@@ -20,6 +20,11 @@
     "authError": "Failed to authenticate. Please try again.",
     "signInButton": "Sign in",
     "signInLoading": "Signing in...",
+    "signUpTitle": "Create an account",
+    "signUpButton": "Create account",
+    "signUpLoading": "Creating account...",
+    "haveAccount": "Already have an account?",
+    "signInLink": "Sign in",
     "resetPassword": {
       "title": "Reset your password",
       "emailPlaceholder": "Enter your email address",

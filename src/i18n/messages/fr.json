@@ -46,6 +46,11 @@
     "authError": "Échec de l'authentification. Veuillez réessayer.",
     "signInButton": "Se connecter",
     "signInLoading": "Connexion en cours...",
+    "signUpTitle": "Créer un compte",
+    "signUpButton": "Créer un compte",
+    "signUpLoading": "Création du compte...",
+    "haveAccount": "Vous avez déjà un compte ?",
+    "signInLink": "Se connecter",
     "resetPassword": {
       "title": "Réinitialiser votre mot de passe",
       "emailPlaceholder": "Saisissez votre adresse e-mail",
