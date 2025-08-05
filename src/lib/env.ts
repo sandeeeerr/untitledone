@@ -8,8 +8,8 @@ const envRef = {
 
 export const reloadEnv = () => {
     envRef.current = {
-        SUPABASE_URL: String(process.env.SUPABASE_URL),
-        SUPABASE_ANON_KEY: String(process.env.SUPABASE_ANON_KEY),
+        SUPABASE_URL: String(process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL),
+        SUPABASE_ANON_KEY: String(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY),
         SUPABASE_BASE_KEY: String(
             process.env.SUPABASE_BASE_KEY ||
                 process.env.SUPABASE_ANON_KEY,

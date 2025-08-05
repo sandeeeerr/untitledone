@@ -9,10 +9,10 @@ import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import supabaseClient from '@/lib/supabase-client'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { Logo } from '@/components/ui/logo'
+import { authApi } from '@/lib/api/auth'
 
 type RegisterFormInputs = {
   email: string
@@ -33,12 +33,13 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterFormInputs) => {
     setIsLoading(true)
     try {
-      const { error } = await supabaseClient.auth.signUp({
-        email: data.email,
-        password: data.password,
-      })
-      if (error) throw error
-      router.push('/') // of '/auth/login' of '/dashboard'
+      const result = await authApi.signUp(data.email, data.password)
+      
+      if (result.error) {
+        throw new Error(result.error)
+      }
+      
+      router.push('/auth/login') // Redirect to login after successful signup
     } catch (error) {
       setError('root.serverError', {
         message: (error as Error).message,
