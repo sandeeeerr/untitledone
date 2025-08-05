@@ -10,10 +10,10 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+import supabaseClient from '@/lib/supabase-client';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { Logo } from '@/components/ui/logo';
-import { authApi } from '@/lib/api/auth';
 
 type LoginFormInputs = {
   email: string;
@@ -50,15 +50,15 @@ export default function LoginPage() {
             window.location.pathname + (params.toString() ? `?${params.toString()}` : '');
           window.history.replaceState({}, '', newUrl);
 
-          // For now, we'll skip the code exchange since it requires direct Supabase client
-          // This is a limitation of the proxy approach, but most auth flows don't need this
-          console.warn('Code exchange not implemented with proxy approach');
+          // TODO: handle exchangeCodeForSession error and display error of redirect user with next router (no window.location.href) if data is returned
+
+          await supabaseClient.auth.exchangeCodeForSession(code);
 
           const next = params.get('next') || '/';
           queryClient.invalidateQueries();
           window.location.href = next;
         } catch (error) {
-          console.error('Error handling auth params:', error);
+          console.error('Error exchanging code for session:', error);
           setError('root.serverError', {
             message: t('auth.authError'),
           });
@@ -78,25 +78,33 @@ export default function LoginPage() {
           const type = hashParams.get('type');
 
           if (accessToken && refreshToken) {
-            // For now, we'll skip the session setting since it requires direct Supabase client
-            // This is a limitation of the proxy approach
-            console.warn('Session setting not implemented with proxy approach');
+            const {
+              data: { user },
+              error,
+            } = await supabaseClient.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
 
-            let next: string = '/';
+            if (error) throw error;
 
-            if (type === 'invite') {
-              next = '/change-password';
-            } else {
-              // Get the next parameter from URL
-              const params = new URLSearchParams(window.location.search);
-              next = params.get('next') || next;
+            if (user) {
+              let next: string = '/';
+
+              if (type === 'invite') {
+                next = '/change-password';
+              } else {
+                // Get the next parameter from URL
+                const params = new URLSearchParams(window.location.search);
+                next = params.get('next') || next;
+              }
+
+              queryClient.invalidateQueries();
+              router.push(next);
             }
-
-            queryClient.invalidateQueries();
-            router.push(next);
           }
         } catch (error) {
-          console.error('Error handling hash params:', error);
+          console.error('Error setting session:', error);
           setError('root.serverError', {
             message: t('auth.authError'),
           });
@@ -113,12 +121,8 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 500));
-      const result = await authApi.signIn(input.email, input.password);
-      
-      if (result.error) {
-        throw new Error(result.error);
-      }
-      
+      const { error } = await supabaseClient.auth.signInWithPassword(input);
+      if (error) throw error;
       queryClient.invalidateQueries();
       reset();
 

@@ -4,7 +4,6 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const nextConfig: NextConfig = {
   env: env(),
-  serverExternalPackages: ['@supabase/ssr'],
 };
 
 const withNextIntl = createNextIntlPlugin();

@@ -5,7 +5,7 @@ import { Database } from "../../types/database";
 function createClient() {
     return createBrowserClient<Database>(
         env().SUPABASE_URL,
-        env().SUPABASE_ANON_KEY,
+        env().SUPABASE_BASE_KEY,
     );
 }
 
