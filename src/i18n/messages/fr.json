@@ -1,0 +1,66 @@
+{
+  "actions": {
+    "login": "Connexion",
+    "logout": "Déconnexion",
+    "openSettings": "Ouvrir les paramètres",
+    "add": "Ajouter"
+  },
+  "home": {
+    "welcome": "Bienvenue, {email}",
+    "description": "Lorem ipsum dolor, sit amet consectetur adipisicing elit. Dignissimos atque nisi necessitatibus neque voluptates libero aperiam nam repellat quam, ab perferendis cum animi repellendus ratione eius dolores et iure rerum!"
+  },
+  "common": {
+    "logo": "Logo"
+  },
+  "navigation": {
+    "home": "Accueil",
+    "mainMenu": "Menu principal",
+    "todos": "Tâches"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "theme": {
+      "label": "Thème",
+      "placeholder": "Sélectionner un thème",
+      "light": "Clair",
+      "dark": "Sombre",
+      "system": "Système"
+    },
+    "language": {
+      "label": "Langue",
+      "placeholder": "Sélectionner une langue"
+    }
+  },
+  "auth": {
+    "signInTitle": "Connectez-vous à votre compte",
+    "emailLabel": "Adresse e-mail",
+    "emailPlaceholder": "Adresse e-mail",
+    "emailRequired": "L'email est requis",
+    "emailInvalid": "Adresse e-mail invalide",
+    "passwordLabel": "Mot de passe",
+    "passwordPlaceholder": "Mot de passe",
+    "passwordRequired": "Le mot de passe est requis",
+    "passwordMinLength": "Le mot de passe doit contenir au moins 6 caractères",
+    "signingIn": "Connexion en cours...",
+    "forgotPassword": "Mot de passe oublié ?",
+    "authError": "Échec de l'authentification. Veuillez réessayer.",
+    "signInButton": "Se connecter",
+    "signInLoading": "Connexion en cours...",
+    "resetPassword": {
+      "title": "Réinitialiser votre mot de passe",
+      "emailPlaceholder": "Saisissez votre adresse e-mail",
+      "sendButton": "Envoyer le lien",
+      "sendingButton": "Envoi du lien...",
+      "backToLogin": "Retour à la connexion",
+      "returnToLogin": "Retourner à la connexion",
+      "successMessage": "Si un compte existe avec cet e-mail, nous avons envoyé les instructions de réinitialisation du mot de passe à votre adresse e-mail.",
+      "sendError": "Échec de l'envoi de l'e-mail de réinitialisation"
+    }
+  },
+  "todos": {
+    "title": "Tâches",
+    "newTodoPlaceholder": "Ajouter une nouvelle tâche...",
+    "noTodos": "Aucune tâche pour le moment",
+    "showAll": "Afficher tout"
+  }
+}
