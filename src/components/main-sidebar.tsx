@@ -20,7 +20,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
-import Image from 'next/image';
 import Link from 'next/link';
 import supabaseClient from '@/lib/supabase-client';
 import { useCurrentUser } from '@/hooks/use-current-user';
@@ -28,6 +27,7 @@ import { usePathname } from 'next/navigation';
 import { ForwardRefExoticComponent, RefAttributes, useState } from 'react';
 import { SettingsModal } from '@/components/settings-modal';
 import { useTranslations } from 'next-intl';
+import { Logo } from '@/components/ui/logo';
 
 // Menu items
 const items: Array<{
@@ -61,7 +61,7 @@ export default function MainSidebar() {
     <Sidebar>
       <SidebarHeader>
         <div className="flex-1 flex items-center justify-center p-4">
-          <Image src="/images/logo.svg" alt={t('common.logo')} width={130} height={100} />
+          <Logo alt={t('common.logo')} width={50} height={35} />
         </div>
       </SidebarHeader>
       <SidebarContent>
@@ -69,8 +69,8 @@ export default function MainSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild className={pathname === '/' ? 'bg-accent' : ''}>
-                  <Link href="/">
+                <SidebarMenuButton asChild className={pathname === '/dashboard' ? 'bg-accent' : ''}>
+                  <Link href="/dashboard">
                     <Home />
                     <span>{t('navigation.home')}</span>
                   </Link>

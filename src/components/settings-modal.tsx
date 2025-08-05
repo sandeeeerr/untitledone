@@ -21,6 +21,7 @@ interface SettingsModalProps {
 const SUPPORTED_LANGUAGES = [
   { value: 'en', label: 'English' },
   { value: 'fr', label: 'Français' },
+  { value: 'nl', label: 'Nederlands' },
 ] as const;
 
 export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {

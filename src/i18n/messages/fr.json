@@ -67,5 +67,55 @@
     "newTodoPlaceholder": "Ajouter une nouvelle tâche...",
     "noTodos": "Aucune tâche pour le moment",
     "showAll": "Afficher tout"
+  },
+  "landing": {
+    "nav": {
+      "login": "Connexion",
+      "signup": "S'inscrire",
+      "dashboard": "Tableau de bord",
+      "todos": "Tâches"
+    },
+    "hero": {
+      "badge": "🛠 En développement",
+      "title": "Créez ensemble. Grandissez ensemble.",
+      "description": "UntitledOne est une plateforme ouverte pour les producteurs et DJs pour collaborer à distance, partager des pistes et donner des retours.",
+      "getStarted": "Commencer",
+      "login": "Se connecter",
+      "dashboard": "Aller au tableau de bord"
+    },
+    "features": {
+      "title": "Pourquoi UntitledOne ?",
+      "description": "Conçu pour la collaboration créative, la propriété et la liberté.",
+      "collaboration": {
+        "title": "Vraie Collaboration",
+        "description": "Travaillez avec d'autres sur des projets musicaux en temps réel ou à distance."
+      },
+      "creativity": {
+        "title": "Focus Créatif",
+        "description": "Outils simples qui vous maintiennent dans le flow, sans distraction."
+      },
+      "ownership": {
+        "title": "Vous Possédez Votre Travail",
+        "description": "Open-source, transparent et libre des intérêts commerciaux."
+      }
+    },
+    "testimonials": {
+      "title": "Ce que disent les créateurs",
+      "description": "Découvrez pourquoi les artistes aiment utiliser UntitledOne.",
+      "daan": "« L'une des rares plateformes où je me sens vraiment créativement libre. Pas de distractions, juste de la musique. »",
+      "nora": "« Enfin un espace où je peux co-créer avec d'autres sans avoir à expliquer chaque détail. »",
+      "jonas": "« Ça fait comme être dans un groupe à nouveau—juste à distance. J'adore. »"
+    },
+    "cta": {
+      "title": "Prêt à commencer ?",
+      "description": "Rejoignez une communauté grandissante d'artistes qui construisent l'avenir de la collaboration musicale.",
+      "getStarted": "Commencer",
+      "dashboard": "Aller au tableau de bord"
+    },
+    "footer": {
+      "copyright": "Tous droits réservés.",
+      "privacy": "Politique de confidentialité",
+      "terms": "Conditions d'utilisation"
+    }
   }
 }

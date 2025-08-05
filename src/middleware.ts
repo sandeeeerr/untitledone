@@ -40,13 +40,14 @@ export async function middleware(request: NextRequest) {
 
     if (user) {
         if (request.nextUrl.pathname.startsWith("/auth")) {
-            // user is logged in, potentially respond by redirecting the user to the home page
+            // user is logged in, potentially respond by redirecting the user to the dashboard
             const url = request.nextUrl.clone();
-            url.pathname = "/";
+            url.pathname = "/dashboard";
             return NextResponse.redirect(url);
         }
     } else {
-        if (!request.nextUrl.pathname.startsWith("/auth")) {
+        // Allow access to landing page and auth pages for non-authenticated users
+        if (!request.nextUrl.pathname.startsWith("/auth") && request.nextUrl.pathname !== "/") {
             // no user, potentially respond by redirecting the user to the login page
             const url = request.nextUrl.clone();
             url.pathname = "/auth/login";

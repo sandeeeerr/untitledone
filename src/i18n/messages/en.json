@@ -67,5 +67,54 @@
     "newTodoPlaceholder": "Add a new todo...",
     "noTodos": "No todos yet",
     "showAll": "Show all"
+  },
+  "landing": {
+    "nav": {
+      "login": "Login",
+      "signup": "Sign up",
+      "dashboard": "Dashboard"
+    },
+    "hero": {
+      "badge": "🛠 In development",
+      "title": "Create together. Grow together.",
+      "description": "UntitledOne is an open platform for producers and DJs to collaborate remotely, share tracks, and give feedback.",
+      "getStarted": "Try it now",
+      "login": "Sign in",
+      "dashboard": "Go to dashboard"
+    },
+    "features": {
+      "title": "Why UntitledOne?",
+      "description": "Built for creative collaboration, ownership, and freedom.",
+      "collaboration": {
+        "title": "Real Collaboration",
+        "description": "Work with others on music projects in real time or remotely."
+      },
+      "creativity": {
+        "title": "Creative Focus",
+        "description": "Simple tools that keep you in the flow, distraction-free."
+      },
+      "ownership": {
+        "title": "You Own Your Work",
+        "description": "Open-source, transparent, and free from commercial interests."
+      }
+    },
+    "testimonials": {
+      "title": "What creators say",
+      "description": "Hear why artists love using UntitledOne.",
+      "daan": "“One of the few platforms where I actually feel creatively free. No distractions, just music.”",
+      "nora": "“Finally a space where I can co-create with others without having to explain every detail.”",
+      "jonas": "“Feels like being in a band again—just remote. Love it.”"
+    },
+    "cta": {
+      "title": "Ready to get started?",
+      "description": "Join a growing community of artists building the future of music collaboration.",
+      "getStarted": "Try it now",
+      "dashboard": "Go to dashboard"
+    },
+    "footer": {
+      "copyright": "All rights reserved.",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service"
+    }
   }
 }

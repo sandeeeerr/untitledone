@@ -19,8 +19,8 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: 'NSS Boilerplate',
-  description: 'A simple boilerplate for Next.js, Supabase and Shadcn/UI',
+  title: 'UntitledOne',
+  description: 'Modern web application platform',
 };
 
 export default async function RootLayout({
@@ -48,4 +48,4 @@ export default async function RootLayout({
       </body>
     </html>
   );
-}
+} 

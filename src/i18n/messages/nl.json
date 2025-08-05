@@ -1,0 +1,121 @@
+{
+  "actions": {
+    "login": "Inloggen",
+    "logout": "Uitloggen",
+    "openSettings": "Instellingen openen",
+    "add": "Toevoegen"
+  },
+  "home": {
+    "welcome": "Welkom terug, {email}",
+    "description": "Lorem ipsum dolor, sit amet consectetur adipisicing elit. Dignissimos atque nisi necessitatibus neque voluptates libero aperiam nam repellat quam, ab perferendis cum animi repellendus ratione eius dolores et iure rerum!"
+  },
+  "common": {
+    "logo": "Logo"
+  },
+  "navigation": {
+    "home": "Home",
+    "mainMenu": "Hoofdmenu",
+    "todos": "Taken"
+  },
+  "settings": {
+    "title": "Instellingen",
+    "theme": {
+      "label": "Thema",
+      "placeholder": "Selecteer thema",
+      "light": "Licht",
+      "dark": "Donker",
+      "system": "Systeem"
+    },
+    "language": {
+      "label": "Taal",
+      "placeholder": "Selecteer taal"
+    }
+  },
+  "auth": {
+    "signInTitle": "Log in op je account",
+    "emailLabel": "E-mailadres",
+    "emailPlaceholder": "E-mailadres",
+    "emailRequired": "E-mail is verplicht",
+    "emailInvalid": "Ongeldig e-mailadres",
+    "passwordLabel": "Wachtwoord",
+    "passwordPlaceholder": "Wachtwoord",
+    "passwordRequired": "Wachtwoord is verplicht",
+    "passwordMinLength": "Wachtwoord moet minimaal 6 karakters bevatten",
+    "signingIn": "Inloggen...",
+    "forgotPassword": "Wachtwoord vergeten?",
+    "authError": "Authenticatie mislukt. Probeer het opnieuw.",
+    "signInButton": "Inloggen",
+    "signInLoading": "Inloggen...",
+    "signUpTitle": "Account aanmaken",
+    "signUpButton": "Account aanmaken",
+    "signUpLoading": "Account aanmaken...",
+    "haveAccount": "Heb je al een account?",
+    "signInLink": "Inloggen",
+    "resetPassword": {
+      "title": "Wachtwoord opnieuw instellen",
+      "emailPlaceholder": "Voer je e-mailadres in",
+      "sendButton": "Reset link versturen",
+      "sendingButton": "Reset link versturen...",
+      "backToLogin": "Terug naar inloggen",
+      "returnToLogin": "Terug naar inloggen",
+      "successMessage": "Als er een account bestaat met dat e-mailadres, hebben we wachtwoord reset instructies naar je e-mailadres gestuurd.",
+      "sendError": "Versturen van reset e-mail mislukt"
+    }
+  },
+  "todos": {
+    "title": "Taken",
+    "newTodoPlaceholder": "Voeg een nieuwe taak toe...",
+    "noTodos": "Nog geen taken",
+    "showAll": "Alles tonen"
+  },
+  "landing": {
+    "nav": {
+      "login": "Inloggen",
+      "signup": "Registreren",
+      "dashboard": "Dashboard",
+      "todos": "Taken"
+    },
+    "hero": {
+      "badge": "🛠 In ontwikkeling",
+      "title": "Creëer samen. Groei samen.",
+      "description": "UntitledOne is een open platform voor producers en DJs om op afstand samen te werken, tracks te delen en feedback te geven.",
+      "getStarted": "Aan de slag",
+      "login": "Inloggen",
+      "dashboard": "Ga naar dashboard"
+    },
+    "features": {
+      "title": "Waarom UntitledOne?",
+      "description": "Gebouwd voor creatieve samenwerking, eigendom en vrijheid.",
+      "collaboration": {
+        "title": "Echte Samenwerking",
+        "description": "Werk met anderen aan muziekprojecten in real-time of op afstand."
+      },
+      "creativity": {
+        "title": "Creatieve Focus",
+        "description": "Eenvoudige tools die je in de flow houden, zonder afleiding."
+      },
+      "ownership": {
+        "title": "Je Bezit Je Werk",
+        "description": "Open-source, transparant en vrij van commerciële belangen."
+      }
+    },
+    "testimonials": {
+      "title": "Wat makers zeggen",
+      "description": "Hoor waarom artiesten van UntitledOne houden.",
+      "daan": "\"Een van de weinige platforms waar ik me echt creatief vrij voel. Geen afleidingen, alleen muziek.\"",
+      "nora": "\"Eindelijk een ruimte waar ik kan samenwerken met anderen zonder elk detail te hoeven uitleggen.\"",
+      "jonas": "\"Voelt als weer in een band zitten—alleen op afstand. Geweldig.\""
+    },
+    "cta": {
+      "title": "Klaar om te beginnen?",
+      "description": "Sluit je aan bij een groeiende gemeenschap van artiesten die de toekomst van muzieksamenwerking bouwen.",
+      "getStarted": "Aan de slag",
+      "dashboard": "Ga naar dashboard"
+    },
+    "footer": {
+      "copyright": "Alle rechten voorbehouden.",
+      "privacy": "Privacybeleid",
+      "terms": "Gebruiksvoorwaarden"
+    }
+  }
+} 

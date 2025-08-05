@@ -8,11 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, CheckCircle2 } from 'lucide-react';
-import LayoutSidebar from '@/components/layout-sidebar';
-import Image from 'next/image';
 import Link from 'next/link';
 import supabaseClient from '@/lib/supabase-client';
 import { useTranslations } from 'next-intl';
+import { Logo } from '@/components/ui/logo';
 
 type ForgotPasswordFormInputs = {
   email: string;
@@ -52,13 +51,10 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <LayoutSidebar
-      containerClassName="bg-muted/50"
-      contentClassName="flex w-full h-full items-center justify-center"
-    >
-      <Card className="max-w-md w-full">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center p-4">
+      <Card className="max-w-md w-full py-4">
         <CardHeader className="flex justify-center items-center gap-4">
-          <Image src="/images/logo.svg" alt={t('common.logo')} width={150} height={100} />
+          <Logo alt={t('common.logo')} width={60} height={40} />
           <CardTitle className="text-center text-lg font-extrabold">
             {t('auth.resetPassword.title')}
           </CardTitle>
@@ -133,6 +129,6 @@ export default function ForgotPasswordPage() {
           )}
         </CardContent>
       </Card>
-    </LayoutSidebar>
+    </div>
   );
 }
