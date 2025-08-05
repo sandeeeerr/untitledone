@@ -36,7 +36,6 @@ export async function middleware(request: NextRequest) {
 
     const {
         data: { session },
-        error,
     } = await supabase.auth.getSession();
     
     const user = session?.user;
