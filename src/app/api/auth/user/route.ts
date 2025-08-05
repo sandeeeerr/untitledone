@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { env } from "@/lib/env";
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
     const supabase = createClient(
       env().SUPABASE_URL,

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { env } from "@/lib/env";
 
-export async function POST(req: Request) {
+export async function POST() {
   try {
     const supabase = createClient(
       env().SUPABASE_URL,
