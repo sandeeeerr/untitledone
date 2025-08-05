@@ -35,8 +35,11 @@ export async function middleware(request: NextRequest) {
     // issues with users being randomly logged out.
 
     const {
-        data: { user },
-    } = await supabase.auth.getUser();
+        data: { session },
+        error,
+    } = await supabase.auth.getSession();
+    
+    const user = session?.user;
 
     if (user) {
         if (request.nextUrl.pathname.startsWith("/auth")) {
