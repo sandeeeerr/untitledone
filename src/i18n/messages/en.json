@@ -36,6 +36,8 @@
     "haveAccount": "Already have an account?",
     "signInLink": "Sign in",
     "checkEmailMessage": "Please check your email to confirm your account before signing in.",
+    "confirmationFailed": "Email confirmation failed. Please try again or contact support.",
+    "invalidToken": "Invalid confirmation link. Please try registering again.",
     "resetPassword": {
       "title": "Reset your password",
       "emailPlaceholder": "Enter your email address",

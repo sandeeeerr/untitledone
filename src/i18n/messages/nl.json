@@ -63,6 +63,8 @@
     "haveAccount": "Heb je al een account?",
     "signInLink": "Inloggen",
     "checkEmailMessage": "Controleer je e-mail om je account te bevestigen voordat je inlogt.",
+    "confirmationFailed": "E-mail bevestiging mislukt. Probeer het opnieuw of neem contact op met support.",
+    "invalidToken": "Ongeldige bevestigingslink. Probeer opnieuw te registreren.",
     "resetPassword": {
       "title": "Wachtwoord opnieuw instellen",
       "emailPlaceholder": "Voer je e-mailadres in",

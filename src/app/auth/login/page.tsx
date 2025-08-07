@@ -45,7 +45,26 @@ export default function LoginPage() {
       const newUrl = window.location.pathname + (params.toString() ? `?${params.toString()}` : '');
       window.history.replaceState({}, '', newUrl);
     }
-  }, []);
+    
+    // Check for confirmation errors
+    if (params.get('error') === 'confirmation-failed') {
+      setError('root.serverError', {
+        message: t('auth.confirmationFailed', { defaultValue: 'Email confirmation failed. Please try again or contact support.' }),
+      });
+      params.delete('error');
+      const newUrl = window.location.pathname + (params.toString() ? `?${params.toString()}` : '');
+      window.history.replaceState({}, '', newUrl);
+    }
+    
+    if (params.get('error') === 'invalid-token') {
+      setError('root.serverError', {
+        message: t('auth.invalidToken', { defaultValue: 'Invalid confirmation link. Please try registering again.' }),
+      });
+      params.delete('error');
+      const newUrl = window.location.pathname + (params.toString() ? `?${params.toString()}` : '');
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, [setError, t]);
 
   useEffect(() => {
     const handleAuthParams = async () => {

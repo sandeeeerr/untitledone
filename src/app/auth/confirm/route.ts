@@ -1,5 +1,5 @@
 import { type EmailOtpType } from "@supabase/supabase-js";
-import { type NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
 import createClient from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
@@ -10,6 +10,10 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get("type") as EmailOtpType | null;
     const next = searchParams.get("next") ?? "/";
 
+    // Ensure we're using HTTPS in production
+    const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+    const host = request.headers.get('host') || 'localhost:3000';
+    
     if (token_hash && type) {
         const supabase = await createClient();
 
@@ -17,12 +21,17 @@ export async function GET(request: NextRequest) {
             type,
             token_hash,
         });
+        
         if (!error) {
             // redirect user to specified redirect URL or root of app
             redirect(next);
+        } else {
+            console.error('Email confirmation error:', error);
+            // Redirect to error page with more specific error
+            return NextResponse.redirect(`${protocol}://${host}/auth/login?error=confirmation-failed`);
         }
     }
 
     // redirect the user to an error page with some instructions
-    redirect("/error");
+    return NextResponse.redirect(`${protocol}://${host}/auth/login?error=invalid-token`);
 }
