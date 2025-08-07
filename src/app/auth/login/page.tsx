@@ -25,6 +25,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const codeExchangeInProgress = useRef(false);
+  const [showCheckEmailMessage, setShowCheckEmailMessage] = useState(false);
   const {
     register,
     handleSubmit,
@@ -33,6 +34,18 @@ export default function LoginPage() {
     reset,
   } = useForm<LoginFormInputs>();
   const t = useTranslations();
+
+  useEffect(() => {
+    // Check for check-email message
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('message') === 'check-email') {
+      setShowCheckEmailMessage(true);
+      // Remove message from URL
+      params.delete('message');
+      const newUrl = window.location.pathname + (params.toString() ? `?${params.toString()}` : '');
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, []);
 
   useEffect(() => {
     const handleAuthParams = async () => {
@@ -149,6 +162,13 @@ export default function LoginPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
+          {showCheckEmailMessage && (
+            <Alert className="mb-6">
+              <AlertDescription>
+                {t('auth.checkEmailMessage', { defaultValue: 'Please check your email to confirm your account before signing in.' })}
+              </AlertDescription>
+            </Alert>
+          )}
           <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
             <div className="space-y-4">
               <div className="space-y-2">
@@ -207,6 +227,16 @@ export default function LoginPage() {
                 t('auth.signInButton')
               )}
             </Button>
+
+            <div className="text-center">
+              <span className="text-sm text-muted-foreground">{t('auth.haveAccount')} </span>
+              <Link
+                href="/auth/register"
+                className="text-sm font-medium text-primary hover:text-primary/80"
+              >
+                {t('auth.signUpButton')}
+              </Link>
+            </div>
 
             {errors.root?.serverError && (
               <Alert variant="destructive">

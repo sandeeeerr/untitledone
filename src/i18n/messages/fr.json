@@ -15,7 +15,8 @@
   "navigation": {
     "home": "Accueil",
     "mainMenu": "Menu principal",
-    "todos": "Tâches"
+    "todos": "Tâches",
+    "profile": "Profil"
   },
   "settings": {
     "title": "Paramètres",
@@ -67,6 +68,12 @@
     "newTodoPlaceholder": "Ajouter une nouvelle tâche...",
     "noTodos": "Aucune tâche pour le moment",
     "showAll": "Afficher tout"
+  },
+  "profile": {
+    "title": "Votre profil",
+    "id": "Identifiant",
+    "email": "Email",
+    "noUser": "Aucun utilisateur n'est connecté."
   },
   "landing": {
     "nav": {

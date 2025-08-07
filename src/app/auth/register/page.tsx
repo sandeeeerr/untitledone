@@ -15,8 +15,10 @@ import { useTranslations } from 'next-intl'
 import { Logo } from '@/components/ui/logo'
 
 type RegisterFormInputs = {
+  displayName: string
   email: string
   password: string
+  confirmPassword: string
 }
 
 export default function RegisterPage() {
@@ -36,9 +38,14 @@ export default function RegisterPage() {
       const { error } = await supabaseClient.auth.signUp({
         email: data.email,
         password: data.password,
+        options: {
+          data: {
+            display_name: data.displayName,
+          },
+        },
       })
       if (error) throw error
-      router.push('/') // of '/auth/login' of '/dashboard'
+      router.push('/auth/login?message=check-email')
     } catch (error) {
       setError('root.serverError', {
         message: (error as Error).message,
@@ -61,18 +68,42 @@ export default function RegisterPage() {
           <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
             <div className="space-y-4">
               <div className="space-y-2">
+                <Label htmlFor="displayName">{t('auth.displayNameLabel', { defaultValue: 'Display name' })}</Label>
+                <Input
+                  {...register('displayName', {
+                    required: t('auth.displayNameRequired', { defaultValue: 'Display name is required' }),
+                    minLength: {
+                      value: 2,
+                      message: t('auth.displayNameMinLength', { defaultValue: 'Display name must be at least 2 characters' }),
+                    },
+                    maxLength: {
+                      value: 50,
+                      message: t('auth.displayNameMaxLength', { defaultValue: 'Display name must be less than 50 characters' }),
+                    },
+                  })}
+                  id="displayName"
+                  type="text"
+                  placeholder={t('auth.displayNamePlaceholder', { defaultValue: 'Enter your display name' })}
+                />
+                {errors.displayName && <p className="text-sm text-destructive">{errors.displayName.message}</p>}
+                <p className="text-xs text-muted-foreground">
+                  {t('auth.displayNameHelp', { defaultValue: 'This will be your public display name. A unique username will be automatically generated.' })}
+                </p>
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="email">{t('auth.emailLabel')}</Label>
                 <Input
                   {...register('email', {
-                    required: 'Email is required',
+                    required: t('auth.emailRequired'),
                     pattern: {
                       value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: 'Invalid email address',
+                      message: t('auth.emailInvalid'),
                     },
                   })}
                   id="email"
                   type="email"
-                  placeholder="name@example.com"
+                  placeholder={t('auth.emailPlaceholder')}
                 />
                 {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
               </div>
@@ -81,18 +112,37 @@ export default function RegisterPage() {
                 <Label htmlFor="password">{t('auth.passwordLabel')}</Label>
                 <Input
                   {...register('password', {
-                    required: 'Password is required',
+                    required: t('auth.passwordRequired'),
                     minLength: {
                       value: 6,
-                      message: 'Password must be at least 6 characters',
+                      message: t('auth.passwordMinLength'),
                     },
                   })}
                   id="password"
                   type="password"
-                  placeholder="••••••••"
+                  placeholder={t('auth.passwordPlaceholder')}
                 />
                 {errors.password && (
                   <p className="text-sm text-destructive">{errors.password.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">{t('auth.confirmPasswordLabel', { defaultValue: 'Confirm password' })}</Label>
+                <Input
+                  {...register('confirmPassword', {
+                    required: t('auth.confirmPasswordRequired', { defaultValue: 'Please confirm your password' }),
+                    validate: (value) => {
+                      const password = (document.getElementById('password') as HTMLInputElement)?.value;
+                      return value === password || t('auth.passwordsDoNotMatch', { defaultValue: 'Passwords do not match' });
+                    },
+                  })}
+                  id="confirmPassword"
+                  type="password"
+                  placeholder={t('auth.confirmPasswordPlaceholder', { defaultValue: 'Confirm your password' })}
+                />
+                {errors.confirmPassword && (
+                  <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
                 )}
               </div>
             </div>

@@ -116,13 +116,19 @@ export default function MainSidebar() {
                   </SidebarMenuButton>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent side="top" className="w-[--radix-popper-anchor-width]">
-                  <DropdownMenuItem onClick={_logout}>
-                    <LogOut className="h-[1.2rem] w-[1.2rem]" />
-                    <span data-testid="logout-button">{t('actions.logout')}</span>
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile">
+                      <User2 className="h-[1.2rem] w-[1.2rem]" />
+                      <span>{t('navigation.profile')}</span>
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setShowSettings(true)}>
                     <Monitor className="h-[1.2rem] w-[1.2rem]" />
                     <span>{t('actions.openSettings')}</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={_logout}>
+                    <LogOut className="h-[1.2rem] w-[1.2rem]" />
+                    <span data-testid="logout-button">{t('actions.logout')}</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

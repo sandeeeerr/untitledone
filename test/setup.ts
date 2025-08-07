@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import { env, reloadEnv } from "../src/lib/env";
 import { createClient } from "@supabase/supabase-js";
+import { expect } from "vitest";
 
 dotenv.config({ path: ".env.test" });
 dotenv.config();
@@ -16,8 +17,10 @@ await client.auth.signInWithPassword({
     password: String(process.env.SUPABASE_USER_PASSWORD),
 });
 
-const { data: { session } } = await client.auth.getSession();
+const { data: { user } } = await client.auth.getUser();
 
+// For testing purposes, we still need the session for the access token
+const { data: { session } } = await client.auth.getSession();
 process.env.SUPABASE_BASE_KEY = String(session?.access_token);
 
 reloadEnv();

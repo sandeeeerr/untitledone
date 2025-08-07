@@ -9,7 +9,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "next lint",
     "format": "prettier ./src/ --wirte",
-    "gen:types": "npx supabase gen types typescript --lang=typescript --local > src/types/database.ts",
+    "gen:types": "npx supabase gen types typescript --project-id syrwlkwoorggaiybglyk > src/types/database.ts",
     "test": "vitest",
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",

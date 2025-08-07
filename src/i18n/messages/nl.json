@@ -15,7 +15,8 @@
   "navigation": {
     "home": "Home",
     "mainMenu": "Hoofdmenu",
-    "todos": "Taken"
+    "todos": "Taken",
+    "profile": "Profiel"
   },
   "settings": {
     "title": "Instellingen",
@@ -37,10 +38,20 @@
     "emailPlaceholder": "E-mailadres",
     "emailRequired": "E-mail is verplicht",
     "emailInvalid": "Ongeldig e-mailadres",
+    "displayNameLabel": "Weergavenaam",
+    "displayNamePlaceholder": "Voer je weergavenaam in",
+    "displayNameRequired": "Weergavenaam is verplicht",
+    "displayNameMinLength": "Weergavenaam moet minimaal 2 karakters bevatten",
+    "displayNameMaxLength": "Weergavenaam moet minder dan 50 karakters bevatten",
+    "displayNameHelp": "Dit wordt je publieke weergavenaam. Een unieke gebruikersnaam wordt automatisch gegenereerd.",
     "passwordLabel": "Wachtwoord",
     "passwordPlaceholder": "Wachtwoord",
     "passwordRequired": "Wachtwoord is verplicht",
     "passwordMinLength": "Wachtwoord moet minimaal 6 karakters bevatten",
+    "confirmPasswordLabel": "Bevestig wachtwoord",
+    "confirmPasswordPlaceholder": "Bevestig je wachtwoord",
+    "confirmPasswordRequired": "Bevestig je wachtwoord",
+    "passwordsDoNotMatch": "Wachtwoorden komen niet overeen",
     "signingIn": "Inloggen...",
     "forgotPassword": "Wachtwoord vergeten?",
     "authError": "Authenticatie mislukt. Probeer het opnieuw.",
@@ -51,6 +62,7 @@
     "signUpLoading": "Account aanmaken...",
     "haveAccount": "Heb je al een account?",
     "signInLink": "Inloggen",
+    "checkEmailMessage": "Controleer je e-mail om je account te bevestigen voordat je inlogt.",
     "resetPassword": {
       "title": "Wachtwoord opnieuw instellen",
       "emailPlaceholder": "Voer je e-mailadres in",
@@ -67,6 +79,15 @@
     "newTodoPlaceholder": "Voeg een nieuwe taak toe...",
     "noTodos": "Nog geen taken",
     "showAll": "Alles tonen"
+  },
+  "profile": {
+    "title": "Jouw profiel",
+    "id": "Gebruikers-ID",
+    "email": "E-mail",
+    "username": "Gebruikersnaam",
+    "displayName": "Weergavenaam",
+    "displayNamePlaceholder": "Je weergavenaam",
+    "noUser": "Er is momenteel geen gebruiker ingelogd."
   },
   "landing": {
     "nav": {

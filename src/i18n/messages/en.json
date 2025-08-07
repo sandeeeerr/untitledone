@@ -11,10 +11,20 @@
     "emailPlaceholder": "Email address",
     "emailRequired": "Email is required",
     "emailInvalid": "Invalid email address",
+    "displayNameLabel": "Display name",
+    "displayNamePlaceholder": "Enter your display name",
+    "displayNameRequired": "Display name is required",
+    "displayNameMinLength": "Display name must be at least 2 characters",
+    "displayNameMaxLength": "Display name must be less than 50 characters",
+    "displayNameHelp": "This will be your public display name. A unique username will be automatically generated.",
     "passwordLabel": "Password",
     "passwordPlaceholder": "Password",
     "passwordRequired": "Password is required",
     "passwordMinLength": "Password must be at least 6 characters",
+    "confirmPasswordLabel": "Confirm password",
+    "confirmPasswordPlaceholder": "Confirm your password",
+    "confirmPasswordRequired": "Please confirm your password",
+    "passwordsDoNotMatch": "Passwords do not match",
     "signingIn": "Signing in...",
     "forgotPassword": "Forgot password?",
     "authError": "Failed to authenticate. Please try again.",
@@ -25,6 +35,7 @@
     "signUpLoading": "Creating account...",
     "haveAccount": "Already have an account?",
     "signInLink": "Sign in",
+    "checkEmailMessage": "Please check your email to confirm your account before signing in.",
     "resetPassword": {
       "title": "Reset your password",
       "emailPlaceholder": "Enter your email address",
@@ -46,7 +57,8 @@
   "navigation": {
     "home": "Home",
     "mainMenu": "Main menu",
-    "todos": "Todos"
+    "todos": "Todos",
+    "profile": "Profile"
   },
   "settings": {
     "title": "Settings",
@@ -68,11 +80,21 @@
     "noTodos": "No todos yet",
     "showAll": "Show all"
   },
+  "profile": {
+    "title": "Your profile",
+    "id": "User ID",
+    "email": "Email",
+    "username": "Username",
+    "displayName": "Display name",
+    "displayNamePlaceholder": "Your display name",
+    "noUser": "No user is currently signed in."
+  },
   "landing": {
     "nav": {
       "login": "Login",
       "signup": "Sign up",
-      "dashboard": "Dashboard"
+      "dashboard": "Dashboard",
+      "todos": "Todos"
     },
     "hero": {
       "badge": "🛠 In development",
