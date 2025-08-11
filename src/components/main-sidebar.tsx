@@ -12,7 +12,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { Home, User2, ChevronUp, ListCheck, Monitor, LogOut, LucideProps } from 'lucide-react';
+import { Home, User2, ChevronUp, ListCheck, Monitor, LogOut, LucideProps, FolderClosed } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +28,7 @@ import { ForwardRefExoticComponent, RefAttributes, useState } from 'react';
 import { SettingsModal } from '@/components/settings-modal';
 import { useTranslations } from 'next-intl';
 import { Logo } from '@/components/ui/logo';
+import { useProfile } from '@/lib/api/queries';
 
 // Menu items
 const items: Array<{
@@ -40,6 +41,11 @@ const items: Array<{
     url: '/todos',
     icon: ListCheck,
   },
+  {
+    titleKey: 'navigation.projects',
+    url: '/projects',
+    icon: FolderClosed,
+  },
 ];
 
 export default function MainSidebar() {
@@ -47,6 +53,7 @@ export default function MainSidebar() {
   const pathname = usePathname();
   const [showSettings, setShowSettings] = useState(false);
   const t = useTranslations();
+  const { data: profile } = useProfile();
 
   const _logout = async () => {
     const { error } = await supabaseClient.auth.signOut();
@@ -117,7 +124,7 @@ export default function MainSidebar() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent side="top" className="w-[--radix-popper-anchor-width]">
                   <DropdownMenuItem asChild>
-                    <Link href="/profile">
+                    <Link href={profile?.username ? `/u/${profile.username}` : '/dashboard'}>
                       <User2 className="h-[1.2rem] w-[1.2rem]" />
                       <span>{t('navigation.profile')}</span>
                     </Link>

@@ -11,17 +11,10 @@ export default function DashboardPage() {
   const t = useTranslations('home');
 
   return (
-    <LayoutSidebar>
+    <LayoutSidebar title={t('welcome', { email: currentUser?.email || 'john.doe@example.com' })}>
       <div className="container py-8">
         <div className="flex flex-col gap-1">
-          <h1 className="relative text-3xl font-bold tracking-tighter sm:text-4xl">
-            <span className={userLoading ? 'opacity-0' : 'opacity-100'}>
-              {t('welcome', {
-                email: currentUser?.email || 'john.doe@example.com',
-              })}
-            </span>
-            {userLoading && <Skeleton className="absolute inset-0" />}
-          </h1>
+          {userLoading && <Skeleton className="h-8 w-64" />}
           <p className="text-muted-foreground">{t('description')}</p>
         </div>
       </div>

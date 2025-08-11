@@ -33,6 +33,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
+
 -- Update the handle_new_user function to use display_name and generate username
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$

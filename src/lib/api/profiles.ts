@@ -1,36 +1,44 @@
-import supabaseClient from "@/lib/supabase-client";
 import { Tables, TablesUpdate } from "@/types/database";
 
 export type Profile = Tables<"profiles">;
 export type ProfileUpdate = TablesUpdate<"profiles">;
 
 export async function getCurrentProfile() {
-  const { data: auth } = await supabaseClient.auth.getUser();
-  const user = auth?.user;
-  if (!user) return null;
-
-  const { data, error } = await supabaseClient
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
-
-  if (error) throw error;
-  return data as Profile;
+  const res = await fetch("/api/profile", { method: "GET" });
+  if (res.status === 401) return null;
+  if (!res.ok) {
+    const err = await safeParseError(res);
+    throw new Error(err ?? "Failed to load profile");
+  }
+  const data = (await res.json()) as Profile;
+  return data;
 }
 
 export async function updateCurrentProfile(update: ProfileUpdate) {
-  const { data: auth } = await supabaseClient.auth.getUser();
-  const user = auth?.user;
-  if (!user) throw new Error("Not authenticated");
+  const res = await fetch("/api/profile", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      display_name: update.display_name ?? undefined,
+      bio: update.bio ?? undefined,
+      location: update.location ?? undefined,
+    }),
+  });
 
-  const { data, error } = await supabaseClient
-    .from("profiles")
-    .update(update)
-    .eq("id", user.id)
-    .select()
-    .single();
+  if (!res.ok) {
+    const err = await safeParseError(res);
+    throw new Error(err ?? "Failed to update profile");
+  }
 
-  if (error) throw error;
-  return data as Profile;
+  const data = (await res.json()) as Profile;
+  return data;
+}
+
+async function safeParseError(res: Response) {
+  try {
+    const body = await res.json();
+    return body?.error as string | undefined;
+  } catch {
+    return undefined;
+  }
 } 

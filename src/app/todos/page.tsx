@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 const todoSchema = z.object({
   label: z.string().min(1, 'Label is required'),
@@ -67,11 +67,10 @@ export default function TodosPage() {
   };
 
   return (
-    <LayoutSidebar>
+    <LayoutSidebar title={t('todos.title')}>
       <div className="container max-w-2xl py-8 mx-auto">
         <Card className="border-none shadow-md">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold">{t('todos.title')}</CardTitle>
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="show-all"

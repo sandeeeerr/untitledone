@@ -47,8 +47,13 @@ export async function middleware(request: NextRequest) {
         }
     } else {
         // Allow access to landing page and auth pages for non-authenticated users
-        if (!request.nextUrl.pathname.startsWith("/auth") && request.nextUrl.pathname !== "/") {
-            // no user, potentially respond by redirecting the user to the login page
+        const path = request.nextUrl.pathname;
+        const isAuthPath = path.startsWith("/auth") || path === "/";
+        const isPublicProfilePage = path.startsWith("/u/");
+        const isPublicProfileApi = path.startsWith("/api/profile/") && request.method === "GET";
+
+        if (!(isAuthPath || isPublicProfilePage || isPublicProfileApi)) {
+            // no user, redirect to the login page
             const url = request.nextUrl.clone();
             url.pathname = "/auth/login";
             url.searchParams.set("next", request.nextUrl.pathname);

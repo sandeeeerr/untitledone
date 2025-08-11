@@ -16,7 +16,8 @@
     "home": "Accueil",
     "mainMenu": "Menu principal",
     "todos": "Tâches",
-    "profile": "Profil"
+    "profile": "Profil",
+    "projects": "Projets"
   },
   "settings": {
     "title": "Paramètres",
@@ -71,9 +72,21 @@
   },
   "profile": {
     "title": "Votre profil",
+    "profile": "Profil",
     "id": "Identifiant",
     "email": "Email",
+    "username": "Nom d'utilisateur",
+    "usernameAutoUpdate": "Le nom d'utilisateur est automatiquement généré et mis à jour lorsque vous changez votre nom d'affichage.",
+    "displayName": "Nom d'affichage",
+    "displayNamePlaceholder": "Votre nom d'affichage",
     "noUser": "Aucun utilisateur n'est connecté."
+  },
+  "projects": {
+    "title": "Mes projets",
+    "new": "Nouveau projet",
+    "lastUpdated": "Dernière mise à jour",
+    "public": "Public",
+    "private": "Privé"
   },
   "landing": {
     "nav": {

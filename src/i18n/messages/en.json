@@ -60,7 +60,8 @@
     "home": "Home",
     "mainMenu": "Main menu",
     "todos": "Todos",
-    "profile": "Profile"
+    "profile": "Profile",
+    "projects": "Projects"
   },
   "settings": {
     "title": "Settings",
@@ -84,12 +85,21 @@
   },
   "profile": {
     "title": "Your profile",
+    "profile": "Profile",
     "id": "User ID",
     "email": "Email",
     "username": "Username",
+    "usernameAutoUpdate": "Username is automatically generated and updated when you change your display name.",
     "displayName": "Display name",
     "displayNamePlaceholder": "Your display name",
     "noUser": "No user is currently signed in."
+  },
+  "projects": {
+    "title": "My projects",
+    "new": "New project",
+    "lastUpdated": "Last updated",
+    "public": "Public",
+    "private": "Private"
   },
   "landing": {
     "nav": {

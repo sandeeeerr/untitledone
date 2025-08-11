@@ -16,7 +16,8 @@
     "home": "Home",
     "mainMenu": "Hoofdmenu",
     "todos": "Taken",
-    "profile": "Profiel"
+    "profile": "Profiel",
+    "projects": "Projecten"
   },
   "settings": {
     "title": "Instellingen",
@@ -84,12 +85,21 @@
   },
   "profile": {
     "title": "Jouw profiel",
+    "profile": "Profiel",
     "id": "Gebruikers-ID",
     "email": "E-mail",
     "username": "Gebruikersnaam",
+    "usernameAutoUpdate": "Gebruikersnaam wordt automatisch gegenereerd en bijgewerkt wanneer je je weergavenaam wijzigt.",
     "displayName": "Weergavenaam",
     "displayNamePlaceholder": "Je weergavenaam",
     "noUser": "Er is momenteel geen gebruiker ingelogd."
+  },
+  "projects": {
+    "title": "Mijn projecten",
+    "new": "Nieuw project",
+    "lastUpdated": "Laatst bijgewerkt",
+    "public": "Publiek",
+    "private": "Privé"
   },
   "landing": {
     "nav": {
