@@ -4,6 +4,11 @@ import { cn } from '@/lib/utils';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import MainSidebar from './main-sidebar';
+import AppHeader from '@/components/app-header';
+import { DynamicBreadcrumbs } from './dynamic-breadcrumbs';
+import { SidebarTrigger } from '@/components/ui/sidebar';
+import { PageTitle } from './page-title';
+import { Separator } from './ui/separator';
 
 export default function LayoutSidebar({
   children,
@@ -26,27 +31,31 @@ export default function LayoutSidebar({
   const sidebarOpen = isOpen ?? (currentUser.data?.id || currentUser.isLoading ? undefined : false);
 
   return (
-    <SidebarProvider open={sidebarOpen}>
-      <MainSidebar />
+    <>
+      <AppHeader className="fixed top-0 left-0 right-0 z-40" fullWidth matchSidebarWidth />
+      <SidebarProvider open={sidebarOpen}>
+        <MainSidebar />
 
-      <main className={cn('flex-1 flex flex-col overflow-auto', containerClassName)}>
-        {/* {sidebarOpen !== false ? <SidebarTrigger className="mx-3 mt-2" /> : null} */}
-        <div className={cn('flex-1 px-4 py-16 bg-background', className)}>
-          <div className={cn('flex-1 container max-w-screen-lg mx-auto', contentClassName)}>
-            {title || titleActions ? (
-              <div className="py-0 flex items-center justify-between gap-3">
-                {title ? (
-                  <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
-                ) : (
-                  <div />
-                )}
-                {titleActions ? <div className="shrink-0">{titleActions}</div> : null}
-              </div>
-            ) : null}
-            {children}
+        <main className={cn('flex-1 flex flex-col overflow-auto', containerClassName)} style={{ paddingTop: '4rem' }}>
+
+          {sidebarOpen !== false ? <SidebarTrigger className="mx-3 mt-2" /> : null}
+          
+          {/* Breadcrumbs - shown for internal app routes */}
+          <div className="w-full bg-background">
+            <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
+              <DynamicBreadcrumbs />
+              {/* <PageTitle /> */}
+              {/* <Separator /> */}
+            </div>
           </div>
-        </div>
-      </main>
-    </SidebarProvider>
+          
+          <div className={cn('flex-1 px-4 py-8  bg-background', className)}>
+            <div className={cn('flex-1 container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8', contentClassName)}>
+              {children}
+            </div>
+          </div>
+        </main>
+      </SidebarProvider>
+    </>
   );
 }

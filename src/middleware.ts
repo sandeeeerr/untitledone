@@ -51,8 +51,9 @@ export async function middleware(request: NextRequest) {
         const isAuthPath = path.startsWith("/auth") || path === "/";
         const isPublicProfilePage = path.startsWith("/u/");
         const isPublicProfileApi = path.startsWith("/api/profile/") && request.method === "GET";
+        const isPublicSocialsApi = path.startsWith("/api/socials/") && request.method === "GET";
 
-        if (!(isAuthPath || isPublicProfilePage || isPublicProfileApi)) {
+        if (!(isAuthPath || isPublicProfilePage || isPublicProfileApi || isPublicSocialsApi)) {
             // no user, redirect to the login page
             const url = request.nextUrl.clone();
             url.pathname = "/auth/login";

@@ -17,7 +17,21 @@
     "mainMenu": "Menu principal",
     "todos": "Tâches",
     "profile": "Profil",
-    "projects": "Projets"
+    "projects": "Projets",
+    "popular": "Populaire",
+    "explore": "Explorer",
+    "files": "Fichiers",
+    "activity": "Activité",
+    "tasks": "Tâches",
+    "recent": "Récents"
+  },
+  "breadcrumbs": {
+    "dashboard": "Tableau de bord",
+    "users": "Utilisateurs",
+    "home": "Accueil",
+    "projects": "Projets",
+    "todos": "Tâches",
+    "profile": "Profil"
   },
   "settings": {
     "title": "Paramètres",
@@ -39,10 +53,20 @@
     "emailPlaceholder": "Adresse e-mail",
     "emailRequired": "L'email est requis",
     "emailInvalid": "Adresse e-mail invalide",
+    "displayNameLabel": "Nom d'affichage",
+    "displayNamePlaceholder": "Entrez votre nom d'affichage",
+    "displayNameRequired": "Le nom d'affichage est requis",
+    "displayNameMinLength": "Le nom d'affichage doit contenir au moins 2 caractères",
+    "displayNameMaxLength": "Le nom d'affichage doit contenir moins de 50 caractères",
+    "displayNameHelp": "Ce sera votre nom d'affichage public. Un nom d'utilisateur unique sera automatiquement généré.",
     "passwordLabel": "Mot de passe",
     "passwordPlaceholder": "Mot de passe",
     "passwordRequired": "Le mot de passe est requis",
     "passwordMinLength": "Le mot de passe doit contenir au moins 6 caractères",
+    "confirmPasswordLabel": "Confirmer le mot de passe",
+    "confirmPasswordPlaceholder": "Confirmez votre mot de passe",
+    "confirmPasswordRequired": "Veuillez confirmer votre mot de passe",
+    "passwordsDoNotMatch": "Les mots de passe ne correspondent pas",
     "signingIn": "Connexion en cours...",
     "forgotPassword": "Mot de passe oublié ?",
     "authError": "Échec de l'authentification. Veuillez réessayer.",
@@ -53,6 +77,9 @@
     "signUpLoading": "Création du compte...",
     "haveAccount": "Vous avez déjà un compte ?",
     "signInLink": "Se connecter",
+    "checkEmailMessage": "Veuillez vérifier votre e-mail pour confirmer votre compte avant de vous connecter.",
+    "confirmationFailed": "La confirmation par e-mail a échoué. Veuillez réessayer ou contacter le support.",
+    "invalidToken": "Lien de confirmation invalide. Veuillez essayer de vous inscrire à nouveau.",
     "resetPassword": {
       "title": "Réinitialiser votre mot de passe",
       "emailPlaceholder": "Saisissez votre adresse e-mail",
@@ -98,37 +125,37 @@
     "hero": {
       "badge": "🛠 En développement",
       "title": "Créez ensemble. Grandissez ensemble.",
-      "description": "UntitledOne est une plateforme ouverte pour les producteurs et DJs pour collaborer à distance, partager des pistes et donner des retours.",
+      "description": "UntitledOne est une plateforme ouverte pour les créateurs musicaux — des producteurs et paroliers aux groupes, chanteurs et compositeurs — pour collaborer à distance, échanger des idées et donner des retours ciblés. Tout en un seul endroit, sans bruit.",
       "getStarted": "Commencer",
       "login": "Se connecter",
       "dashboard": "Aller au tableau de bord"
     },
     "features": {
       "title": "Pourquoi UntitledOne ?",
-      "description": "Conçu pour la collaboration créative, la propriété et la liberté.",
+      "description": "Conçu pour la collaboration créative, la propriété et la liberté — avant la phase de sortie.",
       "collaboration": {
-        "title": "Vraie Collaboration",
-        "description": "Travaillez avec d'autres sur des projets musicaux en temps réel ou à distance."
+        "title": "Collaboration Intelligente",
+        "description": "Travaillez avec d'autres sur des projets, partagez des fichiers et maintenez une vue d'ensemble dans les versions, tâches et accords."
       },
       "creativity": {
-        "title": "Focus Créatif",
-        "description": "Outils simples qui vous maintiennent dans le flow, sans distraction."
+        "title": "Dans Votre Flux Créatif",
+        "description": "Outils simples et intuitifs qui vous aident à vous concentrer sur la création — pas sur la recherche ou l'organisation."
       },
       "ownership": {
-        "title": "Vous Possédez Votre Travail",
-        "description": "Open-source, transparent et libre des intérêts commerciaux."
+        "title": "Vous Êtes le Propriétaire",
+        "description": "Open-source, transparent et sans intérêts commerciaux. Vous décidez qui voit quoi."
       }
     },
     "testimonials": {
       "title": "Ce que disent les créateurs",
-      "description": "Découvrez pourquoi les artistes aiment utiliser UntitledOne.",
-      "daan": "« L'une des rares plateformes où je me sens vraiment créativement libre. Pas de distractions, juste de la musique. »",
-      "nora": "« Enfin un espace où je peux co-créer avec d'autres sans avoir à expliquer chaque détail. »",
-      "jonas": "« Ça fait comme être dans un groupe à nouveau—juste à distance. J'adore. »"
+      "description": "De l'artiste solo au groupe — découvrez comment UntitledOne renforce leur collaboration.",
+      "daan": "\"Enfin un endroit où j'ai toutes mes versions et retours ensemble. Pas de bruit, juste de la musique.\"",
+      "nora": "\"J'ai l'impression d'être assise en studio avec quelqu'un, même si nous sommes à des kilomètres l'un de l'autre.\"",
+      "jonas": "\"Tellement plus facile d'échanger et d'affiner des idées. Cela va faire gagner du temps et apporter de la créativité.\""
     },
     "cta": {
       "title": "Prêt à commencer ?",
-      "description": "Rejoignez une communauté grandissante d'artistes qui construisent l'avenir de la collaboration musicale.",
+      "description": "Rejoignez un groupe grandissant de créateurs qui façonnent ensemble l'avenir de la collaboration musicale.",
       "getStarted": "Commencer",
       "dashboard": "Aller au tableau de bord"
     },

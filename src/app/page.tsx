@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Logo } from '@/components/ui/logo'
 import Link from 'next/link'
+import AppHeader from '@/components/app-header'
 
 export default function LandingPage() {
   const { data: currentUser } = useCurrentUser()
@@ -66,34 +67,10 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       {/* Header */}
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Logo alt="Logo" width={50} height={35} />
-          </div>
-          <nav className="flex items-center gap-4">
-            {currentUser ? (
-              <>
-                <Button variant="ghost" asChild>
-                  <Link href="/dashboard">{t('nav.dashboard')}</Link>
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button variant="ghost" asChild>
-                  <Link href="/auth/login">{t('nav.login')}</Link>
-                </Button>
-                <Button asChild>
-                  <Link href="/auth/register">{t('nav.signup')}</Link>
-                </Button>
-              </>
-            )}
-          </nav>
-        </div>
-      </header>
+      <AppHeader className="fixed top-0 left-0 right-0 z-40 " />
 
       {/* Hero Section */}
-      <section className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24 text-center">
+      <section className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-44 pb-24 text-center">
         <Badge variant="secondary" className="mb-4">
           {t('hero.badge')}
         </Badge>

@@ -94,4 +94,40 @@ export async function PATCH(req: Request) {
   }
 
   return NextResponse.json(data, { status: 200 });
+}
+
+export async function DELETE() {
+  const supabase = await createServerClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError) {
+    return NextResponse.json({ error: authError.message }, { status: 401 });
+  }
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Delete socials first (if table exists)
+  const { error: socialsError } = await (supabase as any)
+    .from("profile_socials")
+    .delete()
+    .eq("profile_id", user.id);
+  if (socialsError && socialsError.code !== "42P01") {
+    // Ignore table not found; otherwise error
+    return NextResponse.json({ error: socialsError.message }, { status: 500 });
+  }
+
+  const { error: delError } = await supabase
+    .from("profiles")
+    .delete()
+    .eq("id", user.id);
+
+  if (delError) {
+    return NextResponse.json({ error: delError.message }, { status: 500 });
+  }
+
+  return NextResponse.json({}, { status: 204 });
 } 

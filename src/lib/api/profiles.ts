@@ -34,6 +34,17 @@ export async function updateCurrentProfile(update: ProfileUpdate) {
   return data;
 }
 
+export async function deleteCurrentProfile() {
+  const res = await fetch("/api/profile", { method: "DELETE" });
+  if (res.status === 401) {
+    throw new Error("Unauthorized");
+  }
+  if (!res.ok && res.status !== 204) {
+    const err = await safeParseError(res);
+    throw new Error(err ?? "Failed to delete profile");
+  }
+}
+
 async function safeParseError(res: Response) {
   try {
     const body = await res.json();

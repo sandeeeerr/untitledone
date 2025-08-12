@@ -5,6 +5,48 @@
     "openSettings": "Open settings",
     "add": "Add"
   },
+  "home": {
+    "welcome": "Welcome back, {email}",
+    "description": "Lorem ipsum dolor, sit amet consectetur adipisicing elit. Dignissimos atque nisi necessitatibus neque voluptates libero aperiam nam repellat quam, ab perferendis cum animi repellendus ratione eius dolores et iure rerum!"
+  },
+  "common": {
+    "logo": "Logo"
+  },
+  "navigation": {
+    "home": "Home",
+    "mainMenu": "Main menu",
+    "todos": "Todos",
+    "profile": "Profile",
+    "projects": "Projects",
+    "popular": "Popular",
+    "explore": "Explore",
+    "files": "Files",
+    "activity": "Activity",
+    "tasks": "Tasks",
+    "recent": "Recent"
+  },
+  "breadcrumbs": {
+    "dashboard": "Dashboard",
+    "users": "Users",
+    "home": "Home",
+    "projects": "Projects",
+    "todos": "Todos",
+    "profile": "Profile"
+  },
+  "settings": {
+    "title": "Settings",
+    "theme": {
+      "label": "Theme",
+      "placeholder": "Select theme",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    },
+    "language": {
+      "label": "Language",
+      "placeholder": "Select language"
+    }
+  },
   "auth": {
     "signInTitle": "Sign in to your account",
     "emailLabel": "Email address",
@@ -49,34 +91,6 @@
       "sendError": "Failed to send reset email"
     }
   },
-  "home": {
-    "welcome": "Welcome back, {email}",
-    "description": "Lorem ipsum dolor, sit amet consectetur adipisicing elit. Dignissimos atque nisi necessitatibus neque voluptates libero aperiam nam repellat quam, ab perferendis cum animi repellendus ratione eius dolores et iure rerum!"
-  },
-  "common": {
-    "logo": "Logo"
-  },
-  "navigation": {
-    "home": "Home",
-    "mainMenu": "Main menu",
-    "todos": "Todos",
-    "profile": "Profile",
-    "projects": "Projects"
-  },
-  "settings": {
-    "title": "Settings",
-    "theme": {
-      "label": "Theme",
-      "placeholder": "Select theme",
-      "light": "Light",
-      "dark": "Dark",
-      "system": "System"
-    },
-    "language": {
-      "label": "Language",
-      "placeholder": "Select language"
-    }
-  },
   "todos": {
     "title": "Todos",
     "newTodoPlaceholder": "Add a new todo...",
@@ -111,38 +125,38 @@
     "hero": {
       "badge": "🛠 In development",
       "title": "Create together. Grow together.",
-      "description": "UntitledOne is an open platform for producers and DJs to collaborate remotely, share tracks, and give feedback.",
-      "getStarted": "Try it now",
+      "description": "UntitledOne is an open platform for musical creators — from producers and songwriters to bands, vocalists and composers — to collaborate remotely, exchange ideas and give targeted feedback. All in one place, without noise.",
+      "getStarted": "Get started",
       "login": "Sign in",
       "dashboard": "Go to dashboard"
     },
     "features": {
       "title": "Why UntitledOne?",
-      "description": "Built for creative collaboration, ownership, and freedom.",
+      "description": "Built for creative collaboration, ownership and freedom — before the release phase.",
       "collaboration": {
-        "title": "Real Collaboration",
-        "description": "Work with others on music projects in real time or remotely."
+        "title": "Smart Collaboration",
+        "description": "Work with others on projects, share files and maintain overview in versions, tasks and agreements."
       },
       "creativity": {
-        "title": "Creative Focus",
-        "description": "Simple tools that keep you in the flow, distraction-free."
+        "title": "In Your Creative Flow",
+        "description": "Simple, intuitive tools that help you focus on creating — not searching or organizing."
       },
       "ownership": {
-        "title": "You Own Your Work",
-        "description": "Open-source, transparent, and free from commercial interests."
+        "title": "You Are the Owner",
+        "description": "Open-source, transparent and without commercial interests. You decide who sees what."
       }
     },
     "testimonials": {
       "title": "What creators say",
-      "description": "Hear why artists love using UntitledOne.",
-      "daan": "“One of the few platforms where I actually feel creatively free. No distractions, just music.”",
-      "nora": "“Finally a space where I can co-create with others without having to explain every detail.”",
-      "jonas": "“Feels like being in a band again—just remote. Love it.”"
+      "description": "From solo artist to band — discover how UntitledOne strengthens their collaboration.",
+      "daan": "\"Finally a place where I have all my versions and feedback together. No noise, just music.\"",
+      "nora": "\"It feels like I'm sitting in the studio with someone, even though we're kilometers apart.\"",
+      "jonas": "\"So much easier to exchange and refine ideas. This will save time and bring creativity.\""
     },
     "cta": {
       "title": "Ready to get started?",
-      "description": "Join a growing community of artists building the future of music collaboration.",
-      "getStarted": "Try it now",
+      "description": "Join a growing group of creators who together shape the future of music collaboration.",
+      "getStarted": "Get started",
       "dashboard": "Go to dashboard"
     },
     "footer": {

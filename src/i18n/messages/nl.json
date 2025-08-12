@@ -17,7 +17,21 @@
     "mainMenu": "Hoofdmenu",
     "todos": "Taken",
     "profile": "Profiel",
-    "projects": "Projecten"
+    "projects": "Projecten",
+    "popular": "Populair",
+    "explore": "Verkennen",
+    "files": "Bestanden",
+    "activity": "Activiteit",
+    "tasks": "Taken",
+    "recent": "Recent"
+  },
+  "breadcrumbs": {
+    "dashboard": "Dashboard",
+    "users": "Gebruikers",
+    "home": "Home",
+    "projects": "Projecten",
+    "todos": "Taken",
+    "profile": "Profiel"
   },
   "settings": {
     "title": "Instellingen",
@@ -110,38 +124,38 @@
     },
     "hero": {
       "badge": "🛠 In ontwikkeling",
-      "title": "Creëer samen. Groei samen.",
-      "description": "UntitledOne is een open platform voor producers en DJs om op afstand samen te werken, tracks te delen en feedback te geven.",
+      "title": "Maak samen. Groei samen.",
+      "description": "UntitledOne is een open platform voor muzikale makers — van producers en songwriters tot bands, vocalisten en componisten — om op afstand samen te werken, ideeën uit te wisselen en gerichte feedback te geven. Alles op één plek, zonder ruis.",
       "getStarted": "Aan de slag",
       "login": "Inloggen",
       "dashboard": "Ga naar dashboard"
     },
     "features": {
       "title": "Waarom UntitledOne?",
-      "description": "Gebouwd voor creatieve samenwerking, eigendom en vrijheid.",
+      "description": "Gebouwd voor creatieve samenwerking, eigenaarschap en vrijheid — vóór de releasefase.",
       "collaboration": {
-        "title": "Echte Samenwerking",
-        "description": "Werk met anderen aan muziekprojecten in real-time of op afstand."
+        "title": "Slim Samenwerken",
+        "description": "Werk met anderen aan projecten, deel bestanden en behoud overzicht in versies, taken en afspraken."
       },
       "creativity": {
-        "title": "Creatieve Focus",
-        "description": "Eenvoudige tools die je in de flow houden, zonder afleiding."
+        "title": "In je Creatieve Flow",
+        "description": "Eenvoudige, intuïtieve tools die je helpen focussen op maken — niet op zoeken of organiseren."
       },
       "ownership": {
-        "title": "Je Bezit Je Werk",
-        "description": "Open-source, transparant en vrij van commerciële belangen."
+        "title": "Jij Bent de Eigenaar",
+        "description": "Open-source, transparant en zonder commerciële belangen. Jij bepaalt wie wat ziet."
       }
     },
     "testimonials": {
       "title": "Wat makers zeggen",
-      "description": "Hoor waarom artiesten van UntitledOne houden.",
-      "daan": "\"Een van de weinige platforms waar ik me echt creatief vrij voel. Geen afleidingen, alleen muziek.\"",
-      "nora": "\"Eindelijk een ruimte waar ik kan samenwerken met anderen zonder elk detail te hoeven uitleggen.\"",
-      "jonas": "\"Voelt als weer in een band zitten—alleen op afstand. Geweldig.\""
+      "description": "Van solo-artiest tot band — ontdek hoe UntitledOne hun samenwerking versterkt.",
+      "daan": "\"Eindelijk een plek waar ik al mijn versies en feedback bij elkaar heb. Geen ruis, alleen muziek.\"",
+      "nora": "\"Het voelt alsof ik in de studio zit met iemand, ook al zijn we kilometers van elkaar verwijderd.\"",
+      "jonas": "\"Zoveel makkelijker om ideeën te ruilen en te verfijnen. Dit gaat tijd besparen én creativiteit brengen.\""
     },
     "cta": {
       "title": "Klaar om te beginnen?",
-      "description": "Sluit je aan bij een groeiende gemeenschap van artiesten die de toekomst van muzieksamenwerking bouwen.",
+      "description": "Sluit je aan bij een groeiende groep makers die samen de toekomst van muzieksamenwerking vormgeven.",
       "getStarted": "Aan de slag",
       "dashboard": "Ga naar dashboard"
     },

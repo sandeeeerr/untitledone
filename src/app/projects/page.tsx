@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Plus } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import Link from 'next/link'
 
 // Dummy data
 type Project = {
@@ -51,17 +52,19 @@ export default function ProjectsPage() {
       <div className="container py-4">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
           {projects.map(project => (
-            <Card key={project.id} className="transition-colors hover:bg-accent/5">
-              <CardHeader className="flex-row items-center justify-between space-y-0">
-                <CardTitle className="text-base font-semibold truncate">{project.name}</CardTitle>
-                <Badge variant={project.visibility === 'public' ? 'default' : 'secondary'}>
-                  {project.visibility === 'public' ? t('public') : t('private')}
-                </Badge>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">{t('lastUpdated')}: {formatDate(project.updatedAt)}</p>
-              </CardContent>
-            </Card>
+            <Link key={project.id} href={`/projects/${project.id}`}>
+              <Card className="transition-colors hover:bg-accent/5 cursor-pointer">
+                <CardHeader className="flex-row items-center justify-between space-y-0">
+                  <CardTitle className="text-base font-semibold truncate">{project.name}</CardTitle>
+                  <Badge variant={project.visibility === 'public' ? 'default' : 'secondary'}>
+                    {project.visibility === 'public' ? t('public') : t('private')}
+                  </Badge>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">{t('lastUpdated')}: {formatDate(project.updatedAt)}</p>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       </div>

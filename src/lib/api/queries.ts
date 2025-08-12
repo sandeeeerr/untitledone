@@ -8,7 +8,7 @@ import {
     updateTodo,
 } from "./todos";
 import { useToast } from "@/hooks/use-toast";
-import { getCurrentProfile, updateCurrentProfile, type Profile, type ProfileUpdate } from "./profiles";
+import { getCurrentProfile, updateCurrentProfile, type Profile, type ProfileUpdate, deleteCurrentProfile } from "./profiles";
 
 export function useTodos({ done }: { done?: boolean } = {}) {
     return useQuery({
@@ -104,6 +104,26 @@ export function useUpdateProfile() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["profile", "me"] });
             toast({ title: "Saved", description: "Profile updated" });
+        },
+        onError: (error) => {
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: error.message,
+            });
+        },
+    });
+}
+
+export function useDeleteProfile() {
+    const queryClient = useQueryClient();
+    const { toast } = useToast();
+
+    return useMutation({
+        mutationFn: () => deleteCurrentProfile(),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["profile", "me"] });
+            toast({ title: "Deleted", description: "Your profile was deleted" });
         },
         onError: (error) => {
             toast({

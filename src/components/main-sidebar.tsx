@@ -12,7 +12,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { Home, User2, ChevronUp, ListCheck, Monitor, LogOut, LucideProps, FolderClosed } from 'lucide-react';
+import { Home, User2, ChevronUp, ListCheck, Monitor, LogOut, LucideProps, FolderClosed, Compass, TrendingUp, Files, Activity as ActivityIcon, CheckSquare } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -66,11 +66,6 @@ export default function MainSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader>
-        <div className="flex-1 flex items-center justify-center p-4">
-          <Logo alt={t('common.logo')} width={50} height={35} />
-        </div>
-      </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
@@ -81,6 +76,18 @@ export default function MainSidebar() {
                     <Home />
                     <span>{t('navigation.home')}</span>
                   </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton disabled>
+                  <TrendingUp />
+                  <span>{t('navigation.popular')}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton disabled>
+                  <Compass />
+                  <span>{t('navigation.explore')}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -100,51 +107,49 @@ export default function MainSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              <SidebarMenuItem>
+                <SidebarMenuButton disabled>
+                  <Files />
+                  <span>{t('navigation.files')}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton disabled>
+                  <ActivityIcon />
+                  <span>{t('navigation.activity')}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton disabled>
+                  <CheckSquare />
+                  <span>{t('navigation.tasks')}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>{t('navigation.recent')}</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {[
+                'Project One',
+                'Summer Mix 2025',
+                'Collab with Nora',
+                'Live Set Draft',
+              ].map((name) => (
+                <SidebarMenuItem key={name}>
+                  <SidebarMenuButton disabled>
+                    <FolderClosed />
+                    <span>{name}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter>
-        <div className="flex items-center justify-between gap-2">
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <SidebarMenuButton data-testid="user-button">
-                    <User2 />
-                    {currentUser?.data?.email ? (
-                      <span className="h-6 inline-flex items-center text-sm truncate flex-shrink">
-                        {currentUser?.data?.email}
-                      </span>
-                    ) : (
-                      <Skeleton className="h-6 w-full" />
-                    )}
-                    <ChevronUp className="ml-auto" />
-                  </SidebarMenuButton>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent side="top" className="w-[--radix-popper-anchor-width]">
-                  <DropdownMenuItem asChild>
-                    <Link href={profile?.username ? `/u/${profile.username}` : '/dashboard'}>
-                      <User2 className="h-[1.2rem] w-[1.2rem]" />
-                      <span>{t('navigation.profile')}</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setShowSettings(true)}>
-                    <Monitor className="h-[1.2rem] w-[1.2rem]" />
-                    <span>{t('actions.openSettings')}</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={_logout}>
-                    <LogOut className="h-[1.2rem] w-[1.2rem]" />
-                    <span data-testid="logout-button">{t('actions.logout')}</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </SidebarMenuItem>
-          </SidebarMenu>
-
-          <SettingsModal open={showSettings} onOpenChange={setShowSettings} />
-        </div>
-      </SidebarFooter>
+      <SidebarFooter />
     </Sidebar>
   );
 }
