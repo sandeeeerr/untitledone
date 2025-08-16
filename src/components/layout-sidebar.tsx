@@ -40,19 +40,17 @@ export default function LayoutSidebar({
 
           {sidebarOpen !== false ? <SidebarTrigger className="mx-3 mt-2" /> : null}
           
-          {/* Breadcrumbs - shown for internal app routes */}
-          <div className="w-full bg-background">
-            <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
-              <DynamicBreadcrumbs />
-              {/* <PageTitle /> */}
-              {/* <Separator /> */}
-            </div>
+          <div className="container mx-auto max-w-7xl px-2 sm:px-4 md:px-6 lg:px-8 py-8">
+
+          <div className="py-4">
+            <DynamicBreadcrumbs />
           </div>
           
-          <div className={cn('flex-1 px-4 py-8  bg-background', className)}>
-            <div className={cn('flex-1 container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8', contentClassName)}>
+          <div className={cn('flex-1 bg-background', className)}>
+            <div className={cn('flex-1 ', contentClassName)}>
               {children}
             </div>
+          </div>
           </div>
         </main>
       </SidebarProvider>

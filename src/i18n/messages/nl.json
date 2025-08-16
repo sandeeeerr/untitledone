@@ -19,7 +19,7 @@
     "profile": "Profiel",
     "projects": "Projecten",
     "popular": "Populair",
-    "explore": "Verkennen",
+    "explore": "Ontdekken",
     "files": "Bestanden",
     "activity": "Activiteit",
     "tasks": "Taken",
@@ -56,13 +56,13 @@
     "displayNameLabel": "Weergavenaam",
     "displayNamePlaceholder": "Voer je weergavenaam in",
     "displayNameRequired": "Weergavenaam is verplicht",
-    "displayNameMinLength": "Weergavenaam moet minimaal 2 karakters bevatten",
-    "displayNameMaxLength": "Weergavenaam moet minder dan 50 karakters bevatten",
+    "displayNameMinLength": "Weergavenaam moet minimaal 2 karakters zijn",
+    "displayNameMaxLength": "Weergavenaam moet minder dan 50 karakters zijn",
     "displayNameHelp": "Dit wordt je publieke weergavenaam. Een unieke gebruikersnaam wordt automatisch gegenereerd.",
     "passwordLabel": "Wachtwoord",
     "passwordPlaceholder": "Wachtwoord",
     "passwordRequired": "Wachtwoord is verplicht",
-    "passwordMinLength": "Wachtwoord moet minimaal 6 karakters bevatten",
+    "passwordMinLength": "Wachtwoord moet minimaal 6 karakters zijn",
     "confirmPasswordLabel": "Bevestig wachtwoord",
     "confirmPasswordPlaceholder": "Bevestig je wachtwoord",
     "confirmPasswordRequired": "Bevestig je wachtwoord",
@@ -76,29 +76,29 @@
     "signUpButton": "Account aanmaken",
     "signUpLoading": "Account aanmaken...",
     "haveAccount": "Heb je al een account?",
-    "signInLink": "Inloggen",
+    "signInLink": "Log in",
     "checkEmailMessage": "Controleer je e-mail om je account te bevestigen voordat je inlogt.",
-    "confirmationFailed": "E-mail bevestiging mislukt. Probeer het opnieuw of neem contact op met support.",
+    "confirmationFailed": "E-mailbevestiging mislukt. Probeer het opnieuw of neem contact op met ondersteuning.",
     "invalidToken": "Ongeldige bevestigingslink. Probeer opnieuw te registreren.",
     "resetPassword": {
-      "title": "Wachtwoord opnieuw instellen",
+      "title": "Reset je wachtwoord",
       "emailPlaceholder": "Voer je e-mailadres in",
-      "sendButton": "Reset link versturen",
+      "sendButton": "Verstuur reset link",
       "sendingButton": "Reset link versturen...",
-      "backToLogin": "Terug naar inloggen",
-      "returnToLogin": "Terug naar inloggen",
+      "backToLogin": "Terug naar login",
+      "returnToLogin": "Terug naar login",
       "successMessage": "Als er een account bestaat met dat e-mailadres, hebben we wachtwoord reset instructies naar je e-mailadres gestuurd.",
-      "sendError": "Versturen van reset e-mail mislukt"
+      "sendError": "Reset e-mail versturen mislukt"
     }
   },
   "todos": {
     "title": "Taken",
     "newTodoPlaceholder": "Voeg een nieuwe taak toe...",
     "noTodos": "Nog geen taken",
-    "showAll": "Alles tonen"
+    "showAll": "Toon alles"
   },
   "profile": {
-    "title": "Jouw profiel",
+    "title": "Je profiel",
     "profile": "Profiel",
     "id": "Gebruikers-ID",
     "email": "E-mail",
@@ -112,19 +112,87 @@
     "title": "Mijn projecten",
     "new": "Nieuw project",
     "lastUpdated": "Laatst bijgewerkt",
-    "public": "Publiek",
-    "private": "Privé"
+    "public": "Openbaar",
+    "private": "Privé",
+    "genre": "Genre",
+    "loading": "Projecten laden...",
+    "empty": {
+      "message": "Nog geen projecten",
+      "createFirst": "Maak je eerste project aan"
+    },
+    "error": {
+      "title": "Fout",
+      "loadFailed": "Projecten laden mislukt",
+      "tryAgain": "Probeer opnieuw"
+    },
+    "new": {
+      "title": "Nieuw Project",
+      "fields": {
+        "name": {
+          "label": "Naam",
+          "placeholder": "Projectnaam"
+        },
+        "description": {
+          "label": "Beschrijving",
+          "placeholder": "Beschrijf je project",
+          "help": "Optioneel. Maximaal 2000 karakters."
+        },
+        "tags": {
+          "label": "Tags",
+          "placeholder": "komma,gescheiden,tags",
+          "help": "Gebruik komma's om tags te scheiden."
+        },
+        "genre": {
+          "label": "Genre",
+          "placeholder": "Vrije tekst genre"
+        },
+        "daw_name": {
+          "label": "DAW",
+          "placeholder": "Ableton Live"
+        },
+        "daw_version": {
+          "label": "DAW Versie",
+          "placeholder": "11.3"
+        },
+        "plugins": {
+          "label": "Plugins",
+          "placeholder": "Serum@1.35, FabFilter Pro-Q 3, ...",
+          "help": "Komma gescheiden. Ondersteunt versies zoals naam@1.2 of naam v1.2"
+        },
+        "is_private": {
+          "label": "Privé project",
+          "help": "Alleen leden kunnen bekijken."
+        },
+        "downloads_enabled": {
+          "label": "Downloads toestaan",
+          "help": "Gebruikers in staat stellen bestanden te downloaden."
+        }
+      },
+      "actions": {
+        "create": "Project aanmaken",
+        "creating": "Aanmaken...",
+        "cancel": "Annuleren"
+      },
+      "success": {
+        "title": "Project aangemaakt",
+        "description": "Project {name} is succesvol aangemaakt"
+      },
+      "error": {
+        "title": "Fout",
+        "description": "Project aanmaken mislukt"
+      }
+    }
   },
   "landing": {
     "nav": {
       "login": "Inloggen",
-      "signup": "Registreren",
+      "signup": "Aanmelden",
       "dashboard": "Dashboard",
       "todos": "Taken"
     },
     "hero": {
       "badge": "🛠 In ontwikkeling",
-      "title": "Maak samen. Groei samen.",
+      "title": "Samen creëren. Samen groeien.",
       "description": "UntitledOne is een open platform voor muzikale makers — van producers en songwriters tot bands, vocalisten en componisten — om op afstand samen te werken, ideeën uit te wisselen en gerichte feedback te geven. Alles op één plek, zonder ruis.",
       "getStarted": "Aan de slag",
       "login": "Inloggen",
@@ -132,30 +200,30 @@
     },
     "features": {
       "title": "Waarom UntitledOne?",
-      "description": "Gebouwd voor creatieve samenwerking, eigenaarschap en vrijheid — vóór de releasefase.",
+      "description": "Gebouwd voor creatieve samenwerking, eigendom en vrijheid — vóór de release fase.",
       "collaboration": {
-        "title": "Slim Samenwerken",
+        "title": "Slimme Samenwerking",
         "description": "Werk met anderen aan projecten, deel bestanden en behoud overzicht in versies, taken en afspraken."
       },
       "creativity": {
-        "title": "In je Creatieve Flow",
-        "description": "Eenvoudige, intuïtieve tools die je helpen focussen op maken — niet op zoeken of organiseren."
+        "title": "In Je Creatieve Flow",
+        "description": "Eenvoudige, intuïtieve tools die je helpen focussen op creëren — niet zoeken of organiseren."
       },
       "ownership": {
         "title": "Jij Bent de Eigenaar",
-        "description": "Open-source, transparant en zonder commerciële belangen. Jij bepaalt wie wat ziet."
+        "description": "Open-source, transparant en zonder commerciële belangen. Jij beslist wie wat ziet."
       }
     },
     "testimonials": {
       "title": "Wat makers zeggen",
-      "description": "Van solo-artiest tot band — ontdek hoe UntitledOne hun samenwerking versterkt.",
-      "daan": "\"Eindelijk een plek waar ik al mijn versies en feedback bij elkaar heb. Geen ruis, alleen muziek.\"",
-      "nora": "\"Het voelt alsof ik in de studio zit met iemand, ook al zijn we kilometers van elkaar verwijderd.\"",
-      "jonas": "\"Zoveel makkelijker om ideeën te ruilen en te verfijnen. Dit gaat tijd besparen én creativiteit brengen.\""
+      "description": "Van solo artiest tot band — ontdek hoe UntitledOne hun samenwerking versterkt.",
+      "daan": "\"Eindelijk een plek waar ik al mijn versies en feedback samen heb. Geen ruis, alleen muziek.\"",
+      "nora": "\"Het voelt alsof ik in de studio zit met iemand, ook al zijn we kilometers uit elkaar.\"",
+      "jonas": "\"Zo veel makkelijker om ideeën uit te wisselen en te verfijnen. Dit bespaart tijd en brengt creativiteit.\""
     },
     "cta": {
       "title": "Klaar om te beginnen?",
-      "description": "Sluit je aan bij een groeiende groep makers die samen de toekomst van muzieksamenwerking vormgeven.",
+      "description": "Doe mee met een groeiende groep makers die samen de toekomst van muziek samenwerking vormgeven.",
       "getStarted": "Aan de slag",
       "dashboard": "Ga naar dashboard"
     },

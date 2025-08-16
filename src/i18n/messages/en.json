@@ -113,7 +113,75 @@
     "new": "New project",
     "lastUpdated": "Last updated",
     "public": "Public",
-    "private": "Private"
+    "private": "Private",
+    "genre": "Genre",
+    "loading": "Loading projects...",
+    "empty": {
+      "message": "No projects yet",
+      "createFirst": "Create your first project"
+    },
+    "error": {
+      "title": "Error",
+      "loadFailed": "Failed to load projects",
+      "tryAgain": "Try again"
+    },
+    "new": {
+      "title": "New Project",
+      "fields": {
+        "name": {
+          "label": "Name",
+          "placeholder": "Project name"
+        },
+        "description": {
+          "label": "Description",
+          "placeholder": "Describe your project",
+          "help": "Optional. Max 2000 characters."
+        },
+        "tags": {
+          "label": "Tags",
+          "placeholder": "comma,separated,tags",
+          "help": "Use commas to separate tags."
+        },
+        "genre": {
+          "label": "Genre",
+          "placeholder": "Free text genre"
+        },
+        "daw_name": {
+          "label": "DAW",
+          "placeholder": "Ableton Live"
+        },
+        "daw_version": {
+          "label": "DAW Version",
+          "placeholder": "11.3"
+        },
+        "plugins": {
+          "label": "Plugins",
+          "placeholder": "Serum@1.35, FabFilter Pro-Q 3, ...",
+          "help": "Comma separated. Accepts versions like name@1.2 or name v1.2"
+        },
+        "is_private": {
+          "label": "Private project",
+          "help": "Only members can view."
+        },
+        "downloads_enabled": {
+          "label": "Allow downloads",
+          "help": "Enable users to download files."
+        }
+      },
+      "actions": {
+        "create": "Create project",
+        "creating": "Creating...",
+        "cancel": "Cancel"
+      },
+      "success": {
+        "title": "Project created",
+        "description": "Project {name} has been created successfully"
+      },
+      "error": {
+        "title": "Error",
+        "description": "Failed to create project"
+      }
+    }
   },
   "landing": {
     "nav": {

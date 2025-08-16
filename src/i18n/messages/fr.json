@@ -1,12 +1,12 @@
 {
   "actions": {
-    "login": "Connexion",
-    "logout": "Déconnexion",
+    "login": "Se connecter",
+    "logout": "Se déconnecter",
     "openSettings": "Ouvrir les paramètres",
     "add": "Ajouter"
   },
   "home": {
-    "welcome": "Bienvenue, {email}",
+    "welcome": "Bon retour, {email}",
     "description": "Lorem ipsum dolor, sit amet consectetur adipisicing elit. Dignissimos atque nisi necessitatibus neque voluptates libero aperiam nam repellat quam, ab perferendis cum animi repellendus ratione eius dolores et iure rerum!"
   },
   "common": {
@@ -23,7 +23,7 @@
     "files": "Fichiers",
     "activity": "Activité",
     "tasks": "Tâches",
-    "recent": "Récents"
+    "recent": "Récent"
   },
   "breadcrumbs": {
     "dashboard": "Tableau de bord",
@@ -37,21 +37,21 @@
     "title": "Paramètres",
     "theme": {
       "label": "Thème",
-      "placeholder": "Sélectionner un thème",
+      "placeholder": "Sélectionner le thème",
       "light": "Clair",
       "dark": "Sombre",
       "system": "Système"
     },
     "language": {
       "label": "Langue",
-      "placeholder": "Sélectionner une langue"
+      "placeholder": "Sélectionner la langue"
     }
   },
   "auth": {
     "signInTitle": "Connectez-vous à votre compte",
     "emailLabel": "Adresse e-mail",
     "emailPlaceholder": "Adresse e-mail",
-    "emailRequired": "L'email est requis",
+    "emailRequired": "L'e-mail est requis",
     "emailInvalid": "Adresse e-mail invalide",
     "displayNameLabel": "Nom d'affichage",
     "displayNamePlaceholder": "Entrez votre nom d'affichage",
@@ -79,14 +79,14 @@
     "signInLink": "Se connecter",
     "checkEmailMessage": "Veuillez vérifier votre e-mail pour confirmer votre compte avant de vous connecter.",
     "confirmationFailed": "La confirmation par e-mail a échoué. Veuillez réessayer ou contacter le support.",
-    "invalidToken": "Lien de confirmation invalide. Veuillez essayer de vous inscrire à nouveau.",
+    "invalidToken": "Lien de confirmation invalide. Veuillez vous inscrire à nouveau.",
     "resetPassword": {
       "title": "Réinitialiser votre mot de passe",
-      "emailPlaceholder": "Saisissez votre adresse e-mail",
-      "sendButton": "Envoyer le lien",
-      "sendingButton": "Envoi du lien...",
+      "emailPlaceholder": "Entrez votre adresse e-mail",
+      "sendButton": "Envoyer le lien de réinitialisation",
+      "sendingButton": "Envoi du lien de réinitialisation...",
       "backToLogin": "Retour à la connexion",
-      "returnToLogin": "Retourner à la connexion",
+      "returnToLogin": "Retour à la connexion",
       "successMessage": "Si un compte existe avec cet e-mail, nous avons envoyé les instructions de réinitialisation du mot de passe à votre adresse e-mail.",
       "sendError": "Échec de l'envoi de l'e-mail de réinitialisation"
     }
@@ -100,46 +100,114 @@
   "profile": {
     "title": "Votre profil",
     "profile": "Profil",
-    "id": "Identifiant",
-    "email": "Email",
+    "id": "ID utilisateur",
+    "email": "E-mail",
     "username": "Nom d'utilisateur",
     "usernameAutoUpdate": "Le nom d'utilisateur est automatiquement généré et mis à jour lorsque vous changez votre nom d'affichage.",
     "displayName": "Nom d'affichage",
     "displayNamePlaceholder": "Votre nom d'affichage",
-    "noUser": "Aucun utilisateur n'est connecté."
+    "noUser": "Aucun utilisateur n'est actuellement connecté."
   },
   "projects": {
     "title": "Mes projets",
     "new": "Nouveau projet",
     "lastUpdated": "Dernière mise à jour",
     "public": "Public",
-    "private": "Privé"
+    "private": "Privé",
+    "genre": "Genre",
+    "loading": "Chargement des projets...",
+    "empty": {
+      "message": "Aucun projet pour le moment",
+      "createFirst": "Créez votre premier projet"
+    },
+    "error": {
+      "title": "Erreur",
+      "loadFailed": "Échec du chargement des projets",
+      "tryAgain": "Réessayer"
+    },
+    "new": {
+      "title": "Nouveau Projet",
+      "fields": {
+        "name": {
+          "label": "Nom",
+          "placeholder": "Nom du projet"
+        },
+        "description": {
+          "label": "Description",
+          "placeholder": "Décrivez votre projet",
+          "help": "Optionnel. Maximum 2000 caractères."
+        },
+        "tags": {
+          "label": "Tags",
+          "placeholder": "tags,séparés,par,des,virgules",
+          "help": "Utilisez des virgules pour séparer les tags."
+        },
+        "genre": {
+          "label": "Genre",
+          "placeholder": "Genre en texte libre"
+        },
+        "daw_name": {
+          "label": "DAW",
+          "placeholder": "Ableton Live"
+        },
+        "daw_version": {
+          "label": "Version DAW",
+          "placeholder": "11.3"
+        },
+        "plugins": {
+          "label": "Plugins",
+          "placeholder": "Serum@1.35, FabFilter Pro-Q 3, ...",
+          "help": "Séparés par des virgules. Accepte les versions comme nom@1.2 ou nom v1.2"
+        },
+        "is_private": {
+          "label": "Projet privé",
+          "help": "Seuls les membres peuvent voir."
+        },
+        "downloads_enabled": {
+          "label": "Autoriser les téléchargements",
+          "help": "Permettre aux utilisateurs de télécharger des fichiers."
+        }
+      },
+      "actions": {
+        "create": "Créer le projet",
+        "creating": "Création...",
+        "cancel": "Annuler"
+      },
+      "success": {
+        "title": "Projet créé",
+        "description": "Le projet {name} a été créé avec succès"
+      },
+      "error": {
+        "title": "Erreur",
+        "description": "Échec de la création du projet"
+      }
+    }
   },
   "landing": {
     "nav": {
-      "login": "Connexion",
+      "login": "Se connecter",
       "signup": "S'inscrire",
       "dashboard": "Tableau de bord",
       "todos": "Tâches"
     },
     "hero": {
       "badge": "🛠 En développement",
-      "title": "Créez ensemble. Grandissez ensemble.",
-      "description": "UntitledOne est une plateforme ouverte pour les créateurs musicaux — des producteurs et paroliers aux groupes, chanteurs et compositeurs — pour collaborer à distance, échanger des idées et donner des retours ciblés. Tout en un seul endroit, sans bruit.",
+      "title": "Créer ensemble. Grandir ensemble.",
+      "description": "UntitledOne est une plateforme ouverte pour les créateurs musicaux — des producteurs et auteurs-compositeurs aux groupes, vocalistes et compositeurs — pour collaborer à distance, échanger des idées et donner des retours ciblés. Tout en un seul endroit, sans bruit.",
       "getStarted": "Commencer",
       "login": "Se connecter",
       "dashboard": "Aller au tableau de bord"
     },
     "features": {
       "title": "Pourquoi UntitledOne ?",
-      "description": "Conçu pour la collaboration créative, la propriété et la liberté — avant la phase de sortie.",
+      "description": "Construit pour la collaboration créative, la propriété et la liberté — avant la phase de sortie.",
       "collaboration": {
         "title": "Collaboration Intelligente",
         "description": "Travaillez avec d'autres sur des projets, partagez des fichiers et maintenez une vue d'ensemble dans les versions, tâches et accords."
       },
       "creativity": {
         "title": "Dans Votre Flux Créatif",
-        "description": "Outils simples et intuitifs qui vous aident à vous concentrer sur la création — pas sur la recherche ou l'organisation."
+        "description": "Des outils simples et intuitifs qui vous aident à vous concentrer sur la création — pas la recherche ou l'organisation."
       },
       "ownership": {
         "title": "Vous Êtes le Propriétaire",
@@ -150,12 +218,12 @@
       "title": "Ce que disent les créateurs",
       "description": "De l'artiste solo au groupe — découvrez comment UntitledOne renforce leur collaboration.",
       "daan": "\"Enfin un endroit où j'ai toutes mes versions et retours ensemble. Pas de bruit, juste de la musique.\"",
-      "nora": "\"J'ai l'impression d'être assise en studio avec quelqu'un, même si nous sommes à des kilomètres l'un de l'autre.\"",
-      "jonas": "\"Tellement plus facile d'échanger et d'affiner des idées. Cela va faire gagner du temps et apporter de la créativité.\""
+      "nora": "\"J'ai l'impression d'être assise en studio avec quelqu'un, même si nous sommes à des kilomètres de distance.\"",
+      "jonas": "\"Tellement plus facile d'échanger et d'affiner des idées. Cela va économiser du temps et apporter de la créativité.\""
     },
     "cta": {
       "title": "Prêt à commencer ?",
-      "description": "Rejoignez un groupe grandissant de créateurs qui façonnent ensemble l'avenir de la collaboration musicale.",
+      "description": "Rejoignez un groupe croissant de créateurs qui façonnent ensemble l'avenir de la collaboration musicale.",
       "getStarted": "Commencer",
       "dashboard": "Aller au tableau de bord"
     },
