@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Logo } from '@/components/ui/logo'
 import Link from 'next/link'
-import AppHeader from '@/components/app-header'
+import LandingHeader from '@/components/public-header'
 
 export default function LandingPage() {
   const { data: currentUser } = useCurrentUser()
@@ -67,7 +67,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       {/* Header */}
-      <AppHeader className="fixed top-0 left-0 right-0 z-40 " />
+      <LandingHeader />
 
       {/* Hero Section */}
       <section className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-44 pb-24 text-center">
