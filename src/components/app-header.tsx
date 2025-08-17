@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { Logo } from "@/components/ui/logo";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { cn } from "@/lib/utils";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -18,11 +18,13 @@ export function AppHeader({
   className,
   fullWidth = false,
   matchSidebarWidth = false,
+  showSidebarTriggerOnMobile = false,
 }: {
   containerClassName?: string;
   className?: string;
   fullWidth?: boolean;
   matchSidebarWidth?: boolean;
+  showSidebarTriggerOnMobile?: boolean;
 }) {
   const { data: currentUser } = useCurrentUser();
   const { data: profile } = useProfile();
@@ -32,7 +34,7 @@ export function AppHeader({
   const [showSettings, setShowSettings] = useState(false);
 
   const innerBase = fullWidth
-    ? "w-full pr-4 flex h-16 items-center justify-between"
+    ? "w-full flex h-16 items-center justify-between"
     : "container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between";
 
   const onLogout = async () => {
@@ -44,10 +46,12 @@ export function AppHeader({
   };
 
   return (
-    <header className={cn("border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60", className)}>
+    <header>
       <div className={cn(innerBase, containerClassName)}>
         <div className={cn(matchSidebarWidth ? "w-[18rem] flex items-center justify-center" : "flex items-center", "gap-2")}> 
-          <Logo alt="Logo" width={40} height={28} />
+          {showSidebarTriggerOnMobile ? (
+            <SidebarTrigger className="md:hidden h-8 w-8 rounded-md hover:bg-sidebar-accent hover:text-sidebar-accent-foreground outline-none ring-sidebar-ring focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0" />
+          ) : null}
         </div>
         <nav className="flex items-center gap-4">
           {currentUser ? (

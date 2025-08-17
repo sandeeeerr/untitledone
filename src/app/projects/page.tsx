@@ -106,7 +106,7 @@ export default function ProjectsPage() {
       titleActions={
         <Button size="sm" asChild>
           <Link href="/projects/new">
-            <Plus className="mr-2 h-4 w-4" />
+          <Plus className="mr-2 h-4 w-4" />
             {t('new.title')}
           </Link>
         </Button>
@@ -124,17 +124,17 @@ export default function ProjectsPage() {
             </Button>
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
-            {projects.map(project => (
-              <Link key={project.id} href={`/projects/${project.id}`}>
-                <Card className="transition-colors hover:bg-accent/5 cursor-pointer">
-                  <CardHeader className="flex-row items-center justify-between space-y-0">
-                    <CardTitle className="text-base font-semibold truncate">{project.name}</CardTitle>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+          {projects.map(project => (
+            <Link key={project.id} href={`/projects/${project.id}`}>
+              <Card className="transition-colors hover:bg-accent/5 cursor-pointer">
+                <CardHeader className="flex-row items-center justify-between space-y-0">
+                  <CardTitle className="text-base font-semibold truncate">{project.name}</CardTitle>
                     <Badge variant={project.is_private ? 'secondary' : 'default'}>
                       {project.is_private ? t('private') : t('public')}
-                    </Badge>
-                  </CardHeader>
-                  <CardContent>
+                  </Badge>
+                </CardHeader>
+                <CardContent>
                     {project.description && (
                       <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
                         {project.description}
@@ -160,11 +160,11 @@ export default function ProjectsPage() {
                       </div>
                     )}
                     <p className="text-sm text-muted-foreground">{t('lastUpdated')}: {formatDate(project.updated_at)}</p>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
         )}
       </div>
     </LayoutSidebar>

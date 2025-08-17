@@ -122,7 +122,7 @@ export default function NewProjectPage() {
 
 	return (
 		<LayoutSidebar title={t('title')}>
-			<div className="container max-w-2xl py-6">
+			<div>
 				<Card>
 					<CardContent className="pt-6">
 						<Form {...form}>

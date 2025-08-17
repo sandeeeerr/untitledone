@@ -201,6 +201,7 @@ const Sidebar = React.forwardRef<
               "w-[--sidebar-width] bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden",
               className,
             )}
+            aria-label="Sidebar"
             style={
               {
                 "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
@@ -237,7 +238,7 @@ const Sidebar = React.forwardRef<
         <div
           className={cn(
             "duration-200 fixed z-10 hidden w-[--sidebar-width] transition-[left,right,width] ease-linear md:flex",
-            "top-16 h-[calc(100svh-4rem)]",
+            "top-0 h-svh",
             side === "left"
               ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
               : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
@@ -407,7 +408,7 @@ const SidebarContent = React.forwardRef<
       ref={ref}
       data-sidebar="content"
       className={cn(
-        "flex min-h-0 flex-1 flex-col gap-1 overflow-auto group-data-[collapsible=icon]:overflow-hidden",
+        "flex min-h-0 flex-1 flex-col gap-1  group-data-[collapsible=icon]:overflow-hidden",
         className
       )}
       {...props}
@@ -424,7 +425,10 @@ const SidebarGroup = React.forwardRef<
     <div
       ref={ref}
       data-sidebar="group"
-      className={cn("relative flex w-full min-w-0 flex-col p-4", className)}
+      className={cn(
+        "relative flex w-full min-w-16 flex-col px-4 py-4 group-data-[state=collapsed]:px-2",
+        className
+      )}
       {...props}
     />
   )
