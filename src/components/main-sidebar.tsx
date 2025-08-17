@@ -17,13 +17,13 @@ import { Logo } from "@/components/ui/logo"
 import {
   Home,
   ListChecksIcon as ListCheck,
-  type LightbulbIcon as LucideProps,
   FolderClosed,
   Compass,
   TrendingUp,
   Files,
   ActivityIcon,
   CheckSquare,
+  type LucideIcon,
 } from "lucide-react"
 import Link from "next/link"
 import supabaseClient from "@/lib/supabase-client"
@@ -37,7 +37,7 @@ import { useProfile } from "@/lib/api/queries"
 const items: Array<{
   titleKey: string
   url: string
-  icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>
+  icon: LucideIcon
 }> = [
   {
     titleKey: "navigation.todos",

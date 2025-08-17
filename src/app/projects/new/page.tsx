@@ -8,7 +8,7 @@ import { useTranslations } from 'next-intl'
 
 import LayoutSidebar from '@/components/layout-sidebar'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -16,13 +16,27 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { createProject } from '@/lib/api/projects'
 import { useToast } from '@/hooks/use-toast'
 
-const formSchema = z.object({
+// Form input schema (matches UI field types)
+const formInputSchema = z.object({
+	name: z.string().min(1, 'Name is required').max(200).trim(),
+	description: z.string().max(2000).trim(),
+	tags: z.string().trim(),
+	genre: z.string().trim(),
+	is_private: z.boolean(),
+	downloads_enabled: z.boolean(),
+	daw_name: z.string().trim(),
+	daw_version: z.string().trim(),
+	plugins: z.string().trim(),
+})
+
+// Submit schema (transforms to API payload types)
+const submitSchema = z.object({
 	name: z.string().min(1, 'Name is required').max(200).trim(),
 	description: z.string().max(2000).trim().transform(v => v || undefined),
 	tags: z.string().trim().transform(v => v ? v.split(',').map(tag => tag.trim()).filter(Boolean) : undefined),
 	genre: z.string().trim().transform(v => v || undefined),
-	is_private: z.coerce.boolean().default(false),
-	downloads_enabled: z.coerce.boolean().default(true),
+	is_private: z.boolean().default(false),
+	downloads_enabled: z.boolean().default(true),
 	daw_name: z.string().trim().transform(v => v || undefined),
 	daw_version: z.string().trim().transform(v => v || undefined),
 	plugins: z.string().trim().transform(v => {
@@ -47,7 +61,7 @@ const formSchema = z.object({
 	}),
 })
 
-type FormValues = z.infer<typeof formSchema>
+type FormValues = z.infer<typeof formInputSchema>
 
 export default function NewProjectPage() {
 	const router = useRouter()
@@ -55,7 +69,7 @@ export default function NewProjectPage() {
 	const t = useTranslations('projects.new')
 
 	const form = useForm<FormValues>({
-		resolver: zodResolver(formSchema),
+		resolver: zodResolver(formInputSchema),
 		defaultValues: {
 			name: '',
 			description: '',
@@ -69,53 +83,52 @@ export default function NewProjectPage() {
 		},
 	})
 
-	const { isSubmitting, errors } = form.formState
+	const { isSubmitting } = form.formState
 
 	async function onSubmit(values: FormValues) {
 		try {
+			const parsed = submitSchema.parse(values)
 			const created = await createProject({
-				name: values.name,
-				description: values.description,
-				tags: values.tags,
-				genre: values.genre,
-				is_private: values.is_private,
-				downloads_enabled: values.downloads_enabled,
-				daw_name: values.daw_name,
-				daw_version: values.daw_version,
-				plugins: values.plugins,
+				name: parsed.name,
+				description: parsed.description,
+				tags: parsed.tags,
+				genre: parsed.genre,
+				is_private: parsed.is_private,
+				downloads_enabled: parsed.downloads_enabled,
+				daw_name: parsed.daw_name,
+				daw_version: parsed.daw_version,
+				plugins: parsed.plugins,
 			})
 			toast({ title: t('success.title'), description: t('success.description', { name: created.name }) })
 			router.replace(`/projects/${created.id}`)
-		} catch (err: any) {
+		} catch (err: unknown) {
 			// Parse backend errors and map to form fields
-			if (err?.message) {
-				const message = err.message as string
-				
-				// Try to map common field errors
-				if (message.includes('name')) {
-					form.setError('name', { message: 'Name is required' })
-				}
-				if (message.includes('description')) {
-					form.setError('description', { message: 'Invalid description' })
-				}
-				if (message.includes('tags')) {
-					form.setError('tags', { message: 'Invalid tags format' })
-				}
-				if (message.includes('genre')) {
-					form.setError('genre', { message: 'Invalid genre' })
-				}
-				if (message.includes('daw')) {
-					form.setError('daw_name', { message: 'Invalid DAW name' })
-				}
-				if (message.includes('plugins')) {
-					form.setError('plugins', { message: 'Invalid plugins format' })
-				}
+			const message = err instanceof Error ? err.message : ''
+			
+			// Try to map common field errors
+			if (message.includes('name')) {
+				form.setError('name', { message: 'Name is required' })
+			}
+			if (message.includes('description')) {
+				form.setError('description', { message: 'Invalid description' })
+			}
+			if (message.includes('tags')) {
+				form.setError('tags', { message: 'Invalid tags format' })
+			}
+			if (message.includes('genre')) {
+				form.setError('genre', { message: 'Invalid genre' })
+			}
+			if (message.includes('daw')) {
+				form.setError('daw_name', { message: 'Invalid DAW name' })
+			}
+			if (message.includes('plugins')) {
+				form.setError('plugins', { message: 'Invalid plugins format' })
 			}
 			
 			toast({ 
 				variant: 'destructive', 
 				title: t('error.title'), 
-				description: err?.message ?? t('error.description') 
+				description: message || t('error.description') 
 			})
 		}
 	}
@@ -273,8 +286,8 @@ export default function NewProjectPage() {
 											<FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3">
 												<FormControl>
 													<Checkbox 
-														checked={field.value} 
-														onCheckedChange={(v) => field.onChange(Boolean(v))}
+														checked={Boolean(field.value)} 
+														onCheckedChange={(v: boolean | 'indeterminate') => field.onChange(Boolean(v))}
 														disabled={isSubmitting}
 													/>
 												</FormControl>
@@ -293,8 +306,8 @@ export default function NewProjectPage() {
 											<FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3">
 												<FormControl>
 													<Checkbox 
-														checked={field.value} 
-														onCheckedChange={(v) => field.onChange(Boolean(v))}
+														checked={Boolean(field.value)} 
+														onCheckedChange={(v: boolean | 'indeterminate') => field.onChange(Boolean(v))}
 														disabled={isSubmitting}
 													/>
 												</FormControl>
