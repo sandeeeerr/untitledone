@@ -26,12 +26,11 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import Link from "next/link"
-import supabaseClient from "@/lib/supabase-client"
 import { useCurrentUser } from "@/hooks/use-current-user"
 import { usePathname } from "next/navigation"
-import { type ForwardRefExoticComponent, type RefAttributes, useState } from "react"
+import { useState } from "react"
 import { useTranslations } from "next-intl"
-import { useProfile } from "@/lib/api/queries"
+import { useProfile, useRecentProjects } from "@/lib/api/queries"
 
 // Menu items
 const items: Array<{
@@ -52,21 +51,12 @@ const items: Array<{
 ]
 
 export default function MainSidebar() {
-  const currentUser = useCurrentUser()
+  const { data: currentUser } = useCurrentUser()
   const pathname = usePathname()
   const [showSettings, setShowSettings] = useState(false)
   const t = useTranslations()
   const { data: profile } = useProfile()
-  
-
-  const _logout = async () => {
-    const { error } = await supabaseClient.auth.signOut()
-    if (error) {
-      alert(error.message)
-    }
-
-    window.location.reload()
-  }
+  const { data: recent } = useRecentProjects(4)
 
   return (
     <Sidebar collapsible="icon" className="data-[state=collapsed]:w-16">
@@ -87,7 +77,7 @@ export default function MainSidebar() {
                 <SidebarMenuButton asChild className={pathname === "/dashboard" ? "bg-accent" : ""}>
                   <Link href="/dashboard">
                     <Home />
-                    <span>{t("navigation.home")}</span>
+                    <span>{t("navigation.dashboard")}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -145,11 +135,13 @@ export default function MainSidebar() {
           <SidebarGroupLabel className="data-[state=collapsed]:sr-only">{t("navigation.recent")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {["Project One", "Summer Mix 2025", "Collab with Nora", "Live Set Draft"].map((name) => (
-                <SidebarMenuItem key={name}>
-                  <SidebarMenuButton disabled>
-                    <FolderClosed />
-                    <span>{name}</span>
+              {(recent ?? []).map((p) => (
+                <SidebarMenuItem key={p.id}>
+                  <SidebarMenuButton asChild>
+                    <Link href={`/projects/${p.id}`}>
+                      <FolderClosed />
+                      <span className="truncate max-w-[140px]">{p.name}</span>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

@@ -9,6 +9,7 @@ import {
 } from "./todos";
 import { useToast } from "@/hooks/use-toast";
 import { getCurrentProfile, updateCurrentProfile, type Profile, type ProfileUpdate, deleteCurrentProfile } from "./profiles";
+import { getProjects, type Project } from "./projects";
 
 export function useTodos({ done }: { done?: boolean } = {}) {
     return useQuery({
@@ -111,6 +112,26 @@ export function useUpdateProfile() {
                 title: "Error",
                 description: error.message,
             });
+        },
+    });
+}
+
+// Projects
+export function useProjects() {
+    return useQuery<Project[]>({
+        queryKey: ["projects", "list"],
+        queryFn: () => getProjects(),
+    });
+}
+
+export function useRecentProjects(limit: number = 4) {
+    return useQuery<Project[]>({
+        queryKey: ["projects", "recent", { limit }],
+        queryFn: async () => {
+            const projects = await getProjects();
+            return [...projects]
+                .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+                .slice(0, limit);
         },
     });
 }

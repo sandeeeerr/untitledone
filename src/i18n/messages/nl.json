@@ -14,6 +14,7 @@
   },
   "navigation": {
     "home": "Home",
+    "dashboard": "Dashboard",
     "mainMenu": "Hoofdmenu",
     "todos": "Taken",
     "profile": "Profiel",
@@ -110,21 +111,6 @@
   },
   "projects": {
     "title": "Mijn projecten",
-    "new": "Nieuw project",
-    "lastUpdated": "Laatst bijgewerkt",
-    "public": "Openbaar",
-    "private": "Privé",
-    "genre": "Genre",
-    "loading": "Projecten laden...",
-    "empty": {
-      "message": "Nog geen projecten",
-      "createFirst": "Maak je eerste project aan"
-    },
-    "error": {
-      "title": "Fout",
-      "loadFailed": "Projecten laden mislukt",
-      "tryAgain": "Probeer opnieuw"
-    },
     "new": {
       "title": "Nieuw Project",
       "fields": {
@@ -180,6 +166,57 @@
       "error": {
         "title": "Fout",
         "description": "Project aanmaken mislukt"
+      }
+    },
+    "lastUpdated": "Laatst bijgewerkt",
+    "public": "Openbaar",
+    "private": "Privé",
+    "genre": "Genre",
+    "loading": "Projecten laden...",
+    "searchPlaceholder": "Zoek projecten...",
+    "filters": {
+      "all": "Alle projecten"
+    },
+    "sort": {
+      "updated_at": "Laatst bijgewerkt",
+      "created_at": "Aanmaakdatum",
+      "name": "Naam",
+      "likes": "Populariteit",
+      "toggleOrder": "Sorteervolgorde wisselen"
+    },
+    "resultsCount": "{count} van {total} projecten",
+    "empty": {
+      "message": "Nog geen projecten",
+      "createFirst": "Maak je eerste project aan",
+      "noResults": "Geen projecten gevonden met de huidige filters."
+    },
+    "error": {
+      "title": "Fout",
+      "loadFailed": "Projecten laden mislukt",
+      "tryAgain": "Probeer opnieuw"
+    },
+    "time": {
+      "justNow": "Zojuist",
+      "hoursAgo": "{count}u geleden",
+      "yesterday": "Gisteren",
+      "daysAgo": "{count}d geleden"
+    },
+    "unknownCreator": "Onbekende creator",
+    "edit": {
+      "title": "Project bewerken",
+      "loading": "Laden...",
+      "actions": {
+        "save": "Wijzigingen opslaan",
+        "saving": "Opslaan...",
+        "cancel": "Annuleren"
+      },
+      "success": {
+        "title": "Project bijgewerkt",
+        "description": "Project {name} is bijgewerkt"
+      },
+      "error": {
+        "title": "Fout",
+        "description": "Project laden mislukt"
       }
     }
   },

@@ -14,6 +14,7 @@
   },
   "navigation": {
     "home": "Home",
+    "dashboard": "Dashboard",
     "mainMenu": "Main menu",
     "todos": "Todos",
     "profile": "Profile",
@@ -110,21 +111,6 @@
   },
   "projects": {
     "title": "My projects",
-    "new": "New project",
-    "lastUpdated": "Last updated",
-    "public": "Public",
-    "private": "Private",
-    "genre": "Genre",
-    "loading": "Loading projects...",
-    "empty": {
-      "message": "No projects yet",
-      "createFirst": "Create your first project"
-    },
-    "error": {
-      "title": "Error",
-      "loadFailed": "Failed to load projects",
-      "tryAgain": "Try again"
-    },
     "new": {
       "title": "New Project",
       "fields": {
@@ -180,6 +166,57 @@
       "error": {
         "title": "Error",
         "description": "Failed to create project"
+      }
+    },
+    "lastUpdated": "Last updated",
+    "public": "Public",
+    "private": "Private",
+    "genre": "Genre",
+    "loading": "Loading projects...",
+    "searchPlaceholder": "Search projects...",
+    "filters": {
+      "all": "All projects"
+    },
+    "sort": {
+      "updated_at": "Last updated",
+      "created_at": "Created at",
+      "name": "Name",
+      "likes": "Popularity",
+      "toggleOrder": "Toggle sort order"
+    },
+    "resultsCount": "{count} of {total} projects",
+    "empty": {
+      "message": "No projects yet",
+      "createFirst": "Create your first project",
+      "noResults": "No projects found with the current filters."
+    },
+    "error": {
+      "title": "Error",
+      "loadFailed": "Failed to load projects",
+      "tryAgain": "Try again"
+    },
+    "time": {
+      "justNow": "Just now",
+      "hoursAgo": "{count}h ago",
+      "yesterday": "Yesterday",
+      "daysAgo": "{count}d ago"
+    },
+    "unknownCreator": "Unknown creator",
+    "edit": {
+      "title": "Edit project",
+      "loading": "Loading...",
+      "actions": {
+        "save": "Save changes",
+        "saving": "Saving...",
+        "cancel": "Cancel"
+      },
+      "success": {
+        "title": "Project updated",
+        "description": "Project {name} has been updated"
+      },
+      "error": {
+        "title": "Error",
+        "description": "Failed to load project"
       }
     }
   },

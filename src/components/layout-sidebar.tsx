@@ -7,7 +7,7 @@ import MainSidebar from './main-sidebar';
 import AppHeader from '@/components/app-header';
 import { DynamicBreadcrumbs } from './dynamic-breadcrumbs';
 import { PageTitle } from './page-title';
-import { Separator } from './ui/separator';
+import { BreadcrumbProvider } from './breadcrumb-context';
 
 export default function LayoutSidebar({
   children,
@@ -17,6 +17,7 @@ export default function LayoutSidebar({
   isOpen,
   title,
   titleActions,
+  breadcrumbLabelOverride,
 }: {
   children: React.ReactNode;
   className?: string;
@@ -25,6 +26,7 @@ export default function LayoutSidebar({
   isOpen?: boolean;
   title?: React.ReactNode;
   titleActions?: React.ReactNode;
+  breadcrumbLabelOverride?: string;
 }) {
   const currentUser = useCurrentUser();
   const sidebarOpen = isOpen ?? (currentUser.data?.id || currentUser.isLoading ? undefined : false);
@@ -46,7 +48,9 @@ export default function LayoutSidebar({
             <div className="pb-6">
               <PageTitle title={title} actions={titleActions} />
               <div className="mt-4">
-                <DynamicBreadcrumbs />
+                <BreadcrumbProvider value={{ currentPageLabel: breadcrumbLabelOverride }}>
+                  <DynamicBreadcrumbs />
+                </BreadcrumbProvider>
               </div>
             </div>
 

@@ -49,7 +49,7 @@ function parsePlugins(value: unknown): Array<{ name: string; version?: string }>
 	return [];
 }
 
-export async function GET() {
+export async function GET(req: Request) {
 	const supabase = await createServerClient();
 	const {
 		data: { user },
@@ -60,7 +60,10 @@ export async function GET() {
 	if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
 	// Haal projecten op die de gebruiker bezit of waar ze member van zijn
-	const { data, error } = await (supabase as any)
+	const url = new URL(req.url);
+	const ownerUsername = url.searchParams.get('owner_username');
+
+	let query = (supabase as any)
 		.from("projects")
 		.select(`
 			id,
@@ -75,14 +78,82 @@ export async function GET() {
 			updated_at,
 			owner_id
 		`)
-		.or(`owner_id.eq.${user.id},is_private.eq.false`)
 		.order("updated_at", { ascending: false });
+
+	if (ownerUsername) {
+		// Filter by owner username; only return public projects for that user
+		const { data: profile } = await supabase
+			.from('profiles')
+			.select('id, username')
+			.eq('username', ownerUsername)
+			.single();
+		if (!profile) {
+			return NextResponse.json([], { status: 200 });
+		}
+		query = query.eq('owner_id', profile.id).eq('is_private', false);
+	} else {
+		query = query.or(`owner_id.eq.${user.id},is_private.eq.false`);
+	}
+
+	const { data, error } = await query;
 
 	if (error) {
 		return NextResponse.json({ error: error.message }, { status: 500 });
 	}
 
-	return NextResponse.json(data || [], { status: 200 });
+	// Enrich with owner profile and default counts
+	const projects = (data || []) as Array<{
+		id: string;
+		name: string;
+		description: string | null;
+		tags: string[] | null;
+		genre: string | null;
+		is_private: boolean;
+		downloads_enabled: boolean;
+		status: string;
+		created_at: string;
+		updated_at: string;
+		owner_id: string;
+	}>;
+
+	const ownerIds = Array.from(new Set(projects.map((p) => p.owner_id)));
+	const profilesById = new Map<string, { id: string; display_name: string | null; username: string | null; avatar_url: string | null }>();
+	if (ownerIds.length > 0) {
+		const { data: profilesData } = await supabase
+			.from("profiles")
+			.select("id, display_name, username, avatar_url")
+			.in("id", ownerIds);
+		for (const pr of profilesData || []) {
+			profilesById.set(pr.id, {
+				id: pr.id,
+				display_name: pr.display_name ?? null,
+				username: pr.username ?? null,
+				avatar_url: pr.avatar_url ?? null,
+			});
+		}
+	}
+
+	const enriched = projects.map((p) => {
+		const profile = profilesById.get(p.owner_id);
+		return {
+			...p,
+			// client expects arrays
+			tags: Array.isArray(p.tags) ? (p.tags as string[]) : [],
+			// defaults for counts (can be replaced later when we add real aggregations)
+			file_count: 0,
+			collaborators_count: 0,
+			likes_count: 0,
+			creator: profile
+				? {
+					id: profile.id,
+					name: (profile.display_name || profile.username || "") as string,
+					avatar: profile.avatar_url || undefined,
+				}
+				: undefined,
+		};
+	});
+
+	return NextResponse.json(enriched, { status: 200 });
 }
 
 export async function POST(req: Request) {

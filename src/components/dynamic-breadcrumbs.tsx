@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Home, Slash } from 'lucide-react';
+import { Home } from 'lucide-react';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { useBreadcrumbs } from '@/hooks/use-breadcrumbs';
 

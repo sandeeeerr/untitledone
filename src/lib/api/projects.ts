@@ -90,3 +90,26 @@ export async function createProject(payload: CreateProjectInput): Promise<Create
 
 	return (await res.json()) as CreatedProject;
 } 
+
+export type UpdateProjectInput = Partial<CreateProjectInput> & {
+	name?: string;
+};
+
+export async function updateProject(id: string, payload: UpdateProjectInput): Promise<Project> {
+	const res = await fetch(`/api/projects/${id}`, {
+		method: "PATCH",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify(payload),
+	});
+
+	if (!res.ok) {
+		let message = "Failed to update project";
+		try {
+			const body = await res.json();
+			if (body?.error) message = body.error as string;
+		} catch {}
+		throw new Error(message);
+	}
+
+	return (await res.json()) as Project;
+}

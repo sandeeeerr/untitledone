@@ -1,15 +1,15 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
 import LayoutSidebar from "@/components/layout-sidebar";
 import { OwnerEditButton } from "./owner-edit";
-import { MapPin, Link as LinkIcon, CalendarDays } from "lucide-react";
+import { MapPin, Link as LinkIcon, CalendarDays, FileAudio, Users, Heart } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { getTranslations } from "next-intl/server";
-import { DynamicBreadcrumbs } from "@/components/dynamic-breadcrumbs";
 import { SocialIconMap } from "@/components/socials";
 import { ProfileSectionTabs } from "./section-tabs";
 import { ProfileActions } from "./profile-actions";
+import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 
 async function getProfile(username: string) {
   const hdrs = await headers();
@@ -55,16 +55,24 @@ function getInitial(nameOrUsername: string) {
 
 export default async function PublicProfilePage({ params }: { params: Promise<{ username: string }> }) {
   const { username } = await params;
-  const [profile, socials] = await Promise.all([
+  const [profile, socials, projects] = await Promise.all([
     getProfile(username),
     getSocials(username),
+    (async () => {
+      const hdrs = await headers();
+      const host = hdrs.get("x-forwarded-host") ?? hdrs.get("host");
+      const protocol = hdrs.get("x-forwarded-proto") ?? "http";
+      const base = host ? `${protocol}://${host}` : "";
+      const res = await fetch(`${base}/api/projects?owner_username=${encodeURIComponent(username)}`, { cache: "no-store" });
+      if (!res.ok) return [] as Array<any>;
+      return (await res.json()) as Array<any>;
+    })(),
   ]);
   if (!profile) {
     notFound();
   }
 
   const title = profile.display_name || profile.username;
-  const t = await getTranslations();
 
   return (
     <LayoutSidebar>
@@ -95,6 +103,43 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
               </div>
             </div>
             <ProfileSectionTabs />
+
+            {/* User projects list full-width below filters */}
+            {projects && projects.length > 0 && (
+              <div className="mt-8 space-y-4">
+                <h3 className="text-lg font-semibold">Projects</h3>
+                <div className="grid gap-4">
+                  {projects.map((project) => (
+                    <Link key={project.id} href={`/projects/${project.id}`}>
+                      <Card className="transition-colors hover:border-primary/20">
+                        <CardHeader className="pb-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <CardTitle className="text-lg font-semibold truncate">
+                              {project.name}
+                            </CardTitle>
+                            <Badge variant={project.is_private ? "secondary" : "default"} className="shrink-0">
+                              {project.is_private ? "Privé" : "Openbaar"}
+                            </Badge>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed min-h-10">
+                            {project.description || "\u00A0"}
+                          </p>
+                          <div className="flex items-center justify-between text-xs text-muted-foreground border-t pt-2">
+                            <div className="flex items-center gap-4">
+                              <span className="inline-flex items-center gap-1"><FileAudio className="h-3 w-3" />{project.file_count ?? 0}</span>
+                              <span className="inline-flex items-center gap-1"><Users className="h-3 w-3" />{project.collaborators_count ?? 0}</span>
+                            </div>
+                            <span className="inline-flex items-center gap-1"><Heart className="h-3 w-3" />{project.likes_count ?? 0}</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="lg:col-span-1">

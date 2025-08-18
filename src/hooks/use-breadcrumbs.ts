@@ -1,5 +1,6 @@
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { useBreadcrumbOverride } from '@/components/breadcrumb-context';
 
 export interface BreadcrumbItem {
   label: string;
@@ -10,6 +11,7 @@ export interface BreadcrumbItem {
 export function useBreadcrumbs(): BreadcrumbItem[] {
   const pathname = usePathname();
   const t = useTranslations('breadcrumbs');
+  const override = useBreadcrumbOverride();
   
   // Split pathname into segments
   const segments = pathname.split('/').filter(Boolean);
@@ -54,7 +56,7 @@ export function useBreadcrumbs(): BreadcrumbItem[] {
       // If there's a project ID, add it
       if (segments.length > 1) {
         breadcrumbs.push({ 
-          label: `Project ${segments[1]}`, 
+          label: override.currentPageLabel || `Project ${segments[1]}`, 
           isCurrentPage: true 
         });
       } else {
