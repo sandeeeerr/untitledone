@@ -216,7 +216,8 @@
       },
       "error": {
         "title": "Error",
-        "description": "Failed to load project"
+        "description": "Failed to load project",
+        "forbidden": "You are not allowed to edit this project."
       }
     }
   },

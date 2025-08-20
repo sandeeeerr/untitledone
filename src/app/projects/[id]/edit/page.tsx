@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useEffect, useState } from 'react'
+import { use, useEffect, useMemo, useState } from 'react'
 import LayoutSidebar from '@/components/layout-sidebar'
 import { Card, CardContent } from '@/components/ui/card'
 import ProjectForm, { type ProjectFormValues } from '@/components/project-form'
@@ -9,6 +9,10 @@ import { useTranslations } from 'next-intl'
 import { useToast } from '@/hooks/use-toast'
 import { Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useCurrentUser } from '@/hooks/use-current-user'
+import { Button } from '@/components/ui/button'
+import InviteDialog from '@/components/invite-dialog'
+import { useProjectInvitations, useProjectMembers } from '@/lib/api/queries'
 
 export default function EditProjectPage({ params }: { params: Promise<{ id: string }> }) {
 	const t = useTranslations('projects.edit')
@@ -17,6 +21,7 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
 	const [project, setProject] = useState<Project | null>(null)
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
+	const { data: currentUser } = useCurrentUser()
 
 	const { id } = use(params)
 
@@ -37,12 +42,24 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
 		if (id) fetchProject()
 	}, [id, toast, t])
 
+	// Guard: only owners can access edit page
+	const isOwner = useMemo(() => {
+		return Boolean(project && currentUser && project.owner_id === currentUser.id)
+	}, [project, currentUser])
+
+	useEffect(() => {
+		if (!loading && project && currentUser && !isOwner) {
+			toast({ variant: 'destructive', title: t('error.title', { default: 'Error' }) as any, description: t('error.forbidden', { default: 'You are not allowed to edit this project.' }) as any })
+			router.replace(`/projects/${id}`)
+		}
+	}, [loading, project, currentUser, isOwner, router, id, t, toast])
+
 	async function onSubmit(values: ProjectFormValues) {
 		try {
 			await updateProject(id, {
 				name: values.name,
 				description: values.description || undefined,
-				tags: values.tags ? values.tags.split(',').map(s => s.trim()).filter(Boolean) : undefined,
+				tags: Array.isArray(values.tags) && values.tags.length ? values.tags : undefined,
 				genre: values.genre || undefined,
 				is_private: Boolean(values.is_private),
 				downloads_enabled: Boolean(values.downloads_enabled),
@@ -68,6 +85,10 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
 		}
 	}
 
+	// Invitation-related queries
+	const { data: invites } = useProjectInvitations(id)
+	const { data: members } = useProjectMembers(id)
+
 	if (loading) {
 		return (
 			<LayoutSidebar title={t('title')}>
@@ -89,10 +110,21 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
 		)
 	}
 
+	// Not owner: avoid flicker
+	if (!isOwner) {
+		return (
+			<LayoutSidebar title={t('title')}>
+				<div className="text-center py-12">
+					<p className="text-muted-foreground mb-4">{t('error.forbidden', { default: 'You are not allowed to edit this project.' })}</p>
+				</div>
+			</LayoutSidebar>
+		)
+	}
+
 	const initial: ProjectFormValues = {
 		name: project.name,
 		description: project.description ?? '',
-		tags: (project.tags || []).join(', '),
+		tags: (project.tags || []),
 		genre: project.genre ?? '',
 		is_private: project.is_private,
 		downloads_enabled: project.downloads_enabled,
@@ -102,6 +134,8 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
 			.map(p => (p.version ? `${p.name}@${p.version}` : p.name))
 			.join(', '),
 	}
+
+
 
 	return (
 		<LayoutSidebar 
@@ -118,6 +152,19 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
 							cancelLabel={t('actions.cancel')}
 							onSubmit={onSubmit}
 						/>
+						<div className="mt-8">
+							<div className="flex items-center justify-between mb-3">
+								<h3 className="text-sm font-medium">Team</h3>
+								<InviteDialog projectId={id} />
+							</div>
+							<div className="space-y-2">
+								<p className="text-sm text-muted-foreground">Pending invitations</p>
+								<div className="rounded border divide-y">
+									{/* Team moved to project page */}
+								</div>
+							</div>
+							{/* Team moved to project page */}
+						</div>
 					</CardContent>
 				</Card>
 			</div>

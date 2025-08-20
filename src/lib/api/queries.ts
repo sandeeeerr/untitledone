@@ -10,6 +10,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { getCurrentProfile, updateCurrentProfile, type Profile, type ProfileUpdate, deleteCurrentProfile } from "./profiles";
 import { getProjects, type Project } from "./projects";
+import { createProjectInvitation, listProjectInvitations, type ProjectInvitation, type ProjectInvitationInsert, acceptInvitation, listProjectMembers, type ProjectMember } from "./projects";
 
 export function useTodos({ done }: { done?: boolean } = {}) {
     return useQuery({
@@ -133,6 +134,50 @@ export function useRecentProjects(limit: number = 4) {
                 .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
                 .slice(0, limit);
         },
+    });
+}
+
+// Project Members & Invitations
+export function useProjectInvitations(projectId: string) {
+    return useQuery<ProjectInvitation[]>({
+        queryKey: ["project", projectId, "invitations"],
+        queryFn: () => listProjectInvitations(projectId),
+        enabled: Boolean(projectId),
+    });
+}
+
+export function useCreateProjectInvitation(projectId: string) {
+    const queryClient = useQueryClient();
+    const { toast } = useToast();
+    return useMutation({
+        mutationFn: (payload: ProjectInvitationInsert) => createProjectInvitation(projectId, payload),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["project", projectId, "invitations"] });
+            queryClient.invalidateQueries({ queryKey: ["project", projectId, "members"] });
+            toast({ title: "Invitation sent", description: "The collaborator has been invited." });
+        },
+        onError: (error: any) => {
+            toast({ variant: "destructive", title: "Error", description: error?.message || "Failed to send invitation" });
+        },
+    });
+}
+
+export function useAcceptInvitation(invitationId: string, token: string) {
+    const { toast } = useToast();
+    return useMutation({
+        mutationFn: () => acceptInvitation(invitationId, token),
+        retry: false,
+        onError: (error: any) => {
+            toast({ variant: "destructive", title: "Error", description: error?.message || "Failed to accept invitation" });
+        },
+    });
+}
+
+export function useProjectMembers(projectId: string) {
+    return useQuery<ProjectMember[]>({
+        queryKey: ["project", projectId, "members"],
+        queryFn: () => listProjectMembers(projectId),
+        enabled: Boolean(projectId),
     });
 }
 

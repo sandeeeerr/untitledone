@@ -22,6 +22,7 @@ type ProjectResponse = {
   created_at: string;
   updated_at: string;
   likes_count: number;
+  owner_id: string;
 };
 
 export async function GET(
@@ -67,7 +68,8 @@ export async function GET(
         status,
         created_at,
         updated_at,
-        likes_count
+        likes_count,
+        owner_id
       `)
       .eq("id", validation.data.id)
       .single();
@@ -105,6 +107,7 @@ export async function GET(
       created_at: data.created_at,
       updated_at: data.updated_at,
       likes_count: data.likes_count,
+      owner_id: data.owner_id,
     };
 
     return NextResponse.json(projectData, { status: 200 });
@@ -233,7 +236,8 @@ export async function PATCH(
         status,
         created_at,
         updated_at,
-        likes_count
+        likes_count,
+        owner_id
       `)
       .single();
 
@@ -258,6 +262,7 @@ export async function PATCH(
       created_at: data.created_at,
       updated_at: data.updated_at,
       likes_count: data.likes_count,
+      owner_id: data.owner_id,
     };
 
     return NextResponse.json(projectData, { status: 200 });

@@ -9,11 +9,12 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { TagInput } from '@/components/tag-input'
 
 const formInputSchema = z.object({
 	name: z.string().min(1, 'Name is required').max(200).trim(),
 	description: z.string().max(2000).trim(),
-	tags: z.string().trim(),
+	tags: z.array(z.string().trim()),
 	genre: z.string().trim(),
 	is_private: z.boolean(),
 	downloads_enabled: z.boolean(),
@@ -39,7 +40,7 @@ export default function ProjectForm({ initialValues, submitLabel, submittingLabe
 		defaultValues: {
 			name: initialValues?.name ?? '',
 			description: initialValues?.description ?? '',
-			tags: initialValues?.tags ?? '',
+			tags: initialValues?.tags ?? [],
 			genre: initialValues?.genre ?? '',
 			is_private: Boolean(initialValues?.is_private ?? false),
 			downloads_enabled: Boolean(initialValues?.downloads_enabled ?? true),
@@ -53,7 +54,7 @@ export default function ProjectForm({ initialValues, submitLabel, submittingLabe
 
 	return (
 		<Form {...form}>
-			<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" aria-busy={isSubmitting}>
+			<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8" aria-busy={isSubmitting}>
 				<FormField
 					control={form.control}
 					name="name"
@@ -91,7 +92,12 @@ export default function ProjectForm({ initialValues, submitLabel, submittingLabe
 							<FormItem>
 								<FormLabel>{t('fields.tags.label')}</FormLabel>
 								<FormControl>
-									<Input placeholder={t('fields.tags.placeholder')} {...field} disabled={isSubmitting} />
+									<TagInput
+										placeholder={t('fields.tags.placeholder')}
+										tags={(field.value as unknown as string[]) ?? []}
+										setTags={(next) => field.onChange(next as any)}
+										disabled={isSubmitting}
+									/>
 								</FormControl>
 								<FormDescription>{t('fields.tags.help')}</FormDescription>
 								<FormMessage />

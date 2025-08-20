@@ -63,21 +63,23 @@ export async function GET(req: Request) {
 	const url = new URL(req.url);
 	const ownerUsername = url.searchParams.get('owner_username');
 
+	let baseSelect = `
+		id,
+		name,
+		description,
+		tags,
+		genre,
+		is_private,
+		downloads_enabled,
+		status,
+		created_at,
+		updated_at,
+		owner_id
+	`;
+
 	let query = (supabase as any)
 		.from("projects")
-		.select(`
-			id,
-			name,
-			description,
-			tags,
-			genre,
-			is_private,
-			downloads_enabled,
-			status,
-			created_at,
-			updated_at,
-			owner_id
-		`)
+		.select(baseSelect)
 		.order("updated_at", { ascending: false });
 
 	if (ownerUsername) {
@@ -92,10 +94,45 @@ export async function GET(req: Request) {
 		}
 		query = query.eq('owner_id', profile.id).eq('is_private', false);
 	} else {
-		query = query.or(`owner_id.eq.${user.id},is_private.eq.false`);
+		// Return projects owned by the current user OR where the user is a member
+		const [{ data: owned, error: ownedErr }, { data: memberData, error: memberErr }] = await Promise.all([
+			(supabase as any)
+				.from("projects")
+				.select(baseSelect)
+				.eq('owner_id', user.id)
+				.order('updated_at', { ascending: false }),
+			(supabase as any)
+				.from("projects")
+				.select(baseSelect + `, project_members!inner(user_id)`) // inner join to filter by membership
+				.eq('project_members.user_id', user.id)
+				.order('updated_at', { ascending: false }),
+		]);
+
+		if (ownedErr) {
+			return NextResponse.json({ error: ownedErr.message }, { status: 500 });
+		}
+		if (memberErr) {
+			return NextResponse.json({ error: memberErr.message }, { status: 500 });
+		}
+
+		// Merge unique by id
+		const byId = new Map<string, any>();
+		for (const p of owned || []) byId.set(p.id, p);
+		for (const p of (memberData || []).map((m: any) => {
+			const { project_members, ...rest } = m;
+			return rest;
+		})) byId.set(p.id, p);
+
+		var data = Array.from(byId.values());
+		var error = null;
+		// fall through to enrichment
 	}
 
-	const { data, error } = await query;
+	if (typeof data === 'undefined') {
+		const res = await query;
+		data = res.data;
+		error = res.error;
+	}
 
 	if (error) {
 		return NextResponse.json({ error: error.message }, { status: 500 });

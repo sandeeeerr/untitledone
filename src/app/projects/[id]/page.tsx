@@ -5,11 +5,15 @@ import LayoutSidebar from '@/components/layout-sidebar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, FileAudio, Loader2, Music, Settings } from 'lucide-react';
+import { Calendar, FileAudio, Loader2, Music, Settings, Tags, Wrench, UserPlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
+import { useCurrentUser } from '@/hooks/use-current-user';
 import { getProject, type Project } from '@/lib/api/projects';
 import { useToast } from '@/hooks/use-toast';
+import InviteDialog from '@/components/invite-dialog';
+import { useProjectMembers } from '@/lib/api/queries';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const t = useTranslations('projects');
@@ -17,8 +21,9 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  const { data: currentUser } = useCurrentUser();
   const { id } = use(params);
+  const { data: members } = useProjectMembers(id as any);
 
   useEffect(() => {
     async function fetchProject() {
@@ -89,12 +94,17 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
               Back
             </Link>
           </Button>
-          <Button size="sm" asChild>
-            <Link href={`/projects/${project.id}/edit`}>
-              <Settings className="mr-2 h-4 w-4" />
-              Edit Project
-            </Link>
-          </Button>
+          {currentUser?.id && (project as any)?.owner_id === currentUser.id && (
+            <>
+              <Button size="sm" asChild>
+                <Link href={`/projects/${project.id}/edit`}>
+                  <Settings className=" h-4 w-4" />
+                  Edit
+                </Link>
+              </Button>
+              <InviteDialog projectId={project.id} trigger={<Button variant="outline" size="sm"><UserPlus className="h-4 w-4" />Invite</Button>} />
+            </>
+          )}
         </div>
       }
     >
@@ -127,6 +137,76 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <FileAudio className="h-4 w-4" />
                   <span>{project.likes_count} likes</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Secondary details merged into first block visually: show inline sections */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {(project.tags?.length ?? 0) > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2 text-sm font-medium">
+                    <Tags className="h-4 w-4" />
+                    <span>Tags</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {project.tags.map((tag) => (
+                      <Badge key={tag} variant="secondary">{tag}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {((project as any).daw_info?.name || (project as any).daw_info?.version) && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-sm text-muted-foreground">DAW Name</div>
+                    <div className="font-medium">{(project as any).daw_info?.name || '-'}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground">DAW Version</div>
+                    <div className="font-medium">{(project as any).daw_info?.version || '-'}</div>
+                  </div>
+                </div>
+              )}
+
+              {(project.plugins_used?.length ?? 0) > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2 text-sm font-medium">
+                    <Wrench className="h-4 w-4" />
+                    <span>Plugins</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {project.plugins_used.map((p, idx) => (
+                      <Badge key={`${p.name}-${p.version ?? idx}`} variant="outline">
+                        {p.name}{p.version ? ` @ ${p.version}` : ''}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Team */}
+              <div>
+                <div className="flex items-center gap-2 mb-2 text-sm font-medium">
+                  <UserPlus className="h-4 w-4" />
+                  <span>Team</span>
+                </div>
+                <div className="flex -space-x-2">
+                  {(members ?? []).slice(0, 6).map(m => (
+                    <Avatar key={m.user_id} className="border-2 border-background h-8 w-8">
+                      <AvatarImage src={m.profile?.avatar_url || undefined} alt={m.profile?.display_name || m.profile?.username || m.user_id} />
+                      <AvatarFallback>{(m.profile?.display_name || m.profile?.username || m.user_id).slice(0,2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                  ))}
+                  {(members?.length ?? 0) === 0 && (
+                    <Avatar className="border-2 border-background h-8 w-8"><AvatarFallback>U1</AvatarFallback></Avatar>
+                  )}
                 </div>
               </div>
             </CardContent>

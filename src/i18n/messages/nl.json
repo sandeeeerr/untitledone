@@ -216,7 +216,8 @@
       },
       "error": {
         "title": "Fout",
-        "description": "Project laden mislukt"
+        "description": "Project laden mislukt",
+        "forbidden": "Je hebt geen rechten om dit project te bewerken."
       }
     }
   },

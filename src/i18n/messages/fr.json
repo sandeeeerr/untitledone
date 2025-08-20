@@ -181,6 +181,24 @@
         "title": "Erreur",
         "description": "Échec de la création du projet"
       }
+    },
+    "edit": {
+      "title": "Modifier le projet",
+      "loading": "Chargement...",
+      "actions": {
+        "save": "Enregistrer les modifications",
+        "saving": "Enregistrement...",
+        "cancel": "Annuler"
+      },
+      "success": {
+        "title": "Projet mis à jour",
+        "description": "Le projet {name} a été mis à jour"
+      },
+      "error": {
+        "title": "Erreur",
+        "description": "Échec du chargement du projet",
+        "forbidden": "Vous n'êtes pas autorisé à modifier ce projet."
+      }
     }
   },
   "landing": {

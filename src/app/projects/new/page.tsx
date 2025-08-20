@@ -18,7 +18,7 @@ export default function NewProjectPage() {
 			const created = await createProject({
 				name: values.name,
 				description: values.description || undefined,
-				tags: values.tags ? values.tags.split(',').map(s => s.trim()).filter(Boolean) : undefined,
+				tags: Array.isArray(values.tags) && values.tags.length ? values.tags : undefined,
 				genre: values.genre || undefined,
 				is_private: Boolean(values.is_private),
 				downloads_enabled: Boolean(values.downloads_enabled),
