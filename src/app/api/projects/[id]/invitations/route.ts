@@ -17,11 +17,19 @@ const inviteBodySchema = z.object({
 });
 
 function getBaseUrl(req: Request) {
+	// Prefer explicit config for production
 	const envUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || process.env.VERCEL_URL;
 	if (envUrl) {
 		if (envUrl.startsWith("http")) return envUrl;
 		return `https://${envUrl}`;
 	}
+	// Try forwarded headers from proxies/CDNs
+	const xfProto = req.headers.get("x-forwarded-proto");
+	const xfHost = req.headers.get("x-forwarded-host");
+	if (xfHost) {
+		return `${xfProto || "https"}://${xfHost}`;
+	}
+	// Fallback to request URL
 	try {
 		const url = new URL(req.url);
 		return `${url.protocol}//${url.host}`;
