@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import createServerClient from "@/lib/supabase/server";
+import { SupabaseClient } from '@supabase/supabase-js';
 
 const MAX_DISPLAY_NAME = 120;
 const MAX_LOCATION = 120;
@@ -111,7 +112,7 @@ export async function DELETE() {
   }
 
   // Delete socials first (if table exists)
-  const { error: socialsError } = await (supabase as any)
+  const { error: socialsError } = await (supabase as SupabaseClient)
     .from("profile_socials")
     .delete()
     .eq("profile_id", user.id);

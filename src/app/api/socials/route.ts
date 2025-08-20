@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { SupabaseClient } from "@supabase/supabase-js";
 import createServerClient from "@/lib/supabase/server";
 
 export async function GET() {
@@ -11,7 +12,7 @@ export async function GET() {
   if (authError) return NextResponse.json({ error: authError.message }, { status: 401 });
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { data, error } = await (supabase as any)
+  const { data, error } = await (supabase as SupabaseClient)
     .from("profile_socials")
     .select("platform, url")
     .eq("profile_id", user.id)
@@ -63,7 +64,7 @@ export async function PUT(req: Request) {
   for (const l of sanitized) dedupMap.set(l.platform, l.url);
   const deduped = Array.from(dedupMap.entries()).map(([platform, url]) => ({ platform, url }));
 
-  const { error: delError } = await (supabase as any)
+  const { error: delError } = await (supabase as SupabaseClient)
     .from("profile_socials")
     .delete()
     .eq("profile_id", user.id);
@@ -71,11 +72,11 @@ export async function PUT(req: Request) {
 
   if (deduped.length > 0) {
     const rows = deduped.map((l) => ({ profile_id: user.id, platform: l.platform, url: l.url }));
-    const { error: insError } = await (supabase as any).from("profile_socials").insert(rows);
+    const { error: insError } = await (supabase as SupabaseClient).from("profile_socials").insert(rows);
     if (insError) return NextResponse.json({ error: insError.message }, { status: 500 });
   }
 
-  const { data, error } = await (supabase as any)
+  const { data, error } = await (supabase as SupabaseClient)
     .from("profile_socials")
     .select("platform, url")
     .eq("profile_id", user.id)

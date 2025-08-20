@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { SupabaseClient } from "@supabase/supabase-js";
 import createServerClient from "@/lib/supabase/server";
 
 // Zod schema voor params validatie
@@ -16,7 +17,7 @@ type ProjectResponse = {
   genre: string | null;
   is_private: boolean;
   downloads_enabled: boolean;
-  daw_info: Record<string, any>;
+  daw_info: Record<string, string>;
   plugins_used: Array<{ name: string; version?: string }>;
   status: string;
   created_at: string;
@@ -53,7 +54,7 @@ export async function GET(
 
     // Project ophalen met RLS policies (geen handmatige toegangscontrole)
     // Gebruik type assertion voor nu tot we de types hebben geregenereerd
-    const { data, error } = await (supabase as any)
+    const { data, error } = await (supabase as SupabaseClient)
       .from("projects")
       .select(`
         id,
@@ -140,8 +141,8 @@ function parseTags(value: unknown): string[] {
 function parsePlugins(value: unknown): Array<{ name: string; version?: string }> {
   if (Array.isArray(value)) {
     return value
-      .filter((item) => item && typeof item === "object" && "name" in item && typeof (item as any).name === "string")
-      .map((item: any) => ({ name: item.name, version: typeof item.version === "string" ? item.version : undefined }));
+      .filter((item) => item && typeof item === "object" && "name" in item && typeof (item as { name: unknown }).name === "string")
+      .map((item: { name: string; version?: unknown }) => ({ name: item.name, version: typeof item.version === "string" ? item.version : undefined }));
   }
   if (typeof value === "string") {
     const items = value
@@ -200,7 +201,7 @@ export async function PATCH(
       plugins: string | Array<{ name: string; version?: string }>;
     }>;
 
-    const updatePayload: Record<string, any> = {};
+    const updatePayload: Record<string, unknown> = {};
     if (typeof input.name === "string" && input.name.trim().length > 0) updatePayload.name = input.name.trim();
     if (typeof input.description === "string") updatePayload.description = input.description.trim() || null;
     if (typeof input.genre === "string") updatePayload.genre = input.genre.trim() || null;
@@ -208,7 +209,7 @@ export async function PATCH(
     if (typeof input.downloads_enabled === "boolean") updatePayload.downloads_enabled = input.downloads_enabled;
     if (typeof input.tags !== "undefined") updatePayload.tags = parseTags(input.tags);
 
-    const dawInfo: Record<string, any> = {};
+    const dawInfo: Record<string, string> = {};
     if (typeof input.daw_name === "string" && input.daw_name.trim()) dawInfo.name = input.daw_name.trim();
     if (typeof input.daw_version === "string" && input.daw_version.trim()) dawInfo.version = input.daw_version.trim();
     if (Object.keys(dawInfo).length) updatePayload.daw_info = dawInfo; else if ("daw_name" in input || "daw_version" in input) updatePayload.daw_info = {};
@@ -219,7 +220,7 @@ export async function PATCH(
       return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
     }
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await (supabase as SupabaseClient)
       .from("projects")
       .update(updatePayload)
       .eq("id", validation.data.id)

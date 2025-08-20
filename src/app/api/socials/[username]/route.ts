@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { SupabaseClient } from "@supabase/supabase-js";
 import createServerClient from "@/lib/supabase/server";
 
 export async function GET(
@@ -27,7 +28,7 @@ export async function GET(
   }
   if (!profile) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const { data, error } = await (supabase as any)
+  const { data, error } = await (supabase as SupabaseClient)
     .from("profile_socials")
     .select("platform, url")
     .eq("profile_id", profile.id)

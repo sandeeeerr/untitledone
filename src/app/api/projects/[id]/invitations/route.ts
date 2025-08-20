@@ -3,6 +3,7 @@ import { z } from "zod";
 import createServerClient from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 import crypto from "node:crypto";
+import { SupabaseClient } from "@supabase/supabase-js";
 export const runtime = "nodejs";
 
 const paramsSchema = z.object({
@@ -46,7 +47,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 	}
 
 	// Pending invitations for the project (accepted_at is null). RLS restricts visibility.
-	const { data, error } = await (supabase as any)
+	const { data, error } = await (supabase as SupabaseClient)
 		.from("project_invitations")
 		.select("id, project_id, email, role, invited_by, expires_at, created_at, accepted_at")
 		.eq("project_id", validation.data.id)
@@ -89,7 +90,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 	}
 
 	// Owner check (explicit) before creating an invitation
-	const { data: project, error: projectError } = await (supabase as any)
+	const { data: project, error: projectError } = await (supabase as SupabaseClient)
 		.from("projects")
 		.select("id, owner_id, name")
 		.eq("id", paramValidation.data.id)
@@ -110,7 +111,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 	const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
 
 	// Create invitation
-	const { data: created, error: insertError } = await (supabase as any)
+	const { data: created, error: insertError } = await (supabase as SupabaseClient)
 		.from("project_invitations")
 		.insert({
 			project_id: project.id,
@@ -139,19 +140,19 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 	const { RESEND_API_KEY, MAIL_FROM } = env();
 	if (RESEND_API_KEY && MAIL_FROM) {
 		try {
-			const subject = `Invitation to collaborate on “${project.name ?? 'your project'}”`;
+			const subject = `Invitation to collaborate on "${project.name ?? 'your project'}"`;
 			const text = `You have been invited to collaborate on "${project.name ?? 'a project'}" on UntitledOne.\n\nOpen this link to accept (expires in ${expiresInHours} hours):\n${inviteUrl}\n`;
 			const html = `
 			  <div style="font-family: Inter, -apple-system, Segoe UI, Roboto, Arial, sans-serif; line-height: 1.6; color: #111827;">
 			    <h1 style="font-size: 20px; margin: 0 0 16px;">Invitation to collaborate</h1>
 			    <p style="margin: 0 0 8px;">
-			      You’ve been invited to collaborate on <strong>${(project.name ?? 'a project')}</strong> on UntitledOne.
+			      You've been invited to collaborate on <strong>${(project.name ?? 'a project')}</strong> on UntitledOne.
 			    </p>
 			    <p style="margin: 0 0 16px;">This link expires in ${expiresInHours} hours.</p>
 			    <p style="margin: 24px 0 0;">
 			      <a href="${inviteUrl}" style="display: inline-block; background: #111827; color: #ffffff; padding: 10px 14px; border-radius: 6px; text-decoration: none;" target="_blank" rel="noreferrer">Accept invitation</a>
 			    </p>
-			    <p style="margin-top: 24px; font-size: 12px; color: #6b7280;">If the button doesn’t work, copy and paste this link in your browser:<br /><em>${inviteUrl}</em></p>
+			    <p style="margin-top: 24px; font-size: 12px; color: #6b7280;">If the button doesn't work, copy and paste this link in your browser:<br /><em>${inviteUrl}</em></p>
 			  </div>`;
 			const resp = await fetch("https://api.resend.com/emails", {
 				method: "POST",
@@ -182,5 +183,3 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
 	return NextResponse.json({ id: created.id, project_id: created.project_id }, { status: 201 });
 }
-
-

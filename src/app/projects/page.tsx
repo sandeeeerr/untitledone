@@ -57,19 +57,20 @@ export default function ProjectsPage() {
         setError(null)
         const data = await getProjects()
 
-        const extendedData: ExtendedProject[] = (data as any[]).map((project) => ({
+        const extendedData: ExtendedProject[] = (data as ExtendedProject[]).map((project) => ({
           ...project,
           file_count: project.file_count ?? 0,
           collaborators_count: project.collaborators_count ?? 0,
         }))
 
         setProjects(extendedData)
-      } catch (err: any) {
-        setError(err?.message || t("error.loadFailed"))
+      } catch (err: unknown) {
+        const errorMessage = err && typeof err === 'object' && 'message' in err && typeof err.message === 'string' ? err.message : t("error.loadFailed")
+        setError(errorMessage)
         toast({
           variant: "destructive",
           title: t("error.title"),
-          description: err?.message || t("error.loadFailed"),
+          description: errorMessage,
         })
       } finally {
         setLoading(false)

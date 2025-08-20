@@ -15,13 +15,11 @@ import supabaseClient from "@/lib/supabase-client";
 
 export function AppHeader({
   containerClassName,
-  className,
   fullWidth = false,
   matchSidebarWidth = false,
   showSidebarTriggerOnMobile = false,
 }: {
   containerClassName?: string;
-  className?: string;
   fullWidth?: boolean;
   matchSidebarWidth?: boolean;
   showSidebarTriggerOnMobile?: boolean;

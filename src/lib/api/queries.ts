@@ -156,8 +156,9 @@ export function useCreateProjectInvitation(projectId: string) {
             queryClient.invalidateQueries({ queryKey: ["project", projectId, "members"] });
             toast({ title: "Invitation sent", description: "The collaborator has been invited." });
         },
-        onError: (error: any) => {
-            toast({ variant: "destructive", title: "Error", description: error?.message || "Failed to send invitation" });
+        onError: (error: unknown) => {
+            const errorMessage = error && typeof error === 'object' && 'message' in error && typeof error.message === 'string' ? error.message : "Failed to send invitation"
+            toast({ variant: "destructive", title: "Error", description: errorMessage });
         },
     });
 }
@@ -167,8 +168,9 @@ export function useAcceptInvitation(invitationId: string, token: string) {
     return useMutation({
         mutationFn: () => acceptInvitation(invitationId, token),
         retry: false,
-        onError: (error: any) => {
-            toast({ variant: "destructive", title: "Error", description: error?.message || "Failed to accept invitation" });
+        onError: (error: unknown) => {
+            const errorMessage = error && typeof error === 'object' && 'message' in error && typeof error.message === 'string' ? error.message : "Failed to accept invitation"
+            toast({ variant: "destructive", title: "Error", description: errorMessage });
         },
     });
 }

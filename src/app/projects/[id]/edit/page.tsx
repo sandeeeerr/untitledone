@@ -10,9 +10,7 @@ import { useToast } from '@/hooks/use-toast'
 import { Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useCurrentUser } from '@/hooks/use-current-user'
-import { Button } from '@/components/ui/button'
 import InviteDialog from '@/components/invite-dialog'
-import { useProjectInvitations, useProjectMembers } from '@/lib/api/queries'
 
 export default function EditProjectPage({ params }: { params: Promise<{ id: string }> }) {
 	const t = useTranslations('projects.edit')
@@ -32,9 +30,10 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
 				setError(null)
 				const data = await getProject(id)
 				setProject(data)
-			} catch (err: any) {
-				setError(err?.message || 'Failed to load project')
-				toast({ variant: 'destructive', title: t('error.title', { default: 'Error' }) as any, description: err?.message || t('error.description', { default: 'Failed to load project' }) as any })
+			} catch (err: unknown) {
+				const errorMessage = err && typeof err === 'object' && 'message' in err && typeof err.message === 'string' ? err.message : 'Failed to load project'
+				setError(errorMessage)
+				toast({ variant: 'destructive', title: t('error.title', { default: 'Error' }), description: errorMessage })
 			} finally {
 				setLoading(false)
 			}
@@ -49,7 +48,7 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
 
 	useEffect(() => {
 		if (!loading && project && currentUser && !isOwner) {
-			toast({ variant: 'destructive', title: t('error.title', { default: 'Error' }) as any, description: t('error.forbidden', { default: 'You are not allowed to edit this project.' }) as any })
+			toast({ variant: 'destructive', title: t('error.title', { default: 'Error' }), description: t('error.forbidden', { default: 'You are not allowed to edit this project.' }) })
 			router.replace(`/projects/${id}`)
 		}
 	}, [loading, project, currentUser, isOwner, router, id, t, toast])
@@ -80,14 +79,15 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
 			})
 			toast({ title: t('success.title'), description: t('success.description', { name: values.name }) })
 			router.replace(`/projects/${id}`)
-		} catch (err: any) {
-			toast({ variant: 'destructive', title: t('error.title'), description: err?.message || t('error.description') })
+		} catch (err: unknown) {
+			const errorMessage = err && typeof err === 'object' && 'message' in err && typeof err.message === 'string' ? err.message : 'Failed to update project'
+			toast({ variant: 'destructive', title: t('error.title'), description: errorMessage })
 		}
 	}
 
 	// Invitation-related queries
-	const { data: invites } = useProjectInvitations(id)
-	const { data: members } = useProjectMembers(id)
+	// const { data: invites } = useProjectInvitations(id)
+	// const { data: members } = useProjectMembers(id)
 
 	if (loading) {
 		return (
@@ -128,8 +128,8 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
 		genre: project.genre ?? '',
 		is_private: project.is_private,
 		downloads_enabled: project.downloads_enabled,
-		daw_name: (project as any).daw_info?.name ?? '',
-		daw_version: (project as any).daw_info?.version ?? '',
+		daw_name: (project.daw_info as { name?: string; version?: string })?.name ?? '',
+		daw_version: (project.daw_info as { name?: string; version?: string })?.version ?? '',
 		plugins: (project.plugins_used || [])
 			.map(p => (p.version ? `${p.name}@${p.version}` : p.name))
 			.join(', '),

@@ -27,7 +27,7 @@ export type Project = {
 	genre: string | null;
 	is_private: boolean;
 	downloads_enabled: boolean;
-	daw_info: Record<string, any>;
+	daw_info: Record<string, string>;
 	plugins_used: Array<{ name: string; version?: string }>;
 	status: string;
 	created_at: string;

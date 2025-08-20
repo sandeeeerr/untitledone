@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import createServerClient from "@/lib/supabase/server";
+import { SupabaseClient } from "@supabase/supabase-js";
 
 // Helper functions to handle both arrays and CSV strings
 function parseTags(value: unknown): string[] {
@@ -63,7 +64,7 @@ export async function GET(req: Request) {
 	const url = new URL(req.url);
 	const ownerUsername = url.searchParams.get('owner_username');
 
-	let baseSelect = `
+	const baseSelect = `
 		id,
 		name,
 		description,
@@ -77,7 +78,10 @@ export async function GET(req: Request) {
 		owner_id
 	`;
 
-	let query = (supabase as any)
+	let data: unknown;
+	let error: { message: string } | null = null;
+
+	let query = (supabase as SupabaseClient)
 		.from("projects")
 		.select(baseSelect)
 		.order("updated_at", { ascending: false });
@@ -96,12 +100,12 @@ export async function GET(req: Request) {
 	} else {
 		// Return projects owned by the current user OR where the user is a member
 		const [{ data: owned, error: ownedErr }, { data: memberData, error: memberErr }] = await Promise.all([
-			(supabase as any)
+			(supabase as SupabaseClient)
 				.from("projects")
 				.select(baseSelect)
 				.eq('owner_id', user.id)
 				.order('updated_at', { ascending: false }),
-			(supabase as any)
+			(supabase as SupabaseClient)
 				.from("projects")
 				.select(baseSelect + `, project_members!inner(user_id)`) // inner join to filter by membership
 				.eq('project_members.user_id', user.id)
@@ -116,15 +120,19 @@ export async function GET(req: Request) {
 		}
 
 		// Merge unique by id
-		const byId = new Map<string, any>();
+		type ProjectData = { id: string; name: string; description: string | null; tags: string[] | null; genre: string | null; is_private: boolean; downloads_enabled: boolean; status: string; created_at: string; updated_at: string; owner_id: string };
+		const byId = new Map<string, ProjectData>();
 		for (const p of owned || []) byId.set(p.id, p);
-		for (const p of (memberData || []).map((m: any) => {
-			const { project_members, ...rest } = m;
-			return rest;
-		})) byId.set(p.id, p);
+		for (const p of memberData || []) {
+			if (p && typeof p === 'object' && 'id' in p) {
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
+				const { project_members, ...projectData } = p as ProjectData & { project_members: unknown };
+				byId.set(projectData.id, projectData);
+			}
+		}
 
-		var data = Array.from(byId.values());
-		var error = null;
+		data = Array.from(byId.values());
+		error = null;
 		// fall through to enrichment
 	}
 
@@ -257,7 +265,7 @@ export async function POST(req: Request) {
 	};
 	const pluginsArray = parsePlugins(input.plugins);
 
-	const insertPayload: Record<string, any> = {
+	const insertPayload: Record<string, unknown> = {
 		name,
 		description: input.description?.trim() ?? null,
 		tags: tagsArray,
@@ -270,7 +278,7 @@ export async function POST(req: Request) {
 		status: "active",
 	};
 
-	const { data, error } = await (supabase as any)
+	const { data, error } = await (supabase as SupabaseClient)
 		.from("projects")
 		.insert(insertPayload)
 		.select("id, name, genre, is_private, downloads_enabled, created_at")

@@ -26,11 +26,9 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import Link from "next/link"
-import { useCurrentUser } from "@/hooks/use-current-user"
 import { usePathname } from "next/navigation"
-import { useState } from "react"
 import { useTranslations } from "next-intl"
-import { useProfile, useRecentProjects } from "@/lib/api/queries"
+import { useRecentProjects } from "@/lib/api/queries"
 
 // Menu items
 const items: Array<{
@@ -51,11 +49,8 @@ const items: Array<{
 ]
 
 export default function MainSidebar() {
-  const { data: currentUser } = useCurrentUser()
   const pathname = usePathname()
-  const [showSettings, setShowSettings] = useState(false)
   const t = useTranslations()
-  const { data: profile } = useProfile()
   const { data: recent } = useRecentProjects(4)
 
   return (

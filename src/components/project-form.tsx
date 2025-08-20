@@ -95,7 +95,7 @@ export default function ProjectForm({ initialValues, submitLabel, submittingLabe
 									<TagInput
 										placeholder={t('fields.tags.placeholder')}
 										tags={(field.value as unknown as string[]) ?? []}
-										setTags={(next) => field.onChange(next as any)}
+										setTags={(next) => field.onChange(next as string[])}
 										disabled={isSubmitting}
 									/>
 								</FormControl>

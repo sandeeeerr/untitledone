@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import createServerClient from "@/lib/supabase/server";
+import { SupabaseClient } from '@supabase/supabase-js';
+import { PostgrestError } from '@supabase/supabase-js';
 
 const paramsSchema = z.object({
 	invitationId: z.string().uuid("Invalid invitation ID"),
@@ -29,12 +31,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ invitat
 	}
 
 	// Call RPC to accept invitation
-	const { data, error } = await (supabase as any)
+	const { data, error } = await (supabase as SupabaseClient)
 		.rpc("accept_invitation", { invitation_id: validation.data.invitationId, raw_token: token });
 
 	if (error) {
 		console.error("accept_invitation RPC error:", error);
-		const msg = (error as any)?.message || "Failed to accept invitation";
+		const msg = (error as PostgrestError)?.message || "Failed to accept invitation";
 		let status = 400;
 		const lower = msg.toLowerCase();
 		if (lower.includes("not authenticated")) status = 401;
@@ -46,5 +48,3 @@ export async function POST(req: Request, { params }: { params: Promise<{ invitat
 	// Expect RPC to return project_id for redirect
 	return NextResponse.json({ success: true, project_id: data?.project_id ?? data?.projectId ?? data }, { status: 200 });
 }
-
-

@@ -23,7 +23,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
   const [error, setError] = useState<string | null>(null);
   const { data: currentUser } = useCurrentUser();
   const { id } = use(params);
-  const { data: members } = useProjectMembers(id as any);
+  const { data: members } = useProjectMembers(id);
 
   useEffect(() => {
     async function fetchProject() {
@@ -94,7 +94,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
               Back
             </Link>
           </Button>
-          {currentUser?.id && (project as any)?.owner_id === currentUser.id && (
+          {currentUser?.id && project?.owner_id === currentUser.id && (
             <>
               <Button size="sm" asChild>
                 <Link href={`/projects/${project.id}/edit`}>
@@ -162,15 +162,15 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                 </div>
               )}
 
-              {((project as any).daw_info?.name || (project as any).daw_info?.version) && (
+              {((project.daw_info as { name?: string; version?: string })?.name || (project.daw_info as { name?: string; version?: string })?.version) && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <div className="text-sm text-muted-foreground">DAW Name</div>
-                    <div className="font-medium">{(project as any).daw_info?.name || '-'}</div>
+                    <div className="font-medium">{(project.daw_info as { name?: string; version?: string })?.name || '-'}</div>
                   </div>
                   <div>
                     <div className="text-sm text-muted-foreground">DAW Version</div>
-                    <div className="font-medium">{(project as any).daw_info?.version || '-'}</div>
+                    <div className="font-medium">{(project.daw_info as { name?: string; version?: string })?.version || '-'}</div>
                   </div>
                 </div>
               )}

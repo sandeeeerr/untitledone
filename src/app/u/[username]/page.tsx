@@ -64,8 +64,8 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
       const protocol = hdrs.get("x-forwarded-proto") ?? "http";
       const base = host ? `${protocol}://${host}` : "";
       const res = await fetch(`${base}/api/projects?owner_username=${encodeURIComponent(username)}`, { cache: "no-store" });
-      if (!res.ok) return [] as Array<any>;
-      return (await res.json()) as Array<any>;
+      if (!res.ok) return [] as Array<{ id: string; name: string; description: string | null; is_private: boolean; file_count: number; collaborators_count: number; likes_count: number }>;
+      return (await res.json()) as Array<{ id: string; name: string; description: string | null; is_private: boolean; file_count: number; collaborators_count: number; likes_count: number }>;
     })(),
   ]);
   if (!profile) {

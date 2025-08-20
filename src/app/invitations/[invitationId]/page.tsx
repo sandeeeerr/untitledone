@@ -32,7 +32,7 @@ export default function AcceptInvitationPage({ params, searchParams }: { params:
         }
         mutation.mutate(undefined, {
             onSuccess: (res) => {
-                const projectId = (res as any)?.project_id
+                const projectId = (res as { project_id?: string })?.project_id
                 if (projectId) router.replace(`/projects/${projectId}`)
                 else router.replace('/projects')
             },
@@ -60,7 +60,7 @@ export default function AcceptInvitationPage({ params, searchParams }: { params:
                 )}
                 {mutation.isError && (
                     <div className="text-center text-sm text-red-500">
-                        {(mutation.error as any)?.message || 'Failed to accept invitation'}
+                        {(mutation.error as { message?: string })?.message || 'Failed to accept invitation'}
                     </div>
                 )}
                 {!!currentUser && !mutation.isPending && (

@@ -73,7 +73,7 @@ export const TagInput = React.forwardRef<HTMLInputElement, TagInputProps>((props
 				<Input
 					ref={(node) => {
 						// keep local ref and forward ref
-						;(inputRef as any).current = node
+						;(inputRef as React.MutableRefObject<HTMLInputElement | null>).current = node
 						if (typeof ref === "function") ref(node)
 						else if (ref) (ref as React.MutableRefObject<HTMLInputElement | null>).current = node
 					}}
