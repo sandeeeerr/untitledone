@@ -65,7 +65,7 @@ export default function ProjectsPage() {
 
         setProjects(extendedData)
       } catch (err: unknown) {
-        const errorMessage = err && typeof err === 'object' && 'message' in err && typeof err.message === 'string' ? err.message : t("error.loadFailed")
+        const errorMessage = err && typeof err === 'object' && 'message' in err && typeof (err as any).message === 'string' ? (err as any).message : t("error.loadFailed")
         setError(errorMessage)
         toast({
           variant: "destructive",
@@ -189,7 +189,7 @@ export default function ProjectsPage() {
         <div className="mb-8 space-y-4">
           <div className="flex flex-col sm:flex-row gap-4">
             {/* Search Bar */}
-            <div className="relative flex-1">
+            <div className="relative flex-1 min-w-0">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
                 placeholder={t("searchPlaceholder")}
@@ -200,7 +200,7 @@ export default function ProjectsPage() {
             </div>
 
             {/* Filters */}
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Select
                 value={visibilityFilter}
                 onValueChange={(value) => setVisibilityFilter(value as "all" | "public" | "private")}
@@ -262,7 +262,7 @@ export default function ProjectsPage() {
               <Link key={project.id} href={`/projects/${project.id}`}>
                 <Card className="group transition-all duration-200 hover:shadow-md hover:shadow-primary/5 hover:border-primary/20 cursor-pointer h-full">
                   <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start justify-between gap-3 min-w-0">
                       <CardTitle className="text-lg font-semibold truncate group-hover:text-primary transition-colors">
                         {project.name}
                       </CardTitle>
@@ -274,8 +274,8 @@ export default function ProjectsPage() {
 
                   <CardContent className="space-y-4">
                     {/* Creator info */}
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-8 w-8">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <Avatar className="h-8 w-8 shrink-0">
                         <AvatarImage src={project.creator?.avatar || "/placeholder.svg"} alt={project.creator?.name} />
                         <AvatarFallback className="text-xs">{project.creator?.name?.charAt(0) || "U"}</AvatarFallback>
                       </Avatar>

@@ -52,18 +52,24 @@ function parsePlugins(value: unknown): Array<{ name: string; version?: string }>
 
 export async function GET(req: Request) {
 	const supabase = await createServerClient();
-	const {
-		data: { user },
-		error: authError,
-	} = await supabase.auth.getUser();
 
-	if (authError) return NextResponse.json({ error: authError.message }, { status: 401 });
-	if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-	// Haal projecten op die de gebruiker bezit of waar ze member van zijn
+	// Public listing by owner username doesn't require auth
 	const url = new URL(req.url);
 	const ownerUsername = url.searchParams.get('owner_username');
 
+	let authedUser: { id: string } | null = null;
+	if (!ownerUsername) {
+		const {
+			data: { user },
+			error: authError,
+		} = await supabase.auth.getUser();
+
+		if (authError) return NextResponse.json({ error: authError.message }, { status: 401 });
+		if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+		authedUser = { id: user.id };
+	}
+
+	// Haal projecten op die de gebruiker bezit of waar ze member van zijn
 	const baseSelect = `
 		id,
 		name,
@@ -103,12 +109,12 @@ export async function GET(req: Request) {
 			(supabase as SupabaseClient)
 				.from("projects")
 				.select(baseSelect)
-				.eq('owner_id', user.id)
+				.eq('owner_id', authedUser!.id)
 				.order('updated_at', { ascending: false }),
 			(supabase as SupabaseClient)
 				.from("projects")
 				.select(baseSelect + `, project_members!inner(user_id)`) // inner join to filter by membership
-				.eq('project_members.user_id', user.id)
+				.eq('project_members.user_id', authedUser!.id)
 				.order('updated_at', { ascending: false }),
 		]);
 
@@ -265,7 +271,7 @@ export async function POST(req: Request) {
 	};
 	const pluginsArray = parsePlugins(input.plugins);
 
-	const insertPayload: Record<string, unknown> = {
+	const insertPayload: Record<string, any> = {
 		name,
 		description: input.description?.trim() ?? null,
 		tags: tagsArray,

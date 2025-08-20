@@ -172,8 +172,17 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center p-4">
-      <Card className="max-w-md w-full py-4">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex flex-col">
+      <div className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center">
+          <Link href="/" className="inline-flex items-center gap-2 text-sm font-medium">
+            <Logo alt={t('common.logo')} width={24} height={16} className="h-4 w-6" />
+            UntitledOne
+          </Link>
+        </div>
+      </div>
+      <div className="flex-1 flex items-center justify-center p-4">
+        <Card className="max-w-md w-full py-4">
         <CardHeader className="flex justify-center items-center gap-4">
           <Logo alt={t('common.logo')} width={60} height={40} />
           <CardTitle className="text-center text-lg font-extrabold">
@@ -264,7 +273,8 @@ export default function LoginPage() {
             )}
           </form>
         </CardContent>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }

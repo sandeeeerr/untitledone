@@ -33,7 +33,7 @@ export default function InviteDialog({ projectId, trigger }: InviteDialogProps) 
 			<DialogTrigger asChild>
 				{trigger ?? <Button size="sm">Invite</Button>}
 			</DialogTrigger>
-			<DialogContent>
+			<DialogContent className="sm:max-w-lg w-[calc(100%-1.5rem)]">
 				<DialogHeader>
 					<DialogTitle>Invite collaborator</DialogTitle>
 					<DialogDescription>Send an invitation to collaborate on this project.</DialogDescription>

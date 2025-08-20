@@ -89,11 +89,6 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
       breadcrumbLabelOverride={project.name}
       titleActions={
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/projects">
-              Back
-            </Link>
-          </Button>
           {currentUser?.id && project?.owner_id === currentUser.id && (
             <>
               <Button size="sm" asChild>

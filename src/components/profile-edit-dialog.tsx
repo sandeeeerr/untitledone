@@ -127,7 +127,7 @@ export function ProfileEditModal({ open, onOpenChange }: ProfileEditModalProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-h-[85svh] overflow-auto sm:max-h-[80svh]">
         <DialogHeader>
           <DialogTitle>Edit profile</DialogTitle>
         </DialogHeader>
@@ -161,22 +161,22 @@ export function ProfileEditModal({ open, onOpenChange }: ProfileEditModalProps) 
         </div>
 
         <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0">
             <div>
               <label className="block text-sm mb-1">Display name</label>
-              <Input {...form.register("display_name")} placeholder="Your display name" />
+              <Input {...form.register("display_name")} placeholder="Your display name" className="min-w-0" />
             </div>
             <div>
               <label className="block text-sm mb-1">Location</label>
-              <Input {...form.register("location")} placeholder="City, Country" />
+              <Input {...form.register("location")} placeholder="City, Country" className="min-w-0" />
             </div>
-            <div className="md:col-span-2">
+            <div className="sm:col-span-2">
               <label className="block text-sm mb-1">Bio</label>
               <Textarea
                 {...form.register("bio")}
                 placeholder="Tell something about yourself"
                 rows={4}
-                className="resize-none"
+                className="resize-none min-w-0"
               />
             </div>
           </div>
@@ -190,14 +190,14 @@ export function ProfileEditModal({ open, onOpenChange }: ProfileEditModalProps) 
                 const placeholder =
                   SOCIAL_PLATFORMS.find((p) => p.value === platform)?.placeholder ?? "https://";
                 return (
-                  <div key={field.id} className="flex items-center gap-2">
+                  <div key={field.id} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 min-w-0">
                     <Controller
                       name={`socials.${index}.platform` as const}
                       control={form.control}
                       defaultValue={form.getValues(`socials.${index}.platform`) ?? SOCIAL_PLATFORMS[0].value}
                       render={({ field: ctrl }) => (
                         <Select value={ctrl.value} onValueChange={ctrl.onChange}>
-                          <SelectTrigger className="w-[180px]">
+                          <SelectTrigger className="w-full sm:w-[180px]">
                             <SelectValue placeholder="Platform" />
                           </SelectTrigger>
                           <SelectContent>
@@ -215,17 +215,17 @@ export function ProfileEditModal({ open, onOpenChange }: ProfileEditModalProps) 
                         </Select>
                       )}
                     />
-                    <div className="flex-1 relative">
+                    <div className="flex-1 relative min-w-0">
                       <Input
                         {...form.register(`socials.${index}.url`)}
                         placeholder={placeholder}
-                        className="pl-9"
+                        className="pl-9 min-w-0"
                       />
                       {Icon ? (
                         <Icon className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       ) : null}
                     </div>
-                    <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
+                    <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="self-end sm:self-auto">
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
