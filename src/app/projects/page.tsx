@@ -65,7 +65,13 @@ export default function ProjectsPage() {
 
         setProjects(extendedData)
       } catch (err: unknown) {
-        const errorMessage = err && typeof err === 'object' && 'message' in err && typeof (err as any).message === 'string' ? (err as any).message : t("error.loadFailed")
+        const errorMessage = (() => {
+          if (err && typeof err === 'object' && 'message' in err) {
+            const m = (err as { message?: unknown }).message
+            return typeof m === 'string' ? m : t("error.loadFailed")
+          }
+          return t("error.loadFailed")
+        })()
         setError(errorMessage)
         toast({
           variant: "destructive",

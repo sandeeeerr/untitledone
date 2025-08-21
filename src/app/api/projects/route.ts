@@ -271,7 +271,20 @@ export async function POST(req: Request) {
 	};
 	const pluginsArray = parsePlugins(input.plugins);
 
-	const insertPayload: Record<string, any> = {
+	type InsertPayload = {
+		name: string;
+		description: string | null;
+		tags: string[];
+		genre: string | null;
+		owner_id: string;
+		is_private: boolean;
+		downloads_enabled: boolean;
+		daw_info: Record<string, string> | {};
+		plugins_used: Array<{ name: string; version?: string }>;
+		status: string;
+	};
+
+	const insertPayload: InsertPayload = {
 		name,
 		description: input.description?.trim() ?? null,
 		tags: tagsArray,

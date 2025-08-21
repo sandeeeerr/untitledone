@@ -9,7 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Rocket, Sparkles, BookOpen } from 'lucide-react';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 
 export default function DashboardPage() {
   const { data: currentUser, isLoading: userLoading } = useCurrentUser();
@@ -27,7 +27,7 @@ export default function DashboardPage() {
                   <span className="truncate">Welcome back,  <br /> {currentUser?.email ? currentUser.email : ''}</span>
                 </div>
                 <p className="text-muted-foreground mt-1">
-                  UntitledOne is actively in development. We're excited you're here — features will appear and evolve rapidly. Thanks for joining early!
+                  UntitledOne is actively in development. We&#39;re excited you&#39;re here — features will appear and evolve rapidly. Thanks for joining early!
                 </p>
               </div>
               <Badge variant="secondary" className="shrink-0">Alpha</Badge>
@@ -64,7 +64,7 @@ export default function DashboardPage() {
                 What to expect
               </div>
               <p className="text-sm text-muted-foreground">
-                Invitations, team management, and collaboration tools are being built. You might see changes frequently — we'll keep things as stable as possible.
+                Invitations, team management, and collaboration tools are being built. You might see changes frequently — we&#39;ll keep things as stable as possible.
               </p>
               <Separator className="my-3" />
               <ul className="text-sm list-disc pl-5 text-muted-foreground space-y-1">
