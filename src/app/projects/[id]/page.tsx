@@ -5,14 +5,15 @@ import LayoutSidebar from '@/components/organisms/layout-sidebar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, FileAudio, Loader2, Music, Settings, Tags, Wrench, UserPlus, Clock, MessageSquare } from 'lucide-react';
+import { Calendar, FileAudio, Loader2, Music, Settings, Tags, Wrench, UserPlus, Clock, MessageSquare, Download } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { getProject, type Project } from '@/lib/api/projects';
 import { useToast } from '@/hooks/use-toast';
 import InviteDialog from '@/components/molecules/invite-dialog';
-import { useProjectMembers } from '@/lib/api/queries';
+import UploadDialog from '@/components/molecules/upload-dialog';
+import { useProjectMembers, useProjectFiles } from '@/lib/api/queries';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import ProjectActivity, { type ProjectActivityVersion } from '@/components/organisms/project-activity';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -268,6 +269,9 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                     </TabsTrigger>
                   </TabsList>
 
+                  {/* Upload button - always visible */}
+                  <UploadDialog projectId={id} />
+
                   {/* Activity search */}
                   {activeTab === 'activity' && (
                     <div className="relative w-64 hidden sm:block">
@@ -288,14 +292,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                   />
                 </TabsContent>
                 <TabsContent value="files" className="mt-4">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-base">Files</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground">Nog geen bestanden beschikbaar.</p>
-                    </CardContent>
-                  </Card>
+                  <ProjectFiles projectId={id} />
                 </TabsContent>
                 <TabsContent value="comments" className="mt-4">
                   <Card>
@@ -385,5 +382,131 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
         </div>
       </div>
     </LayoutSidebar>
+  );
+}
+
+function ProjectFiles({ projectId }: { projectId: string }) {
+  const { data: files, isLoading, error } = useProjectFiles(projectId);
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Files</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading files...</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Files</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-red-600">Failed to load files. Please try again.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!files || files.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Files</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <FileAudio className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <p className="text-sm text-muted-foreground mb-2">No files uploaded yet</p>
+            <p className="text-xs text-muted-foreground">Upload your first file to get started</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const getFileIcon = (filename: string) => {
+    const extension = filename.split('.').pop()?.toLowerCase();
+    switch (extension) {
+      case 'wav':
+      case 'mp3':
+      case 'flac':
+        return <FileAudio className="h-4 w-4 text-green-600" />;
+      case 'mid':
+      case 'midi':
+        return <Music className="h-4 w-4 text-green-600" />;
+      case 'als':
+      case 'flp':
+      default:
+        return <FileAudio className="h-4 w-4 text-blue-600" />;
+    }
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('nl-NL', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Files ({files.length})</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          {files.map((file) => (
+            <div key={file.id} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+              {getFileIcon(file.filename)}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="font-medium text-sm truncate">{file.filename}</p>
+                  <Badge variant="secondary" className="text-xs">
+                    v{file.version}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                  <span>{formatFileSize(file.fileSize)}</span>
+                  <span>•</span>
+                  <span>{file.uploadedBy.name}</span>
+                  <span>•</span>
+                  <span>{formatDate(file.uploadedAt)}</span>
+                </div>
+                {file.description && (
+                  <p className="text-xs text-muted-foreground mt-1">{file.description}</p>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" className="h-8 px-2">
+                  <FileAudio className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="sm" className="h-8 px-2">
+                  <Download className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 } 

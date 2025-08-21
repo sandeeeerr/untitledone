@@ -11,3 +11,5 @@
 .env.keys
 .env.local
 .env.*.local
+.env.development
+.env.production

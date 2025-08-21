@@ -200,3 +200,63 @@ export async function listProjectMembers(projectId: string): Promise<ProjectMemb
 	}
 	return (await res.json()) as ProjectMember[];
 }
+
+// Files
+export type ProjectFile = {
+	id: string;
+	filename: string;
+	fileSize: number;
+	fileType: string;
+	version: number;
+	uploadedAt: string;
+	uploadedBy: {
+		name: string;
+		avatar: string | null;
+	};
+	description: string | null;
+};
+
+export type UploadFileInput = {
+	filename: string;
+	fileSize: number;
+	fileType: string;
+	version: number;
+	description?: string;
+};
+
+export async function uploadProjectFile(projectId: string, payload: UploadFileInput): Promise<{ id: string; filename: string; version: number; uploaded_at: string }> {
+	const res = await fetch(`/api/projects/${projectId}/files`, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify(payload),
+	});
+
+	if (!res.ok) {
+		let message = "Failed to upload file";
+		try {
+			const body = await res.json();
+			if (body?.error) message = body.error as string;
+		} catch {}
+		throw new Error(message);
+	}
+
+	return (await res.json()) as { id: string; filename: string; version: number; uploaded_at: string };
+}
+
+export async function getProjectFiles(projectId: string): Promise<ProjectFile[]> {
+	const res = await fetch(`/api/projects/${projectId}/files`, {
+		method: "GET",
+		headers: { "Content-Type": "application/json" },
+	});
+
+	if (!res.ok) {
+		let message = "Failed to fetch project files";
+		try {
+			const body = await res.json();
+			if (body?.error) message = body.error as string;
+		} catch {}
+		throw new Error(message);
+	}
+
+	return (await res.json()) as ProjectFile[];
+}

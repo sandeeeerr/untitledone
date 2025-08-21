@@ -126,4 +126,77 @@ INSERT INTO public.project_members (id, project_id, user_id, role, joined_at, ad
 -- Restore constraint behavior
 RESET ALL;
 
+-- Add some sample project files for testing
+INSERT INTO public.project_files (
+  id, project_id, filename, file_path, file_size, file_type, version, 
+  uploaded_by, metadata
+) VALUES 
+  (
+    gen_random_uuid(), 
+    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 
+    'collab_track_v1.wav', 
+    '/uploads/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/collab_track_v1.wav',
+    52428800, -- 50MB
+    'audio/wav',
+    1,
+    '11111111-1111-1111-1111-111111111111',
+    '{"description": "Initial demo track with basic structure"}'
+  ),
+  (
+    gen_random_uuid(), 
+    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 
+    'collab_track_v2.wav', 
+    '/uploads/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/collab_track_v2.wav',
+    62914560, -- 60MB
+    'audio/wav',
+    2,
+    '22222222-2222-2222-2222-222222222222',
+    '{"description": "Added bassline and improved drums"}'
+  ),
+  (
+    gen_random_uuid(), 
+    'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 
+    'solo_jam_v1.flp', 
+    '/uploads/bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb/solo_jam_v1.flp',
+    1048576, -- 1MB
+    'application/x-flp',
+    1,
+    '33333333-3333-3333-3333-333333333333',
+    '{"description": "FL Studio project file for lo-fi jam"}'
+  ),
+  (
+    gen_random_uuid(), 
+    'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 
+    'solo_jam_v1_export.mp3', 
+    '/uploads/bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb/solo_jam_v1_export.mp3',
+    8388608, -- 8MB
+    'audio/mpeg',
+    1,
+    '33333333-3333-3333-3333-333333333333',
+    '{"description": "Exported MP3 from FL Studio session"}'
+  );
+
+-- Add some file comments for testing
+INSERT INTO public.file_comments (
+  id, file_id, user_id, comment
+) VALUES 
+  (
+    gen_random_uuid(),
+    (SELECT id FROM public.project_files WHERE filename = 'collab_track_v1.wav' LIMIT 1),
+    '22222222-2222-2222-2222-222222222222',
+    'Great start! Love the chord progression. Maybe we could add some percussion?'
+  ),
+  (
+    gen_random_uuid(),
+    (SELECT id FROM public.project_files WHERE filename = 'collab_track_v2.wav' LIMIT 1),
+    '11111111-1111-1111-1111-111111111111',
+    'Bass sounds perfect! The drums are much better now.'
+  ),
+  (
+    gen_random_uuid(),
+    (SELECT id FROM public.project_files WHERE filename = 'solo_jam_v1.flp' LIMIT 1),
+    '33333333-3333-3333-3333-333333333333',
+    'This lo-fi vibe is exactly what I was going for. Might add some vinyl crackle later.'
+  );
+
 

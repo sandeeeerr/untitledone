@@ -9,7 +9,7 @@ import {
 } from "./todos";
 import { useToast } from "@/hooks/use-toast";
 import { getCurrentProfile, updateCurrentProfile, type Profile, type ProfileUpdate, deleteCurrentProfile } from "./profiles";
-import { getProjects, type Project } from "./projects";
+import { getProjects, type Project, uploadProjectFile, getProjectFiles, type ProjectFile, type UploadFileInput } from "./projects";
 import { createProjectInvitation, listProjectInvitations, type ProjectInvitation, type ProjectInvitationInsert, acceptInvitation, listProjectMembers, type ProjectMember } from "./projects";
 
 export function useTodos({ done }: { done?: boolean } = {}) {
@@ -199,6 +199,33 @@ export function useDeleteProfile() {
                 title: "Error",
                 description: error.message,
             });
+        },
+    });
+}
+
+// Project Files
+export function useProjectFiles(projectId: string) {
+    return useQuery<ProjectFile[]>({
+        queryKey: ["project", projectId, "files"],
+        queryFn: () => getProjectFiles(projectId),
+        enabled: Boolean(projectId),
+    });
+}
+
+export function useUploadProjectFile(projectId: string) {
+    const queryClient = useQueryClient();
+    const { toast } = useToast();
+    
+    return useMutation({
+        mutationFn: (payload: UploadFileInput) => uploadProjectFile(projectId, payload),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["project", projectId, "files"] });
+            queryClient.invalidateQueries({ queryKey: ["project", projectId, "activity"] });
+            toast({ title: "File uploaded", description: "File has been uploaded successfully." });
+        },
+        onError: (error: unknown) => {
+            const errorMessage = error && typeof error === 'object' && 'message' in error && typeof error.message === 'string' ? error.message : "Failed to upload file";
+            toast({ variant: "destructive", title: "Upload failed", description: errorMessage });
         },
     });
 }
