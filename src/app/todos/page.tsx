@@ -7,7 +7,7 @@ import * as z from 'zod';
 import { useTranslations } from 'next-intl';
 import { Loader2, Trash2 } from 'lucide-react';
 import { useTodos, useCreateTodo, useUpdateTodo, useDeleteTodo } from '@/lib/api/queries';
-import LayoutSidebar from '@/components/layout-sidebar';
+import LayoutSidebar from '@/components/organisms/layout-sidebar';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';

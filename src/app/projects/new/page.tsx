@@ -1,8 +1,8 @@
 'use client'
 
-import LayoutSidebar from '@/components/layout-sidebar'
+import LayoutSidebar from '@/components/organisms/layout-sidebar'
 import { Card, CardContent } from '@/components/ui/card'
-import ProjectForm, { type ProjectFormValues } from '@/components/project-form'
+import ProjectForm, { type ProjectFormValues } from '@/components/organisms/project-form'
 import { createProject } from '@/lib/api/projects'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'

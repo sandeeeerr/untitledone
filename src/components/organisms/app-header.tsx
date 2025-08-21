@@ -10,7 +10,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { User2, Monitor, LogOut } from "lucide-react";
 import { useProfile } from "@/lib/api/queries";
 import { useState } from "react";
-import { SettingsModal } from "@/components/settings-modal";
+import { SettingsModal } from "@/components/molecules/settings-modal";
 import supabaseClient from "@/lib/supabase-client";
 
 export function AppHeader({

@@ -4,10 +4,10 @@ import { cn } from '@/lib/utils';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import MainSidebar from './main-sidebar';
-import AppHeader from '@/components/app-header';
-import { DynamicBreadcrumbs } from './dynamic-breadcrumbs';
-import { PageTitle } from './page-title';
-import { BreadcrumbProvider } from './breadcrumb-context';
+import AppHeader from '@/components/organisms/app-header';
+import { DynamicBreadcrumbs } from '../molecules/dynamic-breadcrumbs';
+import { PageTitle } from '../atoms/page-title';
+import { BreadcrumbProvider } from '../atoms/breadcrumb-context';
 import { useEffect, useState } from 'react';
 
 export default function LayoutSidebar({

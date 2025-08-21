@@ -1,7 +1,7 @@
 'use client'
 
 import { use, useEffect, useState } from 'react'
-import LayoutSidebar from '@/components/layout-sidebar'
+import LayoutSidebar from '@/components/organisms/layout-sidebar'
 import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'

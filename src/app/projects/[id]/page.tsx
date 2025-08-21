@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, use } from 'react';
-import LayoutSidebar from '@/components/layout-sidebar';
+import LayoutSidebar from '@/components/organisms/layout-sidebar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,10 +11,10 @@ import Link from 'next/link';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { getProject, type Project } from '@/lib/api/projects';
 import { useToast } from '@/hooks/use-toast';
-import InviteDialog from '@/components/invite-dialog';
+import InviteDialog from '@/components/molecules/invite-dialog';
 import { useProjectMembers } from '@/lib/api/queries';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import ProjectActivity, { type ProjectActivityVersion } from '@/components/project-activity';
+import ProjectActivity, { type ProjectActivityVersion } from '@/components/organisms/project-activity';
 
 export default function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const t = useTranslations('projects');

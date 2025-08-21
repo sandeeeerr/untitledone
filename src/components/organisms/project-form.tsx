@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
-import { TagInput } from '@/components/tag-input'
+import { TagInput } from '@/components/molecules/tag-input'
 
 const formInputSchema = z.object({
 	name: z.string().min(1, 'Name is required').max(200).trim(),

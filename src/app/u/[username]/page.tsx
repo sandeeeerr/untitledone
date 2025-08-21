@@ -1,11 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
-import LayoutSidebar from "@/components/layout-sidebar";
+import LayoutSidebar from "@/components/organisms/layout-sidebar";
 import { OwnerEditButton } from "./owner-edit";
 import { MapPin, Link as LinkIcon, CalendarDays, FileAudio, Users, Heart } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { SocialIconMap } from "@/components/socials";
+import { SocialIconMap } from "@/components/molecules/socials";
 import { ProfileSectionTabs } from "./section-tabs";
 import { ProfileActions } from "./profile-actions";
 import Link from "next/link";

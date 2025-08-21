@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Logo } from '@/components/ui/logo'
 import Link from 'next/link'
-import LandingHeader from '@/components/public-header'
+import LandingHeader from '@/components/organisms/public-header'
 
 export default function LandingPage() {
   const { data: currentUser } = useCurrentUser()

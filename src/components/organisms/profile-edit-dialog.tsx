@@ -12,7 +12,7 @@ import { useProfile, useUpdateProfile, useDeleteProfile } from "@/lib/api/querie
 import { useRouter } from "next/navigation";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { Badge } from "@/components/ui/badge";
-import { SOCIAL_PLATFORMS, SocialIconMap } from "@/components/socials";
+import { SOCIAL_PLATFORMS, SocialIconMap } from "@/components/molecules/socials";
 import type { SocialPlatform } from "@/lib/api/socials";
 import { getCurrentSocials, putCurrentSocials } from "@/lib/api/socials";
 import { X } from "lucide-react";

@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCurrentUser } from '@/hooks/use-current-user';
-import LayoutSidebar from '@/components/layout-sidebar';
+import LayoutSidebar from '@/components/organisms/layout-sidebar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';

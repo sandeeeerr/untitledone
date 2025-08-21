@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs';
-import { SettingsModal } from '@/components/settings-modal';
+import { SettingsModal } from '@/components/molecules/settings-modal';
 import { ThemeProvider } from 'next-themes';
 import { NextIntlClientProvider } from 'next-intl';
 

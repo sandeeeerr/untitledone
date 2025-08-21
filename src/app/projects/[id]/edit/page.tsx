@@ -1,16 +1,16 @@
 'use client'
 
 import { use, useEffect, useMemo, useState } from 'react'
-import LayoutSidebar from '@/components/layout-sidebar'
+import LayoutSidebar from '@/components/organisms/layout-sidebar'
 import { Card, CardContent } from '@/components/ui/card'
-import ProjectForm, { type ProjectFormValues } from '@/components/project-form'
+import ProjectForm, { type ProjectFormValues } from '@/components/organisms/project-form'
 import { getProject, updateProject, type Project } from '@/lib/api/projects'
 import { useTranslations } from 'next-intl'
 import { useToast } from '@/hooks/use-toast'
 import { Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useCurrentUser } from '@/hooks/use-current-user'
-import InviteDialog from '@/components/invite-dialog'
+import InviteDialog from '@/components/molecules/invite-dialog'
 
 export default function EditProjectPage({ params }: { params: Promise<{ id: string }> }) {
 	const t = useTranslations('projects.edit')

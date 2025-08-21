@@ -3,9 +3,9 @@ import localFont from 'next/font/local';
 import './globals.css';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
-import { ReactQueryProvider } from '@/components/react-query-provider';
+import { ReactQueryProvider } from '@/components/atoms/react-query-provider';
 import { Toaster } from '@/components/ui/toaster';
-import { ThemeProvider } from '@/components/theme-provider';
+import { ThemeProvider } from '@/components/atoms/theme-provider';
 
 const geistSans = localFont({
   src: '../fonts/GeistVF.woff',

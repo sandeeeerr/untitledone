@@ -10,7 +10,7 @@ import { useCurrentUser } from "@/hooks/use-current-user"
 import { useProfile } from "@/lib/api/queries"
 import supabaseClient from "@/lib/supabase-client"
 import { useState } from "react"
-import { SettingsModal } from "@/components/settings-modal"
+import { SettingsModal } from "@/components/molecules/settings-modal"
 
 export default function LandingHeader() {
 	const { data: currentUser } = useCurrentUser()

@@ -1,6 +1,6 @@
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useBreadcrumbOverride } from '@/components/breadcrumb-context';
+import { useBreadcrumbOverride } from '@/components/atoms/breadcrumb-context';
 
 export interface BreadcrumbItem {
   label: string;

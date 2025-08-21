@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { ProfileEditModal } from "@/components/profile-edit-dialog";
+import { ProfileEditModal } from "@/components/organisms/profile-edit-dialog";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { useProfile } from "@/lib/api/queries";
 import { Pencil } from "lucide-react";
