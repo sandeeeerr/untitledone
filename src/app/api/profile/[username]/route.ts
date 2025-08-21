@@ -5,31 +5,34 @@ export async function GET(
   _req: Request,
   { params }: { params: Promise<{ username: string }> }
 ) {
-  const { username } = await params;
-  if (!username || typeof username !== "string") {
-    return NextResponse.json({ error: "Invalid username" }, { status: 400 });
-  }
+  try {
+    const { username } = await params;
+    if (!username || typeof username !== "string") {
+      return NextResponse.json({ error: "Invalid username" }, { status: 400 });
+    }
 
-  const supabase = await createServerClient();
+    const supabase = await createServerClient();
 
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("username, display_name, bio, location, avatar_url, website, created_at")
-    .eq("username", username)
-    .limit(1)
-    .single();
+    const { data, error } = await supabase
+      .from("profiles")
+      .select(
+        "username, display_name, bio, location, avatar_url, website, created_at"
+      )
+      .eq("username", username)
+      .limit(1)
+      .maybeSingle();
 
-  if (error) {
-    // If no rows, return 404
-    if ((error as { code?: string }).code === "PGRST116") {
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    if (!data) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
 
-  if (!data) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json(data, { status: 200 });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Unknown error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-
-  return NextResponse.json(data, { status: 200 });
-} 
+}
