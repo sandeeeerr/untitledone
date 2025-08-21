@@ -139,12 +139,12 @@ export default function ProjectActivity({
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground  truncate">{v.description}</p>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1.5">
-                      <span className="font-medium">{v.author}</span>
-                      <span>•</span>
-                      <span>{formatDateSafe(v.date, locale)}</span>
-                    </div>
                   </div>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1.5 shrink-0">
+                  <span className="font-medium">{v.author}</span>
+                  <span>•</span>
+                  <span>{formatDateSafe(v.date, locale)}</span>
                 </div>
               </div>
             </CardHeader>

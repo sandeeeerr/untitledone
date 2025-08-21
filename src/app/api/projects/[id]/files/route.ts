@@ -11,7 +11,8 @@ const uploadSchema = z.object({
   filename: z.string().min(1, "Filename is required"),
   fileSize: z.number().positive("File size must be positive"),
   fileType: z.string().min(1, "File type is required"),
-  version: z.number().int().positive("Version must be a positive integer"),
+  // kept for backwards compatibility; ignored in new schema where versions are separate
+  version: z.number().int().positive("Version must be a positive integer").optional(),
   description: z.string().optional(),
 });
 
@@ -88,7 +89,7 @@ export async function POST(
     const input = uploadSchema.safeParse(body);
     if (!input.success) {
       return NextResponse.json(
-        { error: "Invalid input", details: input.error.errors },
+        { error: "Invalid input", details: input.error.issues },
         { status: 400 }
       );
     }
@@ -103,7 +104,6 @@ export async function POST(
         file_path: `/uploads/${projectId}/${input.data.filename}`, // Placeholder path
         file_size: input.data.fileSize,
         file_type: input.data.fileType,
-        version: input.data.version,
         uploaded_by: user.id,
         metadata: {
           description: input.data.description || null,
@@ -121,10 +121,27 @@ export async function POST(
       );
     }
 
+    // Try to link file to the active project version if it exists
+    try {
+      const { data: activeVersion } = await (supabase as SupabaseClient)
+        .from("project_versions")
+        .select("id")
+        .eq("project_id", projectId)
+        .eq("is_active", true)
+        .maybeSingle();
+
+      if (activeVersion?.id) {
+        await (supabase as SupabaseClient)
+          .from("version_files")
+          .insert({ version_id: activeVersion.id, file_id: fileRecord.id });
+      }
+    } catch (linkErr) {
+      console.warn("Failed to link file to active version (non-fatal):", linkErr);
+    }
+
     return NextResponse.json({
       id: fileRecord.id,
       filename: fileRecord.filename,
-      version: fileRecord.version,
       uploaded_at: fileRecord.uploaded_at,
     }, { status: 201 });
 
@@ -174,7 +191,6 @@ export async function GET(
         filename,
         file_size,
         file_type,
-        version,
         uploaded_at,
         uploaded_by,
         metadata
@@ -189,6 +205,26 @@ export async function GET(
         { status: 500 }
       );
     }
+
+    // Get mapping from file -> version name
+    const fileIds = Array.from(new Set(files?.map(f => f.id) || []));
+    const { data: versionLinks } = await (supabase as SupabaseClient)
+      .from("version_files")
+      .select("file_id, version_id")
+      .in("file_id", fileIds);
+
+    const versionIds = Array.from(new Set((versionLinks || []).map(v => v.version_id)));
+    const { data: versions } = await (supabase as SupabaseClient)
+      .from("project_versions")
+      .select("id, version_name")
+      .in("id", versionIds);
+
+    const fileIdToVersionName = new Map<string, string>();
+    const versionMap = new Map((versions || []).map(v => [v.id, v.version_name] as const));
+    (versionLinks || []).forEach(link => {
+      const vname = versionMap.get(link.version_id);
+      if (vname) fileIdToVersionName.set(link.file_id, vname);
+    });
 
     // Get user profiles for the uploaded_by field
     const userIds = Array.from(new Set(files?.map(f => f.uploaded_by).filter(Boolean) || []));
@@ -210,7 +246,7 @@ export async function GET(
       filename: file.filename,
       fileSize: file.file_size,
       fileType: file.file_type,
-      version: file.version,
+      versionName: fileIdToVersionName.get(file.id) || "",
       uploadedAt: file.uploaded_at,
       uploadedBy: profileMap.get(file.uploaded_by) || { name: "Unknown", avatar: null },
       description: file.metadata?.description || null,

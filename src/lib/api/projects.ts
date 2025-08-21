@@ -207,7 +207,7 @@ export type ProjectFile = {
 	filename: string;
 	fileSize: number;
 	fileType: string;
-	version: number;
+	versionName: string;
 	uploadedAt: string;
 	uploadedBy: {
 		name: string;
@@ -224,7 +224,7 @@ export type UploadFileInput = {
 	description?: string;
 };
 
-export async function uploadProjectFile(projectId: string, payload: UploadFileInput): Promise<{ id: string; filename: string; version: number; uploaded_at: string }> {
+export async function uploadProjectFile(projectId: string, payload: UploadFileInput): Promise<{ id: string; filename: string; uploaded_at: string }> {
 	const res = await fetch(`/api/projects/${projectId}/files`, {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
@@ -240,7 +240,7 @@ export async function uploadProjectFile(projectId: string, payload: UploadFileIn
 		throw new Error(message);
 	}
 
-	return (await res.json()) as { id: string; filename: string; version: number; uploaded_at: string };
+	return (await res.json()) as { id: string; filename: string; uploaded_at: string };
 }
 
 export async function getProjectFiles(projectId: string): Promise<ProjectFile[]> {
@@ -259,4 +259,102 @@ export async function getProjectFiles(projectId: string): Promise<ProjectFile[]>
 	}
 
 	return (await res.json()) as ProjectFile[];
+}
+
+// Project Versions
+export type ProjectVersion = {
+  id: string;
+  version_type: "semantic" | "date" | "custom";
+  version_name: string;
+  description: string;
+  created_at: string;
+  is_active: boolean;
+  created_by: {
+    name: string;
+    avatar: string | null;
+  };
+  file_count: number;
+};
+
+export type CreateVersionInput = {
+  version_type: "semantic" | "date" | "custom";
+  version_name?: string; // Only required for custom type
+  description: string;
+  copy_files_from_version_id?: string;
+};
+
+export async function createProjectVersion(projectId: string, payload: CreateVersionInput): Promise<{ id: string; version_name: string; description: string; version_type: string; created_at: string }> {
+  const res = await fetch(`/api/projects/${projectId}/versions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    let message = "Failed to create version";
+    try {
+      const body = await res.json();
+      if (body?.error) message = body.error as string;
+    } catch {}
+    throw new Error(message);
+  }
+
+  return (await res.json()) as { id: string; version_name: string; description: string; version_type: string; created_at: string };
+}
+
+export async function getProjectVersions(projectId: string): Promise<ProjectVersion[]> {
+  const res = await fetch(`/api/projects/${projectId}/versions`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  if (!res.ok) {
+    let message = "Failed to fetch project versions";
+    try {
+      const body = await res.json();
+      if (body?.error) message = body.error as string;
+    } catch {}
+    throw new Error(message);
+  }
+
+  return (await res.json()) as ProjectVersion[];
+}
+
+// Project Activity
+export type ProjectActivityMicroChange = {
+  id: string;
+  type: "addition" | "feedback" | "update";
+  description: string;
+  author: string;
+  time: string;
+  avatar?: string | null;
+  filename?: string;
+};
+
+export type ProjectActivityVersion = {
+  version: string;
+  description: string;
+  author: string;
+  date: string;
+  avatar?: string | null;
+  microChanges: ProjectActivityMicroChange[];
+  isActive?: boolean;
+};
+
+export async function getProjectActivity(projectId: string): Promise<ProjectActivityVersion[]> {
+  const res = await fetch(`/api/projects/${projectId}/activity`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  if (!res.ok) {
+    let message = "Failed to fetch project activity";
+    try {
+      const body = await res.json();
+      if (body?.error) message = body.error as string;
+    } catch {}
+    throw new Error(message);
+  }
+
+  return (await res.json()) as ProjectActivityVersion[];
 }

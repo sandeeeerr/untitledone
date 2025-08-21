@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState, use } from 'react';
+import React, { useEffect, useState, use } from 'react';
 import LayoutSidebar from '@/components/organisms/layout-sidebar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, FileAudio, Loader2, Music, Settings, Tags, Wrench, UserPlus, Clock, MessageSquare, Download } from 'lucide-react';
+import { Calendar, FileAudio, Loader2, Music, Settings, Tags, Wrench, UserPlus, Clock, MessageSquare, Download, Plus, Upload } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useCurrentUser } from '@/hooks/use-current-user';
@@ -13,11 +13,13 @@ import { getProject, type Project } from '@/lib/api/projects';
 import { useToast } from '@/hooks/use-toast';
 import InviteDialog from '@/components/molecules/invite-dialog';
 import UploadDialog from '@/components/molecules/upload-dialog';
-import { useProjectMembers, useProjectFiles } from '@/lib/api/queries';
+import CreateVersionDialog from '@/components/molecules/create-version-dialog';
+import { useProjectMembers, useProjectFiles, useProjectActivity } from '@/lib/api/queries';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import ProjectActivity, { type ProjectActivityVersion } from '@/components/organisms/project-activity';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
+import { motion } from 'motion/react';
 
 export default function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const t = useTranslations('projects');
@@ -30,33 +32,42 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
   const { data: members } = useProjectMembers(id);
   const [activeTab, setActiveTab] = useState<'overview' | 'activity' | 'files' | 'comments'>('activity');
   const [activityQuery, setActivityQuery] = useState<string>("");
-  const demoActivity: ProjectActivityVersion[] = [
-    {
-      version: 'v2.0',
-      description: 'Final mix door Julia',
-      author: 'Julia',
-      date: '2024-01-15',
-      avatar: null,
-      microChanges: [
-        { id: '1', type: 'addition', description: 'Reverb toegevoegd op vocals', author: 'Julia', time: '16:45', avatar: null },
-        { id: '2', type: 'feedback', description: 'Bass levels zijn perfect nu', author: 'Sam', time: '17:12', avatar: null },
-        { id: '3', type: 'update', description: 'Master limiter aangepast', author: 'Julia', time: '17:30', avatar: null },
-      ],
-    },
-    {
-      version: 'v1.0',
-      description: 'Rough sketch door Sam',
-      author: 'Sam',
-      date: '2024-01-12',
-      avatar: null,
-      microChanges: [
-        { id: '4', type: 'addition', description: 'Bassline toegevoegd', author: 'Julia', time: '14:12', avatar: null },
-        { id: '5', type: 'feedback', description: 'Kick is te droog', author: 'Sam', time: '14:28', avatar: null },
-        { id: '6', type: 'addition', description: 'Vocal take toegevoegd', author: 'Esther', time: '15:01', avatar: null },
-        { id: '7', type: 'update', description: 'Drum pattern aangepast', author: 'Sam', time: '15:45', avatar: null },
-      ],
-    },
-  ];
+  const tabRefs = React.useRef<(HTMLButtonElement | null)[]>([]);
+  const tabsListRef = React.useRef<HTMLDivElement | null>(null);
+  const [underlineStyle, setUnderlineStyle] = useState<{ left: number; width: number }>({ left: 0, width: 0 });
+  
+  // Replace hardcoded demoActivity with real data
+  const { data: activity, isLoading: activityLoading, error: activityError } = useProjectActivity(id);
+
+  const measureUnderline = React.useCallback(() => {
+    const items: Array<{ value: typeof activeTab }> = [
+      { value: 'activity' },
+      { value: 'files' },
+      { value: 'comments' },
+    ];
+    const activeIndex = items.findIndex(t => t.value === activeTab);
+    const activeEl = tabRefs.current[activeIndex];
+    if (activeEl) {
+      const { offsetLeft, offsetWidth } = activeEl;
+      setUnderlineStyle({ left: offsetLeft, width: offsetWidth });
+      return;
+    }
+    // Fallback: distribute equally if refs not ready
+    const container = tabsListRef.current;
+    if (container) {
+      const width = container.offsetWidth;
+      const part = width / items.length;
+      setUnderlineStyle({ left: part * activeIndex, width: part });
+    }
+  }, [activeTab]);
+
+  React.useLayoutEffect(() => {
+    // measure on mount and when activeTab changes
+    requestAnimationFrame(measureUnderline);
+    const handleResize = () => measureUnderline();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [measureUnderline]);
 
   useEffect(() => {
     async function fetchProject() {
@@ -248,48 +259,101 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
               <Tabs
                 value={activeTab}
                 onValueChange={(v: string) => setActiveTab(v as 'overview' | 'activity' | 'files' | 'comments')}
-                className="w-full"
+                className="w-full gap-4"
               >
-                <div className="flex items-center justify-between gap-2">
-                  <TabsList className="p-1">
-                    <TabsTrigger value="activity" className="px-2.5 sm:px-3">
-                      <span className="flex items-center gap-2 text-sm">
-                        <Clock className="h-4 w-4" /> Activity
-                      </span>
-                    </TabsTrigger>
-                    <TabsTrigger value="files" className="px-2.5 sm:px-3">
-                      <span className="flex items-center gap-2 text-sm">
-                        <FileAudio className="h-4 w-4" /> Files
-                      </span>
-                    </TabsTrigger>
-                    <TabsTrigger value="comments" className="px-2.5 sm:px-3">
-                      <span className="flex items-center gap-2 text-sm">
-                        <MessageSquare className="h-4 w-4" /> Comments
-                      </span>
-                    </TabsTrigger>
-                  </TabsList>
+                <TabsList ref={tabsListRef as any} className="bg-background relative rounded-none border-b p-0 w-full flex">
+                  <TabsTrigger
+                    value="activity"
+                    ref={(el) => { tabRefs.current[0] = el; }}
+                    className="relative -mb-[2px] border-b-2 border-transparent data-[state=active]:border-primary px-3 sm:px-4 flex-1 justify-center"
+                    >
+                    <span className="flex items-center gap-2 text-sm">
+                      <Clock className="h-4 w-4" /> Activity
+                    </span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="files"
+                    ref={(el) => { tabRefs.current[1] = el; }}
+                    className="bg-background dark:data-[state=active]:bg-background relative z-10 rounded-none border-0 data-[state=active]:shadow-none px-3 sm:px-4 flex-1 justify-center"
+                  >
+                    <span className="flex items-center gap-2 text-sm">
+                      <FileAudio className="h-4 w-4" /> Files
+                    </span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="comments"
+                    ref={(el) => { tabRefs.current[2] = el; }}
+                    className="bg-background dark:data-[state=active]:bg-background relative z-10 rounded-none border-0 data-[state=active]:shadow-none px-3 sm:px-4 flex-1 justify-center"
+                  >
+                    <span className="flex items-center gap-2 text-sm">
+                      <MessageSquare className="h-4 w-4" /> Comments
+                    </span>
+                  </TabsTrigger>
 
-                  {/* Upload button - always visible */}
-                  <UploadDialog projectId={id} />
+                  <motion.div
+                    initial={false}
+                    className="bg-primary absolute bottom-0 z-20 h-0.5"
+                    layoutId="underline"
+                    style={{ left: underlineStyle.left, width: underlineStyle.width }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 40 }}
+                  />
+                </TabsList>
 
-                  {/* Activity search */}
-                  {activeTab === 'activity' && (
-                    <div className="relative w-64 hidden sm:block">
-                      <Input
-                        placeholder="Search activity..."
-                        className="h-10"
-                        onChange={(e) => setActivityQuery(e.target.value)}
-                      />
-                    </div>
-                  )}
+                {/* Toolbar under tabs */}
+                <div className="mt-3 flex items-center justify-between gap-3">
+                  <div className="flex-1">
+                    {activeTab === 'activity' && (
+                      <div className="w-full max-w-sm">
+                        <Input
+                          placeholder="Search activity..."
+                          className="h-9"
+                          onChange={(e) => setActivityQuery(e.target.value)}
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CreateVersionDialog
+                      projectId={id}
+                      trigger={
+                        <Button size="sm" variant="outline" className="h-9 gap-2 px-3">
+                          <Plus className="h-4 w-4" />
+                          New Version
+                        </Button>
+                      }
+                    />
+                    <UploadDialog
+                      projectId={id}
+                      trigger={
+                        <Button size="sm" className="h-9 gap-2 px-3">
+                          <Upload className="h-4 w-4" />
+                          Upload Files
+                        </Button>
+                      }
+                    />
+                  </div>
                 </div>
 
                 <TabsContent value="activity" className="mt-4">
-                  <ProjectActivity
-                    versions={demoActivity}
-                    locale={Intl.DateTimeFormat().resolvedOptions().locale}
-                    query={activityQuery}
-                  />
+                  {activityLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-6 w-6 animate-spin" />
+                      <span className="ml-2 text-sm text-muted-foreground">Loading activity...</span>
+                    </div>
+                  ) : activityError ? (
+                    <div className="text-center py-8">
+                      <p className="text-sm text-red-600 mb-4">Failed to load activity</p>
+                      <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
+                        Try again
+                      </Button>
+                    </div>
+                  ) : (
+                    <ProjectActivity
+                      versions={activity || []}
+                      locale={Intl.DateTimeFormat().resolvedOptions().locale}
+                      query={activityQuery}
+                    />
+                  )}
                 </TabsContent>
                 <TabsContent value="files" className="mt-4">
                   <ProjectFiles projectId={id} />
@@ -480,9 +544,11 @@ function ProjectFiles({ projectId }: { projectId: string }) {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <p className="font-medium text-sm truncate">{file.filename}</p>
-                  <Badge variant="secondary" className="text-xs">
-                    v{file.version}
-                  </Badge>
+                  {file.versionName && (
+                    <Badge variant="secondary" className="text-xs">
+                      {file.versionName}
+                    </Badge>
+                  )}
                 </div>
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
                   <span>{formatFileSize(file.fileSize)}</span>

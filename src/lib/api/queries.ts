@@ -9,7 +9,7 @@ import {
 } from "./todos";
 import { useToast } from "@/hooks/use-toast";
 import { getCurrentProfile, updateCurrentProfile, type Profile, type ProfileUpdate, deleteCurrentProfile } from "./profiles";
-import { getProjects, type Project, uploadProjectFile, getProjectFiles, type ProjectFile, type UploadFileInput } from "./projects";
+import { getProjects, type Project, uploadProjectFile, getProjectFiles, type ProjectFile, type UploadFileInput, createProjectVersion, getProjectVersions, type ProjectVersion, type CreateVersionInput, getProjectActivity, type ProjectActivityVersion } from "./projects";
 import { createProjectInvitation, listProjectInvitations, type ProjectInvitation, type ProjectInvitationInsert, acceptInvitation, listProjectMembers, type ProjectMember } from "./projects";
 
 export function useTodos({ done }: { done?: boolean } = {}) {
@@ -227,5 +227,41 @@ export function useUploadProjectFile(projectId: string) {
             const errorMessage = error && typeof error === 'object' && 'message' in error && typeof error.message === 'string' ? error.message : "Failed to upload file";
             toast({ variant: "destructive", title: "Upload failed", description: errorMessage });
         },
+    });
+}
+
+// Project Versions
+export function useProjectVersions(projectId: string) {
+    return useQuery<ProjectVersion[]>({
+        queryKey: ["project", projectId, "versions"],
+        queryFn: () => getProjectVersions(projectId),
+        enabled: Boolean(projectId),
+    });
+}
+
+export function useCreateProjectVersion(projectId: string) {
+    const queryClient = useQueryClient();
+    const { toast } = useToast();
+    
+    return useMutation({
+        mutationFn: (payload: CreateVersionInput) => createProjectVersion(projectId, payload),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["project", projectId, "versions"] });
+            queryClient.invalidateQueries({ queryKey: ["project", projectId, "activity"] });
+            toast({ title: "Version created", description: "New version has been created successfully." });
+        },
+        onError: (error: unknown) => {
+            const errorMessage = error && typeof error === 'object' && 'message' in error && typeof error.message === 'string' ? error.message : "Failed to create version";
+            toast({ variant: "destructive", title: "Creation failed", description: errorMessage });
+        },
+    });
+}
+
+// Project Activity
+export function useProjectActivity(projectId: string) {
+    return useQuery<ProjectActivityVersion[]>({
+        queryKey: ["project", projectId, "activity"],
+        queryFn: () => getProjectActivity(projectId),
+        enabled: Boolean(projectId),
     });
 }
