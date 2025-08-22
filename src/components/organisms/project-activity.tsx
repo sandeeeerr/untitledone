@@ -227,7 +227,7 @@ export default function ProjectActivity({ projectId, query, sortBy = 'newest', o
                 {isActive && (
                   <div className="absolute left-0 top-0 bottom-0 w-1 bg-green-500" aria-hidden="true" />
                 )}
-                <CardHeader className="p-4 !pb-3 !md:pb-0 md:p-6 max-w-full">
+                <CardHeader className="p-4 pb-3 md:p-6 md:pb-0 max-w-full">
                 <div className="flex items-start gap-3 min-w-0">
                   {(() => {
                     const member = findMemberByAuthor(version.author);
