@@ -15,7 +15,7 @@ export interface UserAvatarProps {
 export function UserAvatar({ name, username, userId, src, className }: UserAvatarProps) {
   const display = (name || username || "").trim();
   const initial = (display || "U").charAt(0).toUpperCase();
-  const key = userId || username || name || "unknown";
+  const key = username || userId || name || "unknown";
   const bg = colorFromString(key);
 
   return (

@@ -124,15 +124,15 @@ BEGIN
   -- Get the project IDs we just created
   SELECT id INTO collab_project_id FROM public.projects WHERE name = 'Collab Track' LIMIT 1;
   SELECT id INTO solo_project_id FROM public.projects WHERE name = 'Solo Jam' LIMIT 1;
-  
-  -- Memberships
-  -- Owners (optional but explicit)
-  INSERT INTO public.project_members (id, project_id, user_id, role, joined_at, added_by, created_at) VALUES
+
+-- Memberships
+-- Owners (optional but explicit)
+INSERT INTO public.project_members (id, project_id, user_id, role, joined_at, added_by, created_at) VALUES
       (gen_random_uuid(), collab_project_id, '11111111-1111-1111-1111-111111111111', 'owner', now(), '11111111-1111-1111-1111-111111111111', now()),
       (gen_random_uuid(), solo_project_id, '33333333-3333-3333-3333-333333333333', 'owner', now(), '33333333-3333-3333-3333-333333333333', now());
 
-  -- Extra collaborator: Bob on Alice's project
-  INSERT INTO public.project_members (id, project_id, user_id, role, joined_at, added_by, created_at) VALUES
+-- Extra collaborator: Bob on Alice's project
+INSERT INTO public.project_members (id, project_id, user_id, role, joined_at, added_by, created_at) VALUES
       (gen_random_uuid(), collab_project_id, '22222222-2222-2222-2222-222222222222', 'collaborator', now(), '11111111-1111-1111-1111-111111111111', now());
 
   -- Create project versions

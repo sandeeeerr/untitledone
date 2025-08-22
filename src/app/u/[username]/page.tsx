@@ -11,6 +11,7 @@ import { ProfileActions } from "./profile-actions";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { colorFromString } from "@/lib/utils";
+import UserAvatar from "@/components/atoms/user-avatar";
 
 async function getProfile(username: string) {
   const hdrs = await headers();
@@ -83,21 +84,13 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
             <div className="mb-8">
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                 <div className="flex items-center gap-4">
-                  {profile.avatar_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={profile.avatar_url}
-                      alt={title ?? "Avatar"}
-                      className="h-16 w-16 rounded-full object-cover border"
-                    />
-                  ) : (
-                    <div
-                      className="h-16 w-16 rounded-full flex items-center justify-center text-xl font-semibold border text-white"
-                      style={{ backgroundColor: colorFromString(profile.username || title || "unknown") }}
-                    >
-                      {getInitial(title || profile.username)}
-                    </div>
-                  )}
+                  <UserAvatar
+                    className="h-16 w-16 border"
+                    name={title}
+                    username={profile.username}
+                    userId={undefined}
+                    src={profile.avatar_url || null}
+                  />
                   <div>
                     <h2 className="text-2xl font-semibold leading-tight">{title}</h2>
                     <div className="text-muted-foreground">@{profile.username}</div>

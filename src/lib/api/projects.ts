@@ -207,7 +207,7 @@ export type ProjectFile = {
 	filename: string;
 	fileSize: number;
 	fileType: string;
-	versionName: string;
+	versionName: string | null;
 	uploadedAt: string;
 	uploadedBy: {
 		name: string;
@@ -220,8 +220,8 @@ export type UploadFileInput = {
 	filename: string;
 	fileSize: number;
 	fileType: string;
-	version: number;
 	description?: string;
+	versionId?: string;
 };
 
 export async function uploadProjectFile(projectId: string, payload: UploadFileInput): Promise<{ id: string; filename: string; uploaded_at: string }> {

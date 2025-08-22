@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Upload, X, FileAudio, Music, Download } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
-import { useUploadProjectFile } from '@/lib/api/queries'
+import { useUploadProjectFile, useProjectVersions } from '@/lib/api/queries'
 
 export type UploadDialogProps = {
 	projectId: string
@@ -27,8 +27,10 @@ export default function UploadDialog({ projectId, trigger }: UploadDialogProps) 
 	const [open, setOpen] = useState(false)
 	const [files, setFiles] = useState<FileToUpload[]>([])
 	const [isUploading, setIsUploading] = useState(false)
+	const [targetVersionId, setTargetVersionId] = useState<string | undefined>(undefined)
 	const { toast } = useToast()
 	const uploadFile = useUploadProjectFile(projectId)
+	const { data: versions } = useProjectVersions(projectId)
 
 	const onDrop = useCallback((acceptedFiles: File[]) => {
 		const newFiles = acceptedFiles.map(file => ({
@@ -78,30 +80,20 @@ export default function UploadDialog({ projectId, trigger }: UploadDialogProps) 
 
 		setIsUploading(true)
 		try {
-			// Upload each file
 			for (const fileToUpload of files) {
 				await uploadFile.mutateAsync({
 					filename: fileToUpload.file.name,
 					fileSize: fileToUpload.file.size,
 					fileType: fileToUpload.file.type || 'application/octet-stream',
-					version: fileToUpload.version,
 					description: fileToUpload.description,
+					versionId: targetVersionId,
 				})
 			}
-			
-			toast({
-				title: "Upload successful",
-				description: `Uploaded ${files.length} file(s)`,
-			})
-			
+			toast({ title: "Upload successful", description: `Uploaded ${files.length} file(s)` })
 			setOpen(false)
 			setFiles([])
-		} catch (error) {
-			toast({
-				variant: "destructive",
-				title: "Upload failed",
-				description: "Failed to upload files. Please try again.",
-			})
+		} catch {
+			toast({ variant: "destructive", title: "Upload failed", description: "Failed to upload files. Please try again." })
 		} finally {
 			setIsUploading(false)
 		}
@@ -126,6 +118,23 @@ export default function UploadDialog({ projectId, trigger }: UploadDialogProps) 
 				</DialogHeader>
 
 				<div className="space-y-4">
+					{/* Target version selector */}
+					<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+						<div className="space-y-2">
+							<Label className="text-xs">Target version</Label>
+							<select
+								className="h-9 text-sm w-full rounded-md border bg-background"
+								value={targetVersionId ?? ''}
+								onChange={(e) => setTargetVersionId(e.target.value || undefined)}
+							>
+								<option value="">Active version (default)</option>
+								{(versions ?? []).map(v => (
+									<option key={v.id} value={v.id}>{v.version_name} — {v.description}</option>
+								))}
+							</select>
+						</div>
+					</div>
+
 					{/* Drag & Drop Zone */}
 					<div
 						className={cn(
@@ -142,17 +151,7 @@ export default function UploadDialog({ projectId, trigger }: UploadDialogProps) 
 						<p className="text-xs text-muted-foreground">
 							Supports: WAV, MP3, FLAC, MIDI, project files
 						</p>
-						<input
-							id="file-input"
-							type="file"
-							multiple
-							accept=".wav,.mp3,.flac,.aiff,.mid,.midi,.als,.flp,.logic,.ptx,.rpp"
-							className="hidden"
-							onChange={(e) => {
-								const files = Array.from(e.target.files || [])
-								onDrop(files)
-							}}
-						/>
+						<input id="file-input" type="file" multiple accept=".wav,.mp3,.flac,.aiff,.mid,.midi,.als,.flp,.logic,.ptx,.rpp" className="hidden" onChange={(e) => { const files = Array.from(e.target.files || []); onDrop(files) }} />
 					</div>
 
 					{/* File List */}
@@ -165,47 +164,16 @@ export default function UploadDialog({ projectId, trigger }: UploadDialogProps) 
 										{getFileIcon(fileToUpload.file.name)}
 										<div className="flex-1 min-w-0">
 											<p className="font-medium text-sm truncate">{fileToUpload.file.name}</p>
-											<p className="text-xs text-muted-foreground">
-												{formatFileSize(fileToUpload.file.size)}
-											</p>
+											<p className="text-xs text-muted-foreground">{formatFileSize(fileToUpload.file.size)}</p>
 										</div>
-										<Button
-											variant="ghost"
-											size="sm"
-											onClick={() => removeFile(fileToUpload.id)}
-											className="h-6 w-6 p-0"
-										>
+										<Button variant="ghost" size="sm" onClick={() => removeFile(fileToUpload.id)} className="h-6 w-6 p-0">
 											<X className="h-3 w-3" />
 										</Button>
 									</div>
 
-									<div className="grid grid-cols-2 gap-3">
-										<div>
-											<Label htmlFor={`version-${fileToUpload.id}`} className="text-xs">
-												Version
-											</Label>
-											<Input
-												id={`version-${fileToUpload.id}`}
-												type="number"
-												min="1"
-												value={fileToUpload.version}
-												onChange={(e) => updateFile(fileToUpload.id, { version: parseInt(e.target.value) || 1 })}
-												className="h-8 text-sm"
-											/>
-										</div>
-									</div>
-
 									<div>
-										<Label htmlFor={`description-${fileToUpload.id}`} className="text-xs">
-											Description
-										</Label>
-										<Textarea
-											id={`description-${fileToUpload.id}`}
-											value={fileToUpload.description}
-											onChange={(e) => updateFile(fileToUpload.id, { description: e.target.value })}
-											placeholder="Describe what this file contains..."
-											className="h-16 text-sm resize-none"
-										/>
+										<Label htmlFor={`description-${fileToUpload.id}`} className="text-xs">Description</Label>
+										<Textarea id={`description-${fileToUpload.id}`} value={fileToUpload.description} onChange={(e) => updateFile(fileToUpload.id, { description: e.target.value })} placeholder="Describe what this file contains..." className="h-16 text-sm resize-none" />
 									</div>
 								</div>
 							))}
@@ -214,25 +182,9 @@ export default function UploadDialog({ projectId, trigger }: UploadDialogProps) 
 				</div>
 
 				<DialogFooter>
-					<Button variant="outline" onClick={() => setOpen(false)} disabled={isUploading}>
-						Cancel
-					</Button>
-					<Button 
-						onClick={handleUpload} 
-						disabled={isUploading || files.length === 0}
-						className="gap-2"
-					>
-						{isUploading ? (
-							<>
-								<div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-								Uploading...
-							</>
-						) : (
-							<>
-								<Upload className="h-4 w-4" />
-								Upload {files.length} file{files.length !== 1 ? 's' : ''}
-							</>
-						)}
+					<Button variant="outline" size="sm" onClick={() => setOpen(false)} disabled={isUploading}>Cancel</Button>
+					<Button onClick={handleUpload} disabled={isUploading || files.length === 0} className="gap-2" size="sm">
+						{isUploading ? (<><div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />Uploading...</>) : (<><Upload className="h-4 w-4" />Upload {files.length} file{files.length !== 1 ? 's' : ''}</>)}
 					</Button>
 				</DialogFooter>
 			</DialogContent>
