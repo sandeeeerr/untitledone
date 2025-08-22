@@ -5,6 +5,7 @@ import { SupabaseClient } from '@supabase/supabase-js';
 const MAX_DISPLAY_NAME = 120;
 const MAX_LOCATION = 120;
 const MAX_BIO = 1000;
+const MAX_URL_LENGTH = 2048;
 
 export async function GET() {
   const supabase = await createServerClient();
@@ -22,7 +23,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, username, display_name, bio, location")
+    .select("id, username, display_name, bio, location, avatar_url")
     .eq("id", user.id)
     .single();
 
@@ -60,6 +61,7 @@ export async function PATCH(req: Request) {
     display_name: string | null;
     bio: string | null;
     location: string | null;
+    avatar_url: string | null;
   }>;
 
   const errors: string[] = [];
@@ -72,6 +74,17 @@ export async function PATCH(req: Request) {
   if (typeof input.bio !== "undefined" && input.bio !== null && input.bio.length > MAX_BIO) {
     errors.push(`bio must be at most ${MAX_BIO} characters`);
   }
+  if (typeof input.avatar_url !== "undefined") {
+    if (input.avatar_url !== null) {
+      const url = String(input.avatar_url);
+      if (url.length > MAX_URL_LENGTH) {
+        errors.push("avatar_url is too long");
+      }
+      if (!/^https?:\/\//i.test(url)) {
+        errors.push("avatar_url must be an http(s) URL");
+      }
+    }
+  }
 
   if (errors.length) {
     return NextResponse.json({ error: errors.join(", ") }, { status: 400 });
@@ -81,13 +94,14 @@ export async function PATCH(req: Request) {
     display_name: typeof input.display_name === "string" ? input.display_name : input.display_name === null ? null : undefined,
     bio: typeof input.bio === "string" ? input.bio : input.bio === null ? null : undefined,
     location: typeof input.location === "string" ? input.location : input.location === null ? null : undefined,
+    avatar_url: typeof input.avatar_url === "string" ? input.avatar_url : input.avatar_url === null ? null : undefined,
   } as const;
 
   const { data, error } = await supabase
     .from("profiles")
     .update(update)
     .eq("id", user.id)
-    .select("id, username, display_name, bio, location")
+    .select("id, username, display_name, bio, location, avatar_url")
     .single();
 
   if (error) {

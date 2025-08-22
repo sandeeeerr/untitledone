@@ -124,29 +124,30 @@ BEGIN
   -- Get the project IDs we just created
   SELECT id INTO collab_project_id FROM public.projects WHERE name = 'Collab Track' LIMIT 1;
   SELECT id INTO solo_project_id FROM public.projects WHERE name = 'Solo Jam' LIMIT 1;
+  
+  -- Memberships
+  -- Owners (optional but explicit)
+  INSERT INTO public.project_members (id, project_id, user_id, role, joined_at, added_by, created_at) VALUES
+      (gen_random_uuid(), collab_project_id, '11111111-1111-1111-1111-111111111111', 'owner', now(), '11111111-1111-1111-1111-111111111111', now()),
+      (gen_random_uuid(), solo_project_id, '33333333-3333-3333-3333-333333333333', 'owner', now(), '33333333-3333-3333-3333-333333333333', now());
 
--- Memberships
--- Owners (optional but explicit)
-INSERT INTO public.project_members (id, project_id, user_id, role, joined_at, added_by, created_at) VALUES
-    (gen_random_uuid(), collab_project_id, '11111111-1111-1111-1111-111111111111', 'owner', now(), '11111111-1111-1111-1111-111111111111', now()),
-    (gen_random_uuid(), solo_project_id, '33333333-3333-3333-3333-333333333333', 'owner', now(), '33333333-3333-3333-3333-333333333333', now());
-
--- Extra collaborator: Bob on Alice's project
-INSERT INTO public.project_members (id, project_id, user_id, role, joined_at, added_by, created_at) VALUES
-    (gen_random_uuid(), collab_project_id, '22222222-2222-2222-2222-222222222222', 'collaborator', now(), '11111111-1111-1111-1111-111111111111', now());
+  -- Extra collaborator: Bob on Alice's project
+  INSERT INTO public.project_members (id, project_id, user_id, role, joined_at, added_by, created_at) VALUES
+      (gen_random_uuid(), collab_project_id, '22222222-2222-2222-2222-222222222222', 'collaborator', now(), '11111111-1111-1111-1111-111111111111', now());
 
   -- Create project versions
   INSERT INTO public.project_versions (
-    id, project_id, version_type, version_name, description, created_by, is_active
+    id, project_id, version_type, version_name, description, created_by, is_active, created_at
   ) VALUES 
     (
       gen_random_uuid(),
       collab_project_id,
       'semantic',
-      'v1.0',
-      'Rough sketch door Sam',
-      '11111111-1111-1111-1111-111111111111',
-      false
+      'v3.0',
+      'Clean master + minor balance tweaks',
+      '22222222-2222-2222-2222-222222222222',
+      false,
+      now() - interval '1 day'
     ),
     (
       gen_random_uuid(),
@@ -155,17 +156,55 @@ INSERT INTO public.project_members (id, project_id, user_id, role, joined_at, ad
       'v2.0',
       'Final mix door Julia',
       '22222222-2222-2222-2222-222222222222',
-      true
+      false,
+      now() - interval '3 days'
+    ),
+    (
+      gen_random_uuid(),
+      collab_project_id,
+      'semantic',
+      'v1.0',
+      'Rough sketch door Sam',
+      '11111111-1111-1111-1111-111111111111',
+      false,
+      now() - interval '5 days'
+    ),
+    (
+      gen_random_uuid(),
+      solo_project_id,
+      'semantic',
+      'v3.0',
+      'Final bounce with tape hiss and width',
+      '33333333-3333-3333-3333-333333333333',
+      false,
+      now() - interval '1 day'
+    ),
+    (
+      gen_random_uuid(),
+      solo_project_id,
+      'semantic',
+      'v2.0',
+      'Arrangement polish and subtle saturation',
+      '33333333-3333-3333-3333-333333333333',
+      false,
+      now() - interval '3 days'
     ),
     (
       gen_random_uuid(),
       solo_project_id,
       'semantic',
       'v1.0',
-      'Initial lo-fi jam session',
+    'Initial lo-fi jam session',
       '33333333-3333-3333-3333-333333333333',
-      true
+      false,
+      now() - interval '5 days'
     );
+
+  -- Ensure latest is active per project (only one active per project)
+  UPDATE public.project_versions SET is_active = false WHERE project_id = collab_project_id;
+  UPDATE public.project_versions SET is_active = false WHERE project_id = solo_project_id;
+  UPDATE public.project_versions SET is_active = true WHERE version_name = 'v3.0' AND project_id = collab_project_id;
+  UPDATE public.project_versions SET is_active = true WHERE version_name = 'v3.0' AND project_id = solo_project_id;
 
   -- Add some sample project files for testing
   INSERT INTO public.project_files (
@@ -211,6 +250,36 @@ INSERT INTO public.project_members (id, project_id, user_id, role, joined_at, ad
       'audio/mpeg',
       '33333333-3333-3333-3333-333333333333',
       '{"description": "Exported MP3 from FL Studio session"}'
+    ),
+    (
+      gen_random_uuid(), 
+      collab_project_id, 
+      'collab_track_v3.wav', 
+      '/uploads/' || collab_project_id || '/collab_track_v3.wav',
+      68157440, -- 65MB
+      'audio/wav',
+      '22222222-2222-2222-2222-222222222222',
+      '{"description": "Finalized master bounce"}'
+    ),
+    (
+      gen_random_uuid(), 
+      solo_project_id, 
+      'solo_jam_v2.flp', 
+      '/uploads/' || solo_project_id || '/solo_jam_v2.flp',
+      1468006, -- 1.4MB
+      'application/x-flp',
+      '33333333-3333-3333-3333-333333333333',
+      '{"description": "Second iteration project file"}'
+    ),
+    (
+      gen_random_uuid(), 
+      solo_project_id, 
+      'solo_jam_v3.mp3', 
+      '/uploads/' || solo_project_id || '/solo_jam_v3.mp3',
+      9437184, -- 9MB
+      'audio/mpeg',
+      '33333333-3333-3333-3333-333333333333',
+      '{"description": "Final master export"}'
     );
 
   -- Link files to versions
@@ -236,12 +305,28 @@ INSERT INTO public.project_members (id, project_id, user_id, role, joined_at, ad
       gen_random_uuid(),
       (SELECT id FROM public.project_versions WHERE version_name = 'v1.0' AND project_id = solo_project_id),
       (SELECT id FROM public.project_files WHERE filename = 'solo_jam_v1_export.mp3')
+    ),
+    (
+      gen_random_uuid(),
+      (SELECT id FROM public.project_versions WHERE version_name = 'v3.0' AND project_id = collab_project_id),
+      (SELECT id FROM public.project_files WHERE filename = 'collab_track_v3.wav')
+    ),
+    (
+      gen_random_uuid(),
+      (SELECT id FROM public.project_versions WHERE version_name = 'v2.0' AND project_id = solo_project_id),
+      (SELECT id FROM public.project_files WHERE filename = 'solo_jam_v2.flp')
+    ),
+    (
+      gen_random_uuid(),
+      (SELECT id FROM public.project_versions WHERE version_name = 'v3.0' AND project_id = solo_project_id),
+      (SELECT id FROM public.project_files WHERE filename = 'solo_jam_v3.mp3')
     );
 
   -- Create activity changes (microChanges)
   INSERT INTO public.activity_changes (
     id, version_id, type, description, author_id, file_id
   ) VALUES 
+    -- Collab v1.0 changes (5 items)
     (
       gen_random_uuid(),
       (SELECT id FROM public.project_versions WHERE version_name = 'v1.0' AND project_id = collab_project_id),
@@ -276,6 +361,15 @@ INSERT INTO public.project_members (id, project_id, user_id, role, joined_at, ad
     ),
     (
       gen_random_uuid(),
+      (SELECT id FROM public.project_versions WHERE version_name = 'v1.0' AND project_id = collab_project_id),
+      'feedback',
+      'Chord progression voelt te simpel',
+      '33333333-3333-3333-3333-333333333333',
+      (SELECT id FROM public.project_files WHERE filename = 'collab_track_v1.wav')
+    ),
+    -- Collab v2.0 changes (5 items)
+    (
+      gen_random_uuid(),
       (SELECT id FROM public.project_versions WHERE version_name = 'v2.0' AND project_id = collab_project_id),
       'addition',
       'Reverb toegevoegd op vocals',
@@ -300,17 +394,190 @@ INSERT INTO public.project_members (id, project_id, user_id, role, joined_at, ad
     ),
     (
       gen_random_uuid(),
+      (SELECT id FROM public.project_versions WHERE version_name = 'v2.0' AND project_id = collab_project_id),
+      'addition',
+      'Subtle delay op lead synth',
+      '11111111-1111-1111-1111-111111111111',
+      (SELECT id FROM public.project_files WHERE filename = 'collab_track_v2.wav')
+    ),
+    (
+      gen_random_uuid(),
+      (SELECT id FROM public.project_versions WHERE version_name = 'v2.0' AND project_id = collab_project_id),
+      'feedback',
+      'Drums klinken nu veel warmer',
+      '33333333-3333-3333-3333-333333333333',
+      (SELECT id FROM public.project_files WHERE filename = 'collab_track_v2.wav')
+    ),
+    -- Collab v3.0 changes (5 items)
+    (
+      gen_random_uuid(),
+      (SELECT id FROM public.project_versions WHERE version_name = 'v3.0' AND project_id = collab_project_id),
+      'update',
+      'Stereo image iets verbreed',
+      '22222222-2222-2222-2222-222222222222',
+      (SELECT id FROM public.project_files WHERE filename = 'collab_track_v3.wav')
+    ),
+    (
+      gen_random_uuid(),
+      (SELECT id FROM public.project_versions WHERE version_name = 'v3.0' AND project_id = collab_project_id),
+      'addition',
+      'Vocal de-esser toegevoegd',
+      '11111111-1111-1111-1111-111111111111',
+      (SELECT id FROM public.project_files WHERE filename = 'collab_track_v3.wav')
+    ),
+    (
+      gen_random_uuid(),
+      (SELECT id FROM public.project_versions WHERE version_name = 'v3.0' AND project_id = collab_project_id),
+      'feedback',
+      'Mid-range klinkt nu cleaner',
+      '33333333-3333-3333-3333-333333333333',
+      (SELECT id FROM public.project_files WHERE filename = 'collab_track_v3.wav')
+    ),
+    (
+      gen_random_uuid(),
+      (SELECT id FROM public.project_versions WHERE version_name = 'v3.0' AND project_id = collab_project_id),
+      'update',
+      'Transients iets zachter in de master',
+      '22222222-2222-2222-2222-222222222222',
+      (SELECT id FROM public.project_files WHERE filename = 'collab_track_v3.wav')
+    ),
+    (
+      gen_random_uuid(),
+      (SELECT id FROM public.project_versions WHERE version_name = 'v3.0' AND project_id = collab_project_id),
+      'addition',
+      'Final compression layer toegevoegd',
+      '11111111-1111-1111-1111-111111111111',
+      (SELECT id FROM public.project_files WHERE filename = 'collab_track_v3.wav')
+    ),
+    -- Solo v1.0 changes (4 items)
+    (
+      gen_random_uuid(),
+      (SELECT id FROM public.project_versions WHERE version_name = 'v1.0' AND project_id = solo_project_id),
+      'addition',
+      'Basic lo-fi drum pattern',
+      '33333333-3333-3333-3333-333333333333',
+      (SELECT id FROM public.project_files WHERE filename = 'solo_jam_v1.flp')
+    ),
+    (
+      gen_random_uuid(),
+      (SELECT id FROM public.project_versions WHERE version_name = 'v1.0' AND project_id = solo_project_id),
+      'addition',
+      'Warm pad synth layer',
+      '33333333-3333-3333-3333-333333333333',
+      (SELECT id FROM public.project_files WHERE filename = 'solo_jam_v1.flp')
+    ),
+    (
+      gen_random_uuid(),
       (SELECT id FROM public.project_versions WHERE version_name = 'v1.0' AND project_id = solo_project_id),
       'feedback',
       'This lo-fi vibe is exactly what I was going for. Might add some vinyl crackle later.',
       '33333333-3333-3333-3333-333333333333',
       (SELECT id FROM public.project_files WHERE filename = 'solo_jam_v1.flp')
+    ),
+    (
+      gen_random_uuid(),
+      (SELECT id FROM public.project_versions WHERE version_name = 'v1.0' AND project_id = solo_project_id),
+      'update',
+      'Sidechain compression toegevoegd',
+      '33333333-3333-3333-3333-333333333333',
+      (SELECT id FROM public.project_files WHERE filename = 'solo_jam_v1.flp')
+    ),
+    -- Solo v2.0 changes (5 items)
+    (
+      gen_random_uuid(),
+      (SELECT id FROM public.project_versions WHERE version_name = 'v2.0' AND project_id = solo_project_id),
+      'addition',
+      'Subtle vinyl crackle layer toegevoegd',
+      '33333333-3333-3333-3333-333333333333',
+      (SELECT id FROM public.project_files WHERE filename = 'solo_jam_v2.flp')
+    ),
+    (
+      gen_random_uuid(),
+      (SELECT id FROM public.project_versions WHERE version_name = 'v2.0' AND project_id = solo_project_id),
+      'update',
+      'Sidechain fine-tuned',
+      '33333333-3333-3333-3333-333333333333',
+      (SELECT id FROM public.project_files WHERE filename = 'solo_jam_v2.flp')
+    ),
+    (
+      gen_random_uuid(),
+      (SELECT id FROM public.project_versions WHERE version_name = 'v2.0' AND project_id = solo_project_id),
+      'update',
+      'Sidechain fine-tuned',
+      '33333333-3333-3333-3333-333333333333',
+      (SELECT id FROM public.project_files WHERE filename = 'solo_jam_v2.flp')
+    ),
+    (
+      gen_random_uuid(),
+      (SELECT id FROM public.project_versions WHERE version_name = 'v2.0' AND project_id = solo_project_id),
+      'addition',
+      'Analog saturation plugin toegevoegd',
+      '33333333-3333-3333-3333-333333333333',
+      (SELECT id FROM public.project_files WHERE filename = 'solo_jam_v2.flp')
+    ),
+    (
+      gen_random_uuid(),
+      (SELECT id FROM public.project_versions WHERE version_name = 'v2.0' AND project_id = solo_project_id),
+      'feedback',
+      'Arrangement voelt nu compleet',
+      '11111111-1111-1111-1111-111111111111',
+      (SELECT id FROM public.project_files WHERE filename = 'solo_jam_v2.flp')
+    ),
+    (
+      gen_random_uuid(),
+      (SELECT id FROM public.project_versions WHERE version_name = 'v2.0' AND project_id = solo_project_id),
+      'update',
+      'EQ balance aangepast voor warmte',
+      '33333333-3333-3333-3333-333333333333',
+      (SELECT id FROM public.project_files WHERE filename = 'solo_jam_v2.flp')
+    ),
+    -- Solo v3.0 changes (5 items)
+    (
+      gen_random_uuid(),
+      (SELECT id FROM public.project_versions WHERE version_name = 'v3.0' AND project_id = solo_project_id),
+      'update',
+      'Tape hiss en stereo width aangepast',
+      '33333333-3333-3333-3333-333333333333',
+      (SELECT id FROM public.project_files WHERE filename = 'solo_jam_v3.mp3')
+    ),
+    (
+      gen_random_uuid(),
+      (SELECT id FROM public.project_versions WHERE version_name = 'v3.0' AND project_id = solo_project_id),
+      'feedback',
+      'Eindresultaat voelt warm en breed',
+      '11111111-1111-1111-1111-111111111111',
+      (SELECT id FROM public.project_files WHERE filename = 'solo_jam_v3.mp3')
+    ),
+    (
+      gen_random_uuid(),
+      (SELECT id FROM public.project_versions WHERE version_name = 'v3.0' AND project_id = solo_project_id),
+      'addition',
+      'Final mastering chain toegevoegd',
+      '33333333-3333-3333-3333-333333333333',
+      (SELECT id FROM public.project_files WHERE filename = 'solo_jam_v3.mp3')
+    ),
+    (
+      gen_random_uuid(),
+      (SELECT id FROM public.project_versions WHERE version_name = 'v3.0' AND project_id = solo_project_id),
+      'update',
+      'Loudness target naar -14 LUFS',
+      '33333333-3333-3333-3333-333333333333',
+      (SELECT id FROM public.project_files WHERE filename = 'solo_jam_v3.mp3')
+    ),
+    (
+      gen_random_uuid(),
+      (SELECT id FROM public.project_versions WHERE version_name = 'v3.0' AND project_id = solo_project_id),
+      'feedback',
+      'Perfect voor vinyl release',
+      '22222222-2222-2222-2222-222222222222',
+      (SELECT id FROM public.project_files WHERE filename = 'solo_jam_v3.mp3')
     );
 
   -- Add some project comments for testing
   INSERT INTO public.project_comments (
     id, project_id, version_id, user_id, comment
   ) VALUES 
+    -- Collab v1.0 comments (4 items)
     (
       gen_random_uuid(),
       collab_project_id,
@@ -321,9 +588,175 @@ INSERT INTO public.project_members (id, project_id, user_id, role, joined_at, ad
     (
       gen_random_uuid(),
       collab_project_id,
+      (SELECT id FROM public.project_versions WHERE version_name = 'v1.0' AND project_id = collab_project_id),
+      '11111111-1111-1111-1111-111111111111',
+      'Kick heeft meer punch nodig, maar de groove is goed!'
+    ),
+    (
+      gen_random_uuid(),
+      collab_project_id,
+      (SELECT id FROM public.project_versions WHERE version_name = 'v1.0' AND project_id = collab_project_id),
+      '33333333-3333-3333-3333-333333333333',
+      'Vocal take klinkt natuurlijk. Misschien wat meer reverb?'
+    ),
+    (
+      gen_random_uuid(),
+      collab_project_id,
+      (SELECT id FROM public.project_versions WHERE version_name = 'v1.0' AND project_id = collab_project_id),
+      '22222222-2222-2222-2222-222222222222',
+      'Drum pattern is nu veel interessanter!'
+    ),
+    -- Collab v2.0 comments (5 items)
+    (
+      gen_random_uuid(),
+      collab_project_id,
       (SELECT id FROM public.project_versions WHERE version_name = 'v2.0' AND project_id = collab_project_id),
       '11111111-1111-1111-1111-111111111111',
       'Bass sounds perfect! The drums are much better now.'
+    ),
+    (
+      gen_random_uuid(),
+      collab_project_id,
+      (SELECT id FROM public.project_versions WHERE version_name = 'v2.0' AND project_id = collab_project_id),
+      '22222222-2222-2222-2222-222222222222',
+      'Reverb op vocals voegt veel diepte toe!'
+    ),
+    (
+      gen_random_uuid(),
+      collab_project_id,
+      (SELECT id FROM public.project_versions WHERE version_name = 'v2.0' AND project_id = collab_project_id),
+      '33333333-3333-3333-3333-333333333333',
+      'Delay op lead synth is subtiel maar effectief'
+    ),
+    (
+      gen_random_uuid(),
+      collab_project_id,
+      (SELECT id FROM public.project_versions WHERE version_name = 'v2.0' AND project_id = collab_project_id),
+      '11111111-1111-1111-1111-111111111111',
+      'Master limiter settings zijn perfect'
+    ),
+    (
+      gen_random_uuid(),
+      collab_project_id,
+      (SELECT id FROM public.project_versions WHERE version_name = 'v2.0' AND project_id = collab_project_id),
+      '22222222-2222-2222-2222-222222222222',
+      'Drums klinken nu veel warmer inderdaad!'
+    ),
+    -- Collab v3.0 comments (5 items)
+    (
+      gen_random_uuid(),
+      collab_project_id,
+      (SELECT id FROM public.project_versions WHERE version_name = 'v3.0' AND project_id = collab_project_id),
+      '33333333-3333-3333-3333-333333333333',
+      'Stereo image is nu perfect breed!'
+    ),
+    (
+      gen_random_uuid(),
+      collab_project_id,
+      (SELECT id FROM public.project_versions WHERE version_name = 'v3.0' AND project_id = collab_project_id),
+      '11111111-1111-1111-1111-111111111111',
+      'Vocal de-esser maakt het veel cleaner'
+    ),
+    (
+      gen_random_uuid(),
+      collab_project_id,
+      (SELECT id FROM public.project_versions WHERE version_name = 'v3.0' AND project_id = collab_project_id),
+      '22222222-2222-2222-2222-222222222222',
+      'Mid-range balance is nu spot-on'
+    ),
+    (
+      gen_random_uuid(),
+      collab_project_id,
+      (SELECT id FROM public.project_versions WHERE version_name = 'v3.0' AND project_id = collab_project_id),
+      '33333333-3333-3333-3333-333333333333',
+      'Transients zijn nu perfect punchy'
+    ),
+    (
+      gen_random_uuid(),
+      collab_project_id,
+      (SELECT id FROM public.project_versions WHERE version_name = 'v3.0' AND project_id = collab_project_id),
+      '11111111-1111-1111-1111-111111111111',
+      'Final compression voegt veel body toe!'
+    ),
+    -- Solo v1.0 comments (3 items)
+    (
+      gen_random_uuid(),
+      solo_project_id,
+      (SELECT id FROM public.project_versions WHERE version_name = 'v1.0' AND project_id = solo_project_id),
+      '33333333-3333-3333-3333-333333333333',
+      'Basic lo-fi drums zijn perfect voor deze vibe'
+    ),
+    (
+      gen_random_uuid(),
+      solo_project_id,
+      (SELECT id FROM public.project_versions WHERE version_name = 'v1.0' AND project_id = solo_project_id),
+      '11111111-1111-1111-1111-111111111111',
+      'Warm pad synth voegt veel atmosfeer toe'
+    ),
+    (
+      gen_random_uuid(),
+      solo_project_id,
+      (SELECT id FROM public.project_versions WHERE version_name = 'v1.0' AND project_id = solo_project_id),
+      '22222222-2222-2222-2222-222222222222',
+      'Sidechain compression maakt het dynamisch'
+    ),
+    -- Solo v2.0 comments (4 items)
+    (
+      gen_random_uuid(),
+      solo_project_id,
+      (SELECT id FROM public.project_versions WHERE version_name = 'v2.0' AND project_id = solo_project_id),
+      '33333333-3333-3333-3333-333333333333',
+      'Vinyl crackle voegt authenticiteit toe!'
+    ),
+    (
+      gen_random_uuid(),
+      solo_project_id,
+      (SELECT id FROM public.project_versions WHERE version_name = 'v2.0' AND project_id = solo_project_id),
+      '11111111-1111-1111-1111-111111111111',
+      'Sidechain is nu perfect getimed'
+    ),
+    (
+      gen_random_uuid(),
+      solo_project_id,
+      (SELECT id FROM public.project_versions WHERE version_name = 'v2.0' AND project_id = solo_project_id),
+      '22222222-2222-2222-2222-222222222222',
+      'Analog saturation maakt het warmer'
+    ),
+    (
+      gen_random_uuid(),
+      solo_project_id,
+      (SELECT id FROM public.project_versions WHERE version_name = 'v2.0' AND project_id = solo_project_id),
+      '33333333-3333-3333-3333-333333333333',
+      'EQ balance is nu perfect voor warmte'
+    ),
+    -- Solo v3.0 comments (4 items)
+    (
+      gen_random_uuid(),
+      solo_project_id,
+      (SELECT id FROM public.project_versions WHERE version_name = 'v3.0' AND project_id = solo_project_id),
+      '11111111-1111-1111-1111-111111111111',
+      'Tape hiss voegt vintage karakter toe!'
+    ),
+    (
+      gen_random_uuid(),
+      solo_project_id,
+      (SELECT id FROM public.project_versions WHERE version_name = 'v3.0' AND project_id = solo_project_id),
+      '22222222-2222-2222-2222-222222222222',
+      'Stereo width is perfect breed'
+    ),
+    (
+      gen_random_uuid(),
+      solo_project_id,
+      (SELECT id FROM public.project_versions WHERE version_name = 'v3.0' AND project_id = solo_project_id),
+      '33333333-3333-3333-3333-333333333333',
+      'Mastering chain is professioneel'
+    ),
+    (
+      gen_random_uuid(),
+      solo_project_id,
+      (SELECT id FROM public.project_versions WHERE version_name = 'v3.0' AND project_id = solo_project_id),
+      '11111111-1111-1111-1111-111111111111',
+      '-14 LUFS is perfect voor streaming!'
     );
 
 END $$;

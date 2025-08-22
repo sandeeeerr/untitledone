@@ -8,6 +8,7 @@ import { useCurrentUser } from "@/hooks/use-current-user";
 import { cn } from "@/lib/utils";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { User2, Monitor, LogOut } from "lucide-react";
+import UserAvatar from "@/components/atoms/user-avatar";
 import { useProfile } from "@/lib/api/queries";
 import { useState } from "react";
 import { SettingsModal } from "@/components/molecules/settings-modal";
@@ -59,11 +60,14 @@ export function AppHeader({
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button
-                    aria-label="User menu"
-                    className="h-9 w-9 rounded-full border flex items-center justify-center hover:bg-accent hover:text-accent-foreground"
-                  >
-                    <User2 className="h-[1.1rem] w-[1.1rem]" />
+                  <button aria-label="User menu" className="rounded-full">
+                    <UserAvatar
+                      className="h-9 w-9 border"
+                      name={profile?.display_name || null}
+                      username={profile?.username || null}
+                      userId={currentUser.id}
+                      src={profile?.avatar_url || null}
+                    />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">

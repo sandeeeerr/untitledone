@@ -96,7 +96,7 @@ export default function LayoutSidebar({
               </div>
             </div>
 
-            <div className={cn('flex-1 min-w-0 overflow-x-hidden', className)}>
+            <div className={cn('flex-1 min-w-0 overflow-x-hidden py-8', className)}>
               <div className={cn('flex-1 min-w-0', contentClassName)}>
                 {children}
               </div>

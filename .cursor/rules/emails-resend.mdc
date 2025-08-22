@@ -1,0 +1,19 @@
+---
+description: Rules for sending emails with Resend (server-only, templates)
+alwaysApply: false
+---
+  - "src/app/api/(email|notifications)/**/*"
+  - "src/lib/email/**/*"
+
+# Email (Resend)
+
+## Best Practices
+
+- Keep email functionality server-side only; never expose API keys in client bundles
+- Store email templates in `src/components/templates/email-*.tsx`
+- Maintain consistent DKIM configuration and `from` domain across all emails
+
+## Avoid
+
+- Sending emails from client-side components
+- Exposing email configuration or credentials in client code

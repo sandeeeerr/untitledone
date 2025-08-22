@@ -22,6 +22,7 @@ export async function updateCurrentProfile(update: ProfileUpdate) {
       display_name: update.display_name ?? undefined,
       bio: update.bio ?? undefined,
       location: update.location ?? undefined,
+      avatar_url: update.avatar_url ?? undefined,
     }),
   });
 

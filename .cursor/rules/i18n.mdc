@@ -1,0 +1,20 @@
+---
+description: Guidelines for internationalization using next-intl
+alwaysApply: false
+---
+  - "src/**/*.{ts,tsx}"
+
+# i18n – next-intl
+
+## Best Practices
+
+### Do
+- Use `useTranslations()` hook for all UI strings - avoid hardcoded text
+- Structure translation keys as `scope.section.key` - avoid using full sentences as keys
+- Handle pluralization through `t.rich` or plural rules
+- Keep translations organized and maintainable
+
+### Avoid
+- Letting untranslated text from server responses bubble up to the UI
+- Mixing translation approaches within components
+- Duplicating translation keys

@@ -14,92 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
-      file_comments: {
+      activity_changes: {
         Row: {
-          comment: string
+          author_id: string
           created_at: string
-          file_id: string
+          description: string
+          file_id: string | null
           id: string
-          timestamp: number | null
-          updated_at: string
-          user_id: string
+          type: string
+          version_id: string
         }
         Insert: {
-          comment: string
+          author_id: string
           created_at?: string
-          file_id: string
+          description: string
+          file_id?: string | null
           id?: string
-          timestamp?: number | null
-          updated_at?: string
-          user_id: string
+          type: string
+          version_id: string
         }
         Update: {
-          comment?: string
+          author_id?: string
           created_at?: string
-          file_id?: string
+          description?: string
+          file_id?: string | null
           id?: string
-          timestamp?: number | null
-          updated_at?: string
-          user_id?: string
+          type?: string
+          version_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "file_comments_file_id_fkey"
+            foreignKeyName: "activity_changes_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_changes_file_id_fkey"
             columns: ["file_id"]
             isOneToOne: false
             referencedRelation: "project_files"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "file_comments_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "activity_changes_version_id_fkey"
+            columns: ["version_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      file_versions: {
-        Row: {
-          change_description: string | null
-          created_at: string
-          created_by: string
-          file_id: string
-          file_path: string
-          id: string
-          version_number: number
-        }
-        Insert: {
-          change_description?: string | null
-          created_at?: string
-          created_by: string
-          file_id: string
-          file_path: string
-          id?: string
-          version_number: number
-        }
-        Update: {
-          change_description?: string | null
-          created_at?: string
-          created_by?: string
-          file_id?: string
-          file_path?: string
-          id?: string
-          version_number?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "file_versions_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "file_versions_file_id_fkey"
-            columns: ["file_id"]
-            isOneToOne: false
-            referencedRelation: "project_files"
+            referencedRelation: "project_versions"
             referencedColumns: ["id"]
           },
         ]
@@ -178,6 +140,65 @@ export type Database = {
         }
         Relationships: []
       }
+      project_comments: {
+        Row: {
+          comment: string
+          created_at: string
+          file_id: string | null
+          id: string
+          project_id: string
+          user_id: string
+          version_id: string | null
+        }
+        Insert: {
+          comment: string
+          created_at?: string
+          file_id?: string | null
+          id?: string
+          project_id: string
+          user_id: string
+          version_id?: string | null
+        }
+        Update: {
+          comment?: string
+          created_at?: string
+          file_id?: string | null
+          id?: string
+          project_id?: string
+          user_id?: string
+          version_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_comments_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "project_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_comments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_comments_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "project_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_files: {
         Row: {
           collaboration_mode: string | null
@@ -191,7 +212,6 @@ export type Database = {
           project_id: string
           uploaded_at: string
           uploaded_by: string
-          version: number
         }
         Insert: {
           collaboration_mode?: string | null
@@ -205,7 +225,6 @@ export type Database = {
           project_id: string
           uploaded_at?: string
           uploaded_by: string
-          version?: number
         }
         Update: {
           collaboration_mode?: string | null
@@ -219,7 +238,6 @@ export type Database = {
           project_id?: string
           uploaded_at?: string
           uploaded_by?: string
-          version?: number
         }
         Relationships: [
           {
@@ -366,6 +384,54 @@ export type Database = {
           },
         ]
       }
+      project_versions: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string
+          id: string
+          is_active: boolean | null
+          project_id: string
+          version_name: string
+          version_type: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description: string
+          id?: string
+          is_active?: boolean | null
+          project_id: string
+          version_name: string
+          version_type: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string
+          id?: string
+          is_active?: boolean | null
+          project_id?: string
+          version_name?: string
+          version_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_versions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_versions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           archived_at: string | null
@@ -452,6 +518,52 @@ export type Database = {
         }
         Relationships: []
       }
+      version_files: {
+        Row: {
+          added_at: string
+          copied_from_version_id: string | null
+          file_id: string
+          id: string
+          version_id: string
+        }
+        Insert: {
+          added_at?: string
+          copied_from_version_id?: string | null
+          file_id: string
+          id?: string
+          version_id: string
+        }
+        Update: {
+          added_at?: string
+          copied_from_version_id?: string | null
+          file_id?: string
+          id?: string
+          version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "version_files_copied_from_version_id_fkey"
+            columns: ["copied_from_version_id"]
+            isOneToOne: false
+            referencedRelation: "project_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "version_files_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: true
+            referencedRelation: "project_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "version_files_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "project_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -487,6 +599,10 @@ export type Database = {
       }
       generate_unique_username: {
         Args: { display_name: string }
+        Returns: string
+      }
+      generate_version_name: {
+        Args: { p_project_id: string; p_version_type: string }
         Returns: string
       }
       is_project_member: {

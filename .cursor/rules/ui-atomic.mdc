@@ -1,0 +1,41 @@
+---
+description: Guidelines for writing UI components following Atomic Design principles
+alwaysApply: false
+---
+  - "src/components/atoms/**/*"
+  - "src/components/molecules/**/*"
+  - "src/components/organisms/**/*"
+  - "src/components/templates/**/*"
+
+# UI – Atomic Design
+
+## Core Principles
+- Keep components small, reusable, and free of business logic
+- Use Shadcn/UI + Radix as foundation; Tailwind for layout/spacing (avoid @apply)
+- Utilize `cn()` helper and `class-variance-authority` for component variants
+
+## Component Guidelines
+
+### Atoms
+- Pure presentational components
+- No data fetching or complex state
+- Only UI-specific state allowed (e.g., hover, focus)
+
+### Molecules
+- Compose multiple atoms together
+- Minimal internal state management
+- No I/O operations or side effects
+
+### Organisms
+- Orchestrate molecules and light page logic
+- Follow server-first approach (no client-side data fetching)
+- Handle component composition and interactions
+
+### Templates
+- Focus solely on layout and grid systems
+- Define page structure and component placement
+
+## Best Practices
+- Split files exceeding 200 lines for maintainability
+- Use internationalization (i18n) for all text content
+- Add `use client` directive only when necessary

@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import UserAvatar from "@/components/atoms/user-avatar";
 import { Clock, MessageSquare, Plus, FileAudio, Music, Download } from "lucide-react";
 
 export type ProjectActivityChangeType = "addition" | "feedback" | "update";
@@ -89,6 +89,25 @@ export default function ProjectActivity({
     return value;
   };
 
+  const startOfDay = (d: Date) => {
+    const c = new Date(d);
+    c.setHours(0, 0, 0, 0);
+    return c;
+  };
+
+  const getGroupLabel = (value: string): string => {
+    const d = new Date(value);
+    if (!isNaN(d.getTime())) {
+      const today = startOfDay(new Date());
+      const day = startOfDay(d);
+      const diffDays = Math.round((today.getTime() - day.getTime()) / (1000 * 60 * 60 * 24));
+      if (diffDays === 0) return "Today";
+      if (diffDays === 1) return "Yesterday";
+      return d.toLocaleDateString(locale, { day: "numeric", month: "short", year: "numeric" });
+    }
+    return value;
+  };
+
   if (!versions || versions.length === 0) {
     return (
       <Card>
@@ -114,21 +133,26 @@ export default function ProjectActivity({
       })).filter(v => v.microChanges.length > 0)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 mt-8">
       {filteredVersions.map((v, idx) => {
+        const currentLabel = getGroupLabel(v.date);
+        const prevLabel = idx > 0 ? getGroupLabel(filteredVersions[idx - 1].date) : null;
+        const showHeader = idx === 0 || currentLabel !== prevLabel;
         const isActive = v.isActive ?? idx === 0;
         return (
-          <Card
-            key={v.version}
-            className={`${isActive ? "border-l-4 border-l-green-500" : "border-l-4 border-l-gray-200"}`}
-          >
+          <div className="space-y-2" key={v.version}>
+            {showHeader && (
+              <div className="">
+                <div className="text-xs sm:text-sm font-medium text-muted-foreground">{currentLabel}</div>
+              </div>
+            )}
+            <Card
+              className={`${isActive ? "border-l-4 border-l-green-500" : "border-l-4 border-l-gray-200"}`}
+            >
             <CardHeader className="pb-5">
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-3 min-w-0">
-                  <Avatar className="h-9 w-9 mt-1">
-                    <AvatarImage src={v.avatar || undefined} alt={v.author} />
-                    <AvatarFallback>{v.author.slice(0, 2).toUpperCase()}</AvatarFallback>
-                  </Avatar>
+                  <UserAvatar className="h-9 w-9 mt-1" name={v.author} src={v.avatar || null} />
                   <div className="min-w-0">
                     <div className="flex items-center gap-3">
                       <CardTitle className="text-base font-semibold truncate">{v.version}</CardTitle>
@@ -165,12 +189,7 @@ export default function ProjectActivity({
                     <div key={change.id} className={`${base} ${typeStyles}`}>
                       <div className="flex items-center gap-2 mt-0.5">
                         {getChangeIcon(change.type)}
-                        <Avatar className="h-6 w-6">
-                          <AvatarImage src={change.avatar || undefined} alt={change.author} />
-                          <AvatarFallback className="text-xs">
-                            {change.author.slice(0, 1).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
+                        <UserAvatar className="h-6 w-6" name={change.author} src={change.avatar || null} />
                       </div>
 
                       <div className="flex-1 min-w-0">
@@ -226,7 +245,8 @@ export default function ProjectActivity({
                 })}
               </div>
             </CardContent>
-          </Card>
+            </Card>
+          </div>
         );
       })}
     </div>

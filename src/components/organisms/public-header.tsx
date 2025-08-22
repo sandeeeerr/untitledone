@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { User2, LogOut, Monitor } from "lucide-react"
+import UserAvatar from "@/components/atoms/user-avatar"
 import { Logo } from "@/components/ui/logo"
 import { useCurrentUser } from "@/hooks/use-current-user"
 import { useProfile } from "@/lib/api/queries"
@@ -47,11 +48,14 @@ export default function LandingHeader() {
 							</Button>
 							<DropdownMenu>
 								<DropdownMenuTrigger asChild>
-									<button
-										aria-label="User menu"
-										className="h-9 w-9 rounded-full border flex items-center justify-center hover:bg-accent hover:text-accent-foreground"
-									>
-										<User2 className="h-[1.1rem] w-[1.1rem]" />
+									<button aria-label="User menu" className="rounded-full">
+										<UserAvatar
+											className="h-9 w-9 border"
+											name={profile?.display_name || null}
+											username={profile?.username || null}
+											userId={currentUser.id}
+											src={profile?.avatar_url || null}
+										/>
 									</button>
 								</DropdownMenuTrigger>
 								<DropdownMenuContent align="end" className="w-48">

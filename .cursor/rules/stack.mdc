@@ -1,6 +1,4 @@
 ---
-description: Explanation of the main stack / structure of the project
-globs: 
 alwaysApply: true
 ---
 # Next.js + Supabase + Shadcn/UI (NSS) Boilerplate

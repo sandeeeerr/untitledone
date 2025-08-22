@@ -1,0 +1,18 @@
+---
+description: Guidelines for forms and validation with React Hook Form and Zod
+alwaysApply: false
+---
+  - "src/**/?(*.)form.{tsx,ts}"
+  - "src/components/**/*{Form,Input,Field}*.tsx"
+
+# Forms & Validation
+
+## Best Practices
+- Use `react-hook-form` with `@hookform/resolvers/zod` for form management and validation
+- Validate at the edges: Use Zod schemas in Server Actions/API endpoints
+- Display field errors inline using aria-* attributes and `FormMessage` components
+- Keep form state management consistent within a form
+
+## Avoid
+- Mixing controlled and uncontrolled form components in the same form
+- Client-side validation without corresponding server-side validation

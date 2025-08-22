@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
+import React from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -47,6 +48,8 @@ export function ProfileEditModal({ open, onOpenChange }: ProfileEditModalProps) 
   const { data: profile } = useProfile();
   const { data: user } = useCurrentUser();
   const router = useRouter();
+  const [uploading, setUploading] = React.useState(false);
+  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
 
   type ProfileFormValues = z.input<typeof ProfileEditSchema>;
 
@@ -70,6 +73,7 @@ export function ProfileEditModal({ open, onOpenChange }: ProfileEditModalProps) 
         location: profile.location ?? "",
         socials: form.getValues("socials"),
       });
+      setPreviewUrl(profile.avatar_url ?? null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile]);
@@ -95,6 +99,7 @@ export function ProfileEditModal({ open, onOpenChange }: ProfileEditModalProps) 
       display_name: values.display_name,
       bio: values.bio,
       location: values.location,
+      avatar_url: previewUrl ?? undefined,
     });
 
     try {
@@ -133,6 +138,36 @@ export function ProfileEditModal({ open, onOpenChange }: ProfileEditModalProps) 
         </DialogHeader>
 
         <div className="space-y-3 mb-4">
+          <div className="flex items-center gap-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={previewUrl || "/images/logo.svg"}
+              alt="Avatar preview"
+              className="h-16 w-16 rounded-full object-cover border"
+            />
+            <div className="flex items-center gap-2">
+              <Input
+                type="file"
+                accept="image/png,image/jpeg,image/jpg,image/webp"
+                onChange={async (e) => {
+                  const file = e.currentTarget.files?.[0];
+                  if (!file || !user?.id) return;
+                  try {
+                    setUploading(true);
+                    // Upload to Supabase Storage
+                    const { uploadAvatar } = await import("@/lib/supabase/upload-avatar");
+                    const publicUrl = await uploadAvatar(user.id, file);
+                    setPreviewUrl(publicUrl);
+                  } catch (err) {
+                    console.error(err);
+                  } finally {
+                    setUploading(false);
+                  }
+                }}
+                disabled={uploading}
+              />
+            </div>
+          </div>
           {user && (
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">User ID</span>

@@ -1,95 +1,417 @@
+# UntitledOne – Full-Stack Music Collaboration Platform
+Built with Next.js, Supabase & Shadcn/UI
 
-# UntitledOne – Full-Stack Music Collaboration Platform  
-Built with Next.js, Supabase & Shadcn/UI  
+**UntitledOne** is an open-source platform for remote collaboration between producers, DJs, and audio creatives. It combines file-sharing, time-based feedback, and lightweight project management — optimized for usability, modularity, and speed.
 
-**UntitledOne** is an open-source platform designed for remote collaboration between producers, DJs, and audio creatives. Built using a modern tech stack, it combines file-sharing, feedback, and project management features into one focused environment — prioritizing usability, modularity, and speed.
-
-## ⚙️ Project Structure  
-
-The project follows a modular and scalable file structure:
+## Project Structure
 
 ```
 src/
-├── app/                    # App Router structure (Next.js 15)
-│   ├── auth/               # Authentication flows
-│   ├── dashboard/          # Project overview for logged-in users
-│   ├── project/            # Project pages, feedback & file views
-│   └── landing/            # Public landing page
-├── components/             # Reusable UI components (Shadcn)
-│   └── ui/                 # Atomic UI building blocks
-├── fonts/                  # Typography assets
-├── hooks/                  # Custom hooks
-├── i18n/                   # Translation files
-├── lib/                    # Configs & utility functions
-│   ├── api/                # API queries & helpers
-│   ├── supabase/           # Supabase client logic
-│   └── env.ts              # Environment configuration
-├── stories/                # Storybook components
-├── types/                  # Supabase schema types (auto-generated)
-└── middleware.ts           # Next.js middleware (auth handling)
+├─ app/                         # Next.js App Router (server-first)
+│  └─ (routes)/…                # feature routes (e.g., dashboard, project, auth)
+├─ components/                  # Atomic Design + shadcn/ui
+│  ├─ atoms/
+│  ├─ molecules/
+│  ├─ organisms/
+│  ├─ templates/                # includes email templates
+│  └─ ui/                       # shadcn/ui building blocks
+├─ hooks/                       # custom hooks
+├─ i18n/                        # next-intl (messages/, routing)
+├─ lib/
+│  ├─ api/                      # queries, mutations, server actions
+│  ├─ supabase/                 # server/client helpers
+│  ├─ env.ts                    # zod-validated env
+│  └─ utils.ts                  # cn(), helpers
+├─ stories/                     # Storybook
+├─ types/                       # Supabase schema types (generated)
+└─ styles/                      # globals.css, tailwind.css (optional)
 ```
 
-## 🧠 Development Philosophy  
+## Development Philosophy
 
-To ensure long-term maintainability, UntitledOne follows these key principles:
+- **Server-first**: data fetching & mutations via RSC/Server Actions; client components zo klein mogelijk.
+- **Clear states**: elke route/segment heeft loading, empty en error states.
+- **Atomic UI**: kleine, herbruikbare components; geen businesslogica in UI.
+- **Single Source of Truth**: types, env en Supabase-setup centraal en getypeerd.
+- **DRY & conventions**: herhaal geen logica; volg vaste patronen.
+- **A11y & theming**: Radix toegankelijkheid, toetsenbordnavigatie, dark mode getest.
 
-- **Atomic UI**: Components are structured using the [Atomic Design](https://bradfrost.com/blog/post/atomic-web-design/) methodology to ensure reusability and clarity.
-- **Single Source of Truth**: All config and schema logic is centralized (e.g., types, env, Supabase setup).
-- **No Repetition (DRY)**: Common logic is abstracted into hooks or utility functions.
-- **Convention Over Configuration**: Navigation patterns and UI decisions follow best practices to reduce cognitive overhead.
-- **Accessibility & Theming**: Light/dark mode, keyboard navigation and semantic markup are implemented where possible.
+## Core Stack
 
-## 🧰 Core Tech Stack  
+- **Next.js 15 (App Router)**, **React**, **TypeScript**
+- **Supabase** (Auth, DB, Storage)
+- **Shadcn/UI** + **Radix UI** + **Tailwind**
+- **TanStack Query** voor server state
+- **react-hook-form** + **Zod** voor forms
+- **next-intl** voor i18n
+- DX: **ESLint**, **Prettier**, **Vitest**, **Cypress**, **Storybook**
 
-### Framework & Backend  
-- **Next.js 15 (App Router)** – Flexible routing, SSR and edge-ready  
-- **Supabase** – Auth, database, and storage as a Firebase alternative  
-- **TypeScript** – Type safety across the stack  
-- **React 18** – Component-based UI  
+## UI & i18n Guidelines
 
-### UI & Styling  
-- **Shadcn/UI** – Accessible UI components powered by Radix UI  
-- **Tailwind CSS** – Utility-first styling  
-- **Lucide React** – Icon library  
-- **next-themes** – Theme toggling (light/dark)  
+- Geen hardcoded UI-strings; gebruik `next-intl` (`useTranslations`) met gescope’de keys en pluralization.
+- Shadcn + Radix als basis; Tailwind voor layout/spacing; geen `@apply`.
+- Variants via `class-variance-authority`; `cn()` voor class merges.
+- Atoms: puur visueel. Molecules: combineert atoms. Organisms: schermdelen, minimale orchestration. Templates: layout-only.
 
-### Forms & Validation  
-- **React Hook Form** – Declarative forms  
-- **Zod** – Schema validation  
-- **@hookform/resolvers** – Zod ↔ RHF integration  
+## Routing, Data & Performance
 
-### Data Fetching  
-- **TanStack Query (React Query)** – Server state management  
+- Geen client-side fetch in RSC. Gebruik `fetch`/DB in server context of Server Actions.
+- Stel `revalidate`, `dynamic` en caching bewust in.
+- Minimaliseer `use client`; gebruik Suspense/dynamic import voor niet-kritische UI.
+- Optimaliseer images en vermijd zware berekeningen in render (desnoods `useMemo`).
 
-### i18n  
-- **next-intl** – Translation system with `en.json`, `fr.json`, etc.  
+## Security & ENV
 
-### Dev Experience  
-- **Storybook** – Component development environment  
-- **Vitest** – Unit testing  
-- **Cypress** – E2E testing  
-- **ESLint & Prettier** – Linting and code style  
-- **Postgres** – Managed by Supabase  
+- Alleen variabelen met `NEXT_PUBLIC_*` mogen in client code.
+- Secrets (Supabase, Resend) uitsluitend server-only (Server Actions, API routes of Edge Functions).
+- Gebruik `.env.local` en `.env.production`. Lever `.env.example` met placeholders:
 
-## 🧪 Development Workflow  
+```
+SUPABASE_URL=
+SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+SUPABASE_DB_URL=
+RESEND_API_KEY=
+NEXT_PUBLIC_SITE_URL=
+```
 
-| Task                      | Command                       |
-|---------------------------|-------------------------------|
-| Start dev server          | `npm run dev`                 |
-| Type check                | `npm run typecheck`           |
-| Format code               | `npm run format`              |
-| Lint                      | `npm run lint`                |
-| Generate DB types         | `npm run gen:types`           |
-| Run unit tests            | `npm run test`                |
-| Open Cypress (E2E tests)  | `npm run cypress:open`        |
-| Start Storybook           | `npm run storybook`           |
+## Email (Resend)
 
-## 🛠️ Customization & Extension  
+- E-mail versturen gebeurt server-only met TSX templates in `src/components/templates/`.
+- Geen keys in de client bundel. Voeg DKIM/afzenderdomein toe in deployment.
 
-The project is built to scale. Some key areas for extension:
+## Database, Migrations & RLS
 
-- Extend routes (`/app`) to add new features  
-- Add UI components to `/components/`  
-- Expand Supabase schema and regenerate types  
-- Add new languages in `src/i18n/messages/`  
-- Update the `.env` file for environment-specific config  
+- **Migrations** zijn idempotent en zoveel mogelijk in één transactie. Gebruik `if not exists`/`if exists`. Noteer onderaan hoe te “down”-reversen.
+
+Voorbeeld:
+
+```sql
+begin;
+
+create table if not exists public.projects (
+  id bigint generated always as identity primary key,
+  owner_id uuid not null,
+  name text not null,
+  created_at timestamptz not null default now()
+);
+
+alter table public.projects enable row level security;
+
+create index if not exists projects_owner_id_idx
+  on public.projects(owner_id);
+
+commit;
+
+/* Down (manual notes)
+- drop index if exists public.projects_owner_id_idx;
+- drop table if exists public.projects;
+*/
+```
+
+* **RLS policies**: altijd per operatie (select/insert/update/delete) en expliciet `to authenticated/anon`. Gebruik `(select auth.uid())` in filters voor betere planning.
+
+Canoniek voorbeeld:
+
+```sql
+create policy "projects are viewable by owners"
+on public.projects
+for select
+to authenticated
+using ( (select auth.uid()) = owner_id );
+
+create policy "owners can insert projects"
+on public.projects
+for insert
+to authenticated
+with check ( (select auth.uid()) = owner_id );
+
+create policy "owners can update projects"
+on public.projects
+for update
+to authenticated
+using ( (select auth.uid()) = owner_id )
+with check ( (select auth.uid()) = owner_id );
+
+create policy "owners can delete projects"
+on public.projects
+for delete
+to authenticated
+using ( (select auth.uid()) = owner_id );
+```
+
+## SQL Style (samenvatting)
+
+* Keywords en ongequote identifiers in **lowercase**; gebruik `public.table` expliciet.
+* Snake_case voor tabellen en kolommen; tabellen meervoud, kolommen enkelvoud.
+* ISO timestamps (`timestamptz`) en duidelijke comments bij complexe stappen.
+* Bij complexe queries: CTE’s, lineaire opbouw, leesbaarheid boven micro-optimisatie.
+
+## Cursor Rules Mapping (globs)
+
+Deze repo gebruikt Auto Attached rules per domein. Relevante mappen:
+
+```
+src/components/atoms/**
+src/components/molecules/**
+src/components/organisms/**
+src/components/templates/**
+src/components/ui/**
+src/app/**
+src/lib/supabase/**
+src/app/api/**
+src/i18n/**
+```
+
+Doel:
+
+* Atomic UI patterns automatisch toepassen in `components/**`.
+* Server-first en App Router patronen in `app/**`.
+* Typed Supabase usage en RLS-conventies in `lib/supabase/**` en `app/api/**`.
+* i18n afdwingen in de gehele `src/**`.
+
+## Development Workflow
+
+| Task                     | Command                |
+| ------------------------ | ---------------------- |
+| Dev server               | `npm run dev`          |
+| Type check               | `npm run typecheck`    |
+| Lint                     | `npm run lint`         |
+| Format code              | `npm run format`       |
+| Generate DB types        | `npm run gen:types`    |
+| Unit tests               | `npm run test`         |
+| E2E (Cypress)            | `npm run cypress:open` |
+| Storybook                | `npm run storybook`    |
+| Full check (type + lint) | `pnpm check`           |
+
+## Package & Tooling Notes
+
+* `format` script: `prettier --write .`
+* Handige extra scripts:
+
+  * `lint:fix`: `next lint --fix`
+  * `check`: `pnpm typecheck && pnpm lint`
+* Prettier is leidend (incl. `prettier-plugin-tailwindcss`).
+* ESLint: react-hooks, import/order, @tanstack rules, no unused vars.
+* TypeScript strict: `noImplicitAny`, `strictNullChecks`, `exactOptionalPropertyTypes`.
+* Tailwind PostCSS plugin opnemen in `postcss.config.js` indien nodig (`@tailwindcss/postcss`).
+
+## Customization & Extension
+
+* Breid routes uit onder `src/app/`.
+* Voeg UI toe in `src/components/` (Atomic + shadcn).
+* Pas DB-schema aan via migrations; **genereer types opnieuw** (`npm run gen:types`).
+* Breid i18n uit in `src/i18n/messages/`.
+* Werk `.env` bij per omgeving.
+
+# UntitledOne – Full-Stack Music Collaboration Platform
+Built with Next.js, Supabase & Shadcn/UI
+
+**UntitledOne** is an open-source platform for remote collaboration between producers, DJs, and audio creatives. It combines file-sharing, time-based feedback, and lightweight project management — optimized for usability, modularity, and speed.
+
+## Project Structure
+src/
+├─ app/ # Next.js App Router (server-first)
+│ └─ (routes)/… # feature routes (e.g., dashboard, project, auth)
+├─ components/ # Atomic Design + shadcn/ui
+│ ├─ atoms/
+│ ├─ molecules/
+│ ├─ organisms/
+│ ├─ templates/ # includes email templates
+│ └─ ui/ # shadcn/ui building blocks
+├─ hooks/ # custom hooks
+├─ i18n/ # next-intl (messages/, routing)
+├─ lib/
+│ ├─ api/ # queries, mutations, server actions
+│ ├─ supabase/ # server/client helpers
+│ ├─ env.ts # zod-validated env
+│ └─ utils.ts # cn(), helpers
+├─ stories/ # Storybook
+├─ types/ # Supabase schema types (generated)
+└─ styles/ # globals.css, tailwind.css (optional)
+
+## Development Philosophy
+
+- **Server-first**: data fetching & mutations via RSC/Server Actions; client components zo klein mogelijk.
+- **Clear states**: elke route/segment heeft loading, empty en error states.
+- **Atomic UI**: kleine, herbruikbare components; geen businesslogica in UI.
+- **Single Source of Truth**: types, env en Supabase-setup centraal en getypeerd.
+- **DRY & conventions**: herhaal geen logica; volg vaste patronen.
+- **A11y & theming**: Radix toegankelijkheid, toetsenbordnavigatie, dark mode getest.
+
+## Core Stack
+
+- **Next.js 15 (App Router)**, **React**, **TypeScript**
+- **Supabase** (Auth, DB, Storage)
+- **Shadcn/UI** + **Radix UI** + **Tailwind**
+- **TanStack Query** voor server state
+- **react-hook-form** + **Zod** voor forms
+- **next-intl** voor i18n
+- DX: **ESLint**, **Prettier**, **Vitest**, **Cypress**, **Storybook**
+
+## UI & i18n Guidelines
+
+- Geen hardcoded UI-strings; gebruik `next-intl` (`useTranslations`) met gescope’de keys en pluralization.
+- Shadcn + Radix als basis; Tailwind voor layout/spacing; geen `@apply`.
+- Variants via `class-variance-authority`; `cn()` voor class merges.
+- Atoms: puur visueel. Molecules: combineert atoms. Organisms: schermdelen, minimale orchestration. Templates: layout-only.
+
+## Routing, Data & Performance
+
+- Geen client-side fetch in RSC. Gebruik `fetch`/DB in server context of Server Actions.
+- Stel `revalidate`, `dynamic` en caching bewust in.
+- Minimaliseer `use client`; gebruik Suspense/dynamic import voor niet-kritische UI.
+- Optimaliseer images en vermijd zware berekeningen in render (desnoods `useMemo`).
+
+## Security & ENV
+
+- Alleen variabelen met `NEXT_PUBLIC_*` mogen in client code.
+- Secrets (Supabase, Resend) uitsluitend server-only (Server Actions, API routes of Edge Functions).
+- Gebruik `.env.local` en `.env.production`. Lever `.env.example` met placeholders:
+
+SUPABASE_URL=
+SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+SUPABASE_DB_URL=
+RESEND_API_KEY=
+NEXT_PUBLIC_SITE_URL=
+
+sql
+Copy
+Edit
+
+## Email (Resend)
+
+- E-mail versturen gebeurt server-only met TSX templates in `src/components/templates/`.
+- Geen keys in de client bundel. Voeg DKIM/afzenderdomein toe in deployment.
+
+## Database, Migrations & RLS
+
+- **Migrations** zijn idempotent en zoveel mogelijk in één transactie. Gebruik `if not exists`/`if exists`. Noteer onderaan hoe te “down”-reversen.
+
+Voorbeeld:
+
+```sql
+begin;
+
+create table if not exists public.projects (
+  id bigint generated always as identity primary key,
+  owner_id uuid not null,
+  name text not null,
+  created_at timestamptz not null default now()
+);
+
+alter table public.projects enable row level security;
+
+create index if not exists projects_owner_id_idx
+  on public.projects(owner_id);
+
+commit;
+
+/* Down (manual notes)
+- drop index if exists public.projects_owner_id_idx;
+- drop table if exists public.projects;
+*/
+RLS policies: altijd per operatie (select/insert/update/delete) en expliciet to authenticated/anon. Gebruik (select auth.uid()) in filters voor betere planning.
+
+Canoniek voorbeeld:
+
+```sql
+create policy "projects are viewable by owners"
+on public.projects
+for select
+to authenticated
+using ( (select auth.uid()) = owner_id );
+
+create policy "owners can insert projects"
+on public.projects
+for insert
+to authenticated
+with check ( (select auth.uid()) = owner_id );
+
+create policy "owners can update projects"
+on public.projects
+for update
+to authenticated
+using ( (select auth.uid()) = owner_id )
+with check ( (select auth.uid()) = owner_id );
+
+create policy "owners can delete projects"
+on public.projects
+for delete
+to authenticated
+using ( (select auth.uid()) = owner_id );
+```
+SQL Style (samenvatting)
+Keywords en ongequote identifiers in lowercase; gebruik public.table expliciet.
+
+Snake_case voor tabellen en kolommen; tabellen meervoud, kolommen enkelvoud.
+
+ISO timestamps (timestamptz) en duidelijke comments bij complexe stappen.
+
+Bij complexe queries: CTE’s, lineaire opbouw, leesbaarheid boven micro-optimisatie.
+
+Cursor Rules Mapping (globs)
+Deze repo gebruikt Auto Attached rules per domein. Relevante mappen:
+
+```
+src/components/atoms/**
+src/components/molecules/**
+src/components/organisms/**
+src/components/templates/**
+src/components/ui/**
+src/app/**
+src/lib/supabase/**
+src/app/api/**
+src/i18n/**
+```
+
+Doel:
+
+Atomic UI patterns automatisch toepassen in components/**.
+
+Server-first en App Router patronen in app/**.
+
+Typed Supabase usage en RLS-conventies in lib/supabase/** en app/api/**.
+
+i18n afdwingen in de gehele src/**.
+
+Development Workflow
+Task	Command
+Dev server	npm run dev
+Type check	npm run typecheck
+Lint	npm run lint
+Format code	npm run format
+Generate DB types	npm run gen:types
+Unit tests	npm run test
+E2E (Cypress)	npm run cypress:open
+Storybook	npm run storybook
+Full check (type + lint)	pnpm check
+
+Package & Tooling Notes
+format script: prettier --write .
+
+Handige extra scripts:
+
+lint:fix: next lint --fix
+
+check: pnpm typecheck && pnpm lint
+
+Prettier is leidend (incl. prettier-plugin-tailwindcss).
+
+ESLint: react-hooks, import/order, @tanstack rules, no unused vars.
+
+TypeScript strict: noImplicitAny, strictNullChecks, exactOptionalPropertyTypes.
+
+Tailwind PostCSS plugin opnemen in postcss.config.js indien nodig (@tailwindcss/postcss).
+
+Customization & Extension
+Breid routes uit onder src/app/.
+
+Voeg UI toe in src/components/ (Atomic + shadcn).
+
+Pas DB-schema aan via migrations; genereer types opnieuw (npm run gen:types).
+
+Breid i18n uit in src/i18n/messages/.
+
+Werk .env bij per omgeving.

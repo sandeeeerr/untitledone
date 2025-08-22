@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import UserAvatar from "@/components/atoms/user-avatar"
 import { Plus, Loader2, Search, Filter, Heart, FileAudio, Users, Calendar, ArrowUpDown } from "lucide-react"
 import { useTranslations } from "next-intl"
 import Link from "next/link"
@@ -146,7 +146,7 @@ export default function ProjectsPage() {
           </Button>
         }
       >
-        <div className="container py-6">
+        <div className="container">
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin" />
             <span className="ml-2">{t("loading")}</span>
@@ -169,7 +169,7 @@ export default function ProjectsPage() {
           </Button>
         }
       >
-        <div className="container py-6">
+        <div className="container">
           <div className="text-center py-12">
             <p className="text-muted-foreground mb-4">{error}</p>
             <Button onClick={() => window.location.reload()}>{t("error.tryAgain")}</Button>
@@ -191,7 +191,7 @@ export default function ProjectsPage() {
         </Button>
       }
     >
-      <div className="container py-6">
+      <div className="container">
         <div className="mb-8 space-y-4">
           <div className="flex flex-col sm:flex-row gap-4">
             {/* Search Bar */}
@@ -281,10 +281,13 @@ export default function ProjectsPage() {
                   <CardContent className="space-y-4">
                     {/* Creator info */}
                     <div className="flex items-center gap-3 min-w-0">
-                      <Avatar className="h-8 w-8 shrink-0">
-                        <AvatarImage src={project.creator?.avatar || "/placeholder.svg"} alt={project.creator?.name} />
-                        <AvatarFallback className="text-xs">{project.creator?.name?.charAt(0) || "U"}</AvatarFallback>
-                      </Avatar>
+                      <UserAvatar
+                        className="h-8 w-8 shrink-0"
+                        name={project.creator?.name}
+                        username={undefined}
+                        userId={project.creator?.id}
+                        src={project.creator?.avatar || null}
+                      />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{project.creator?.name || t("unknownCreator")}</p>
                         <p className="text-xs text-muted-foreground">

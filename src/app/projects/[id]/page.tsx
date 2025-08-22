@@ -5,7 +5,7 @@ import LayoutSidebar from '@/components/organisms/layout-sidebar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, FileAudio, Loader2, Music, Settings, Tags, Wrench, UserPlus, Clock, MessageSquare, Download, Plus, Upload } from 'lucide-react';
+import { FileAudio, Loader2, Music, Settings, Tags, Wrench, UserPlus, Clock, MessageSquare, Download, Plus, Upload, Heart } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useCurrentUser } from '@/hooks/use-current-user';
@@ -15,11 +15,12 @@ import InviteDialog from '@/components/molecules/invite-dialog';
 import UploadDialog from '@/components/molecules/upload-dialog';
 import CreateVersionDialog from '@/components/molecules/create-version-dialog';
 import { useProjectMembers, useProjectFiles, useProjectActivity } from '@/lib/api/queries';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import ProjectActivity, { type ProjectActivityVersion } from '@/components/organisms/project-activity';
+import UserAvatar from '@/components/atoms/user-avatar';
+import ProjectActivity from '@/components/organisms/project-activity';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
-import { motion } from 'motion/react';
+import { ArrowLeft } from 'lucide-react';
+// removed motion underline for tabs
 
 export default function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const t = useTranslations('projects');
@@ -32,42 +33,10 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
   const { data: members } = useProjectMembers(id);
   const [activeTab, setActiveTab] = useState<'overview' | 'activity' | 'files' | 'comments'>('activity');
   const [activityQuery, setActivityQuery] = useState<string>("");
-  const tabRefs = React.useRef<(HTMLButtonElement | null)[]>([]);
-  const tabsListRef = React.useRef<HTMLDivElement | null>(null);
-  const [underlineStyle, setUnderlineStyle] = useState<{ left: number; width: number }>({ left: 0, width: 0 });
   
   // Replace hardcoded demoActivity with real data
   const { data: activity, isLoading: activityLoading, error: activityError } = useProjectActivity(id);
 
-  const measureUnderline = React.useCallback(() => {
-    const items: Array<{ value: typeof activeTab }> = [
-      { value: 'activity' },
-      { value: 'files' },
-      { value: 'comments' },
-    ];
-    const activeIndex = items.findIndex(t => t.value === activeTab);
-    const activeEl = tabRefs.current[activeIndex];
-    if (activeEl) {
-      const { offsetLeft, offsetWidth } = activeEl;
-      setUnderlineStyle({ left: offsetLeft, width: offsetWidth });
-      return;
-    }
-    // Fallback: distribute equally if refs not ready
-    const container = tabsListRef.current;
-    if (container) {
-      const width = container.offsetWidth;
-      const part = width / items.length;
-      setUnderlineStyle({ left: part * activeIndex, width: part });
-    }
-  }, [activeTab]);
-
-  React.useLayoutEffect(() => {
-    // measure on mount and when activeTab changes
-    requestAnimationFrame(measureUnderline);
-    const handleResize = () => measureUnderline();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [measureUnderline]);
 
   useEffect(() => {
     async function fetchProject() {
@@ -129,59 +98,55 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
 
   return (
     <LayoutSidebar
-      title={project.name}
+      title={"Project"}
       breadcrumbLabelOverride={project.name}
       titleActions={
         <div className="flex gap-2">
-          {currentUser?.id && project?.owner_id === currentUser.id && (
-            <>
-              <Button size="sm" asChild>
-                <Link href={`/projects/${project.id}/edit`}>
-                  <Settings className=" h-4 w-4" />
-                  Edit
-                </Link>
-              </Button>
-              <InviteDialog projectId={project.id} trigger={<Button variant="outline" size="sm"><UserPlus className="h-4 w-4" />Invite</Button>} />
-            </>
-          )}
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/projects">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
+            </Link>
+          </Button>
+
         </div>
       }
     >
-      <div className="py-2">
+
         <div className="w-full grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* Left column: overview + tabs + tab content */}
           <div className="xl:col-span-2">
-            <div className="grid gap-6">
-              {/* Project Overview */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-2xl">{project.name}</CardTitle>
-                    <Badge variant={project.is_private ? 'secondary' : 'default'}>
-                      {project.is_private ? t('private') : t('public')}
-                    </Badge>
+            <div className="grid">
+              {/* Project meta below title */}
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-3 min-w-0">
+                  <h2 className="text-2xl font-semibold leading-tight truncate">{project.name}</h2>
+                  <Badge variant={project.is_private ? 'secondary' : 'default'}>
+                    {project.is_private ? t('private') : t('public')}
+                  </Badge>
+                </div>
+                {currentUser?.id && project?.owner_id === currentUser.id && (
+                  <div className="flex items-center gap-2 flex-wrap md:flex-nowrap justify-end">
+                    <Button size="sm" variant="outline" asChild>
+                      <Link href={`/projects/${project.id}/edit`}>
+                        <Settings className=" h-4 w-4" />
+                        Edit
+                      </Link>
+                    </Button>
+                    <InviteDialog projectId={project.id} trigger={<Button variant="outline" size="sm"><UserPlus className="h-4 w-4" />Invite</Button>} />
                   </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {project.description && (
-                    <p className="text-muted-foreground">{project.description}</p>
-                  )}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Calendar className="h-4 w-4" />
-                      <span>Updated {new Date(project.updated_at).toLocaleDateString()}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Music className="h-4 w-4" />
-                      <span>{project.genre || 'No genre'}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <FileAudio className="h-4 w-4" />
-                      <span>{project.likes_count} likes</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                )}
+              </div>
+              <div className="flex items-center gap-6 text-sm text-muted-foreground ">
+                <div className="flex items-center gap-2">
+                  <Music className="h-4 w-4" />
+                  <span>{project.genre || 'No genre'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Heart className="h-4 w-4" />
+                  <span>{project.likes_count} Likes</span>
+                </div>
+              </div>
 
               {/* Details (mobile-only, under overview) */}
               <div className="xl:hidden">
@@ -241,13 +206,17 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                       </div>
                       <div className="flex -space-x-2">
                         {(members ?? []).slice(0, 6).map(m => (
-                          <Avatar key={m.user_id} className="border-2 border-background h-8 w-8">
-                            <AvatarImage src={m.profile?.avatar_url || undefined} alt={m.profile?.display_name || m.profile?.username || m.user_id} />
-                            <AvatarFallback>{(m.profile?.display_name || m.profile?.username || m.user_id).slice(0,2).toUpperCase()}</AvatarFallback>
-                          </Avatar>
+                          <UserAvatar
+                            key={m.user_id}
+                            className="border-2 border-background h-8 w-8"
+                            name={m.profile?.display_name}
+                            username={m.profile?.username}
+                            userId={m.user_id}
+                            src={m.profile?.avatar_url}
+                          />
                         ))}
                         {(members?.length ?? 0) === 0 && (
-                          <Avatar className="border-2 border-background h-8 w-8"><AvatarFallback>UO</AvatarFallback></Avatar>
+                          <UserAvatar className="border-2 border-background h-8 w-8" name={"UntitledOne"} username={"uo"} userId={"placeholder"} src={null} />
                         )}
                       </div>
                     </div>
@@ -261,43 +230,37 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                 onValueChange={(v: string) => setActiveTab(v as 'overview' | 'activity' | 'files' | 'comments')}
                 className="w-full gap-4"
               >
-                <TabsList ref={tabsListRef as any} className="bg-background relative rounded-none border-b p-0 w-full flex">
-                  <TabsTrigger
-                    value="activity"
-                    ref={(el) => { tabRefs.current[0] = el; }}
-                    className="relative -mb-[2px] border-b-2 border-transparent data-[state=active]:border-primary px-3 sm:px-4 flex-1 justify-center"
+                <div className="mt-6 md:mt-8 flex items-center justify-between border-b">
+                  <TabsList className="bg-background relative rounded-none border-b-0 p-0 w-auto">
+                    <TabsTrigger
+                      value="activity"
+                      className="relative -mb-[2px] border-b-2 border-transparent data-[state=active]:border-primary px-3 sm:px-4"
                     >
-                    <span className="flex items-center gap-2 text-sm">
-                      <Clock className="h-4 w-4" /> Activity
-                    </span>
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="files"
-                    ref={(el) => { tabRefs.current[1] = el; }}
-                    className="bg-background dark:data-[state=active]:bg-background relative z-10 rounded-none border-0 data-[state=active]:shadow-none px-3 sm:px-4 flex-1 justify-center"
-                  >
-                    <span className="flex items-center gap-2 text-sm">
-                      <FileAudio className="h-4 w-4" /> Files
-                    </span>
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="comments"
-                    ref={(el) => { tabRefs.current[2] = el; }}
-                    className="bg-background dark:data-[state=active]:bg-background relative z-10 rounded-none border-0 data-[state=active]:shadow-none px-3 sm:px-4 flex-1 justify-center"
-                  >
-                    <span className="flex items-center gap-2 text-sm">
-                      <MessageSquare className="h-4 w-4" /> Comments
-                    </span>
-                  </TabsTrigger>
-
-                  <motion.div
-                    initial={false}
-                    className="bg-primary absolute bottom-0 z-20 h-0.5"
-                    layoutId="underline"
-                    style={{ left: underlineStyle.left, width: underlineStyle.width }}
-                    transition={{ type: 'spring', stiffness: 400, damping: 40 }}
-                  />
-                </TabsList>
+                      <span className="flex items-center gap-2 text-sm">
+                        <Clock className="h-4 w-4" /> Activity
+                      </span>
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="files"
+                      className="bg-background dark:data-[state=active]:bg-background relative z-10 rounded-none data-[state=active]:shadow-none px-3 sm:px-4 -mb-[2px] border-b-2 border-transparent data-[state=active]:border-primary"
+                    >
+                      <span className="flex items-center gap-2 text-sm">
+                        <FileAudio className="h-4 w-4" /> Files
+                      </span>
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="comments"
+                      className="bg-background dark:data-[state=active]:bg-background relative z-10 rounded-none data-[state=active]:shadow-none px-3 sm:px-4 -mb-[2px] border-b-2 border-transparent data-[state=active]:border-primary"
+                    >
+                      <span className="flex items-center gap-2 text-sm">
+                        <MessageSquare className="h-4 w-4" /> Comments
+                      </span>
+                    </TabsTrigger>
+                  </TabsList>
+                  <div className="text-xs sm:text-sm text-muted-foreground">
+                    {`Last update: ${new Date(project.updated_at).toLocaleString('nl-NL', { dateStyle: 'medium', timeStyle: 'short' })}`}
+                  </div>
+                </div>
 
                 {/* Toolbar under tabs */}
                 <div className="mt-3 flex items-center justify-between gap-3">
@@ -314,20 +277,11 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                   </div>
                   <div className="flex items-center gap-2">
                     <CreateVersionDialog
-                      projectId={id}
+                      projectId={project.id}
                       trigger={
-                        <Button size="sm" variant="outline" className="h-9 gap-2 px-3">
+                        <Button>
                           <Plus className="h-4 w-4" />
-                          New Version
-                        </Button>
-                      }
-                    />
-                    <UploadDialog
-                      projectId={id}
-                      trigger={
-                        <Button size="sm" className="h-9 gap-2 px-3">
-                          <Upload className="h-4 w-4" />
-                          Upload Files
+                          Add new version
                         </Button>
                       }
                     />
@@ -430,13 +384,17 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                   </div>
                   <div className="flex -space-x-2">
                     {(members ?? []).slice(0, 6).map(m => (
-                      <Avatar key={m.user_id} className="border-2 border-background h-8 w-8">
-                        <AvatarImage src={m.profile?.avatar_url || undefined} alt={m.profile?.display_name || m.profile?.username || m.user_id} />
-                        <AvatarFallback>{(m.profile?.display_name || m.profile?.username || m.user_id).slice(0,2).toUpperCase()}</AvatarFallback>
-                      </Avatar>
+                      <UserAvatar
+                        key={m.user_id}
+                        className="border-2 border-background h-8 w-8"
+                        name={m.profile?.display_name}
+                        username={m.profile?.username}
+                        userId={m.user_id}
+                        src={m.profile?.avatar_url}
+                      />
                     ))}
                     {(members?.length ?? 0) === 0 && (
-                      <Avatar className="border-2 border-background h-8 w-8"><AvatarFallback>UO</AvatarFallback></Avatar>
+                      <UserAvatar className="border-2 border-background h-8 w-8" name={"UntitledOne"} username={"uo"} userId={"placeholder"} src={null} />
                     )}
                   </div>
                 </div>
@@ -444,7 +402,6 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
             </Card>
           </div>
         </div>
-      </div>
     </LayoutSidebar>
   );
 }
@@ -576,3 +533,4 @@ function ProjectFiles({ projectId }: { projectId: string }) {
     </Card>
   );
 } 
+

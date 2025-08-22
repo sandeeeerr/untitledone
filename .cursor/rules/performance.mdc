@@ -1,0 +1,20 @@
+---
+description: Performance guidelines for React Server Components and client code
+alwaysApply: false
+---
+type: auto-attached
+globs:
+  - "src/**/*.{ts,tsx}"
+
+# Performance & React Server Components
+
+## Best Practices
+- Minimize `use client` directives - prefer Server Components where possible
+- Use `React.lazy()` and dynamic imports for non-critical UI components
+- Optimize images and implement appropriate Suspense fallbacks
+- Leverage `useMemo` for expensive computations instead of inline calculations
+
+## Avoid
+- Unnecessary client-side components when Server Components would suffice
+- Heavy computations in render functions
+- Loading large dependencies without code splitting

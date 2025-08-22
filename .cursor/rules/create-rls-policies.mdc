@@ -15,33 +15,55 @@ The output should use the following instructions:
 - You can add short explanations to your messages.
 - The result should be a valid markdown. The SQL code should be wrapped in ``` (including sql language tag).
 - Always use "auth.uid()" instead of "current_user".
-- SELECT policies should always have USING but not WITH CHECK
-- INSERT policies should always have WITH CHECK but not USING
-- UPDATE policies should always have WITH CHECK and most often have USING
-- DELETE policies should always have USING but not WITH CHECK
-- Don't use `FOR ALL`. Instead separate into 4 separate policies for select, insert, update, and delete.
-- The policy name should be short but detailed text explaining the policy, enclosed in double quotes.
+- SELECT policies must always have USING but never WITH CHECK.
+- INSERT policies must always have WITH CHECK but never USING.
+- UPDATE policies must always have WITH CHECK and usually also have USING.
+- DELETE policies must always have USING but never WITH CHECK.
+- Don't use `FOR ALL`. Always create separate policies for select, insert, update, and delete.
+- The policy name should be short but descriptive, enclosed in double quotes.
 - Always put explanations as separate text. Never use inline SQL comments.
-- If the user asks for something that's not related to SQL policies, explain to the user
-  that you can only help with policies.
+- If the user asks for something that's not related to SQL policies, explain to the user that you can only help with policies.
 - Discourage `RESTRICTIVE` policies and encourage `PERMISSIVE` policies, and explain why.
 
-The output should look like this:
+## Example
 
 ```sql
-CREATE POLICY "My descriptive policy." ON books FOR INSERT to authenticated USING ( (select auth.uid()) = author_id ) WITH ( true );
-```
+create policy "Profiles are viewable by everyone"
+on public.profiles
+for select
+to authenticated, anon
+using ( true );
 
-Since you are running in a Supabase environment, take note of these Supabase-specific additions below.
+create policy "Users can insert their own profile"
+on public.profiles
+for insert
+to authenticated
+with check ( (select auth.uid()) = id );
+
+create policy "Users can update their own profile"
+on public.profiles
+for update
+to authenticated
+using ( (select auth.uid()) = id )
+with check ( (select auth.uid()) = id );
+
+create policy "Users can delete their own profile"
+on public.profiles
+for delete
+to authenticated
+using ( (select auth.uid()) = id );
+```
 
 ## Authenticated and unauthenticated roles
 
 Supabase maps every request to one of the roles:
 
-- `anon`: an unauthenticated request (the user is not logged in)
-- `authenticated`: an authenticated request (the user is logged in)
+- **anon**: an unauthenticated request (the user is not logged in)
+- **authenticated**: an authenticated request (the user is logged in)
 
-These are actually [Postgres Roles](mdc:docs/guides/database/postgres/roles). You can use these roles within your Policies using the `TO` clause:
+These are Postgres roles. You can use them in the TO clause.
+
+### Policies using the `TO` clause
 
 ```sql
 create policy "Profiles are viewable by everyone"
@@ -59,9 +81,9 @@ to authenticated
 using ( true );
 ```
 
-Note that `for ...` must be added after the table but before the roles. `to ...` must be added after `for ...`:
+**Note**: The `for ...` must be added after the table but before the roles. The `to ...` must be added after `for ...`:
 
-### Incorrect
+#### Incorrect
 
 ```sql
 create policy "Public profiles are viewable only by authenticated users"
@@ -71,7 +93,7 @@ for select
 using ( true );
 ```
 
-### Correct
+#### Correct
 
 ```sql
 create policy "Public profiles are viewable only by authenticated users"
@@ -145,7 +167,8 @@ create policy "Restrict updates."
 on profiles
 as restrictive
 for update
-to authenticated using (
+to authenticated 
+using (
   (select auth.jwt()->>'aal') = 'aal2'
 );
 ```
@@ -194,7 +217,7 @@ using ( (select auth.uid()) = user_id );
 
 This method works well for JWT functions like `auth.uid()` and `auth.jwt()` as well as `security definer` Functions. Wrapping the function causes an `initPlan` to be run by the Postgres optimizer, which allows it to "cache" the results per-statement, rather than calling the function on each row.
 
-Caution: You can only use this technique if the results of the query or function do not change based on the row data.
+**Caution**: You can only use this technique if the results of the query or function do not change based on the row data.
 
 ### Minimize joins
 
@@ -230,7 +253,7 @@ using (
 
 ### Specify roles in your policies
 
-Always use the Role of inside your policies, specified by the `TO` operator. For example, instead of this query:
+Always use the Role inside your policies, specified by the `TO` operator. For example, instead of this query:
 
 ```sql
 create policy "Users can access their own records" on rls_test
@@ -244,5 +267,7 @@ create policy "Users can access their own records" on rls_test
 to authenticated
 using ( (select auth.uid()) = user_id );
 ```
+
+This prevents the policy `( (select auth.uid()) = user_id )` from running for any `anon` users, since the execution stops at the `to authenticated` step.
 
 This prevents the policy `( (select auth.uid()) = user_id )` from running for any `anon` users, since the execution stops at the `to authenticated` step.

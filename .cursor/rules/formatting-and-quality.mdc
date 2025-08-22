@@ -1,0 +1,23 @@
+---
+description: Formatting and code quality rules (Prettier, ESLint, TS strict)
+alwaysApply: false
+---
+type: always
+globs: []
+
+# Formatting & Quality
+
+## Best Practices
+- Use Prettier as the source of truth for code formatting (including prettier-plugin-tailwindcss)
+- Follow ESLint rules for:
+  - React hooks
+  - Import ordering
+  - TanStack Query
+- Enable strict TypeScript settings:
+  - noImplicitAny
+  - strictNullChecks
+  - exactOptionalPropertyTypes
+
+## Avoid
+- Using PropTypes in TypeScript files
+- Overriding Prettier's default semicolon rules with Standard.js rules

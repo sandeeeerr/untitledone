@@ -1,0 +1,23 @@
+---
+description: Rules for App Router, data fetching, caching, and Server Actions
+alwaysApply: false
+---
+  - "src/app/**/*"
+
+# App Router, Data & Server Actions
+
+## Core Principles
+- Server-first approach: Handle data fetching, authentication, and mutations on the server using React Server Components (RSC) and Server Actions
+- Avoid client-side data fetching in RSC components
+- Use Edge Runtime strategically, being mindful of Node.js API compatibility
+
+## Best Practices
+
+### Do
+- Explicitly configure caching behavior using `export const dynamic = "force-dynamic"` or `revalidate = ...`
+- Implement error, empty state, and loading UI for each route segment
+- Use guard clauses and provide clear error messages to the user interface
+
+### Avoid
+- Large client components at the top of the route hierarchy
+- Using environment variables on the client-side except for `NEXT_PUBLIC_*` prefixed variables

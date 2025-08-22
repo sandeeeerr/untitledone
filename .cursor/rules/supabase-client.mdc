@@ -1,0 +1,21 @@
+---
+description: Guidelines for using the Supabase client safely and consistently
+alwaysApply: false
+---
+  - "src/lib/supabase/**/*"
+  - "src/app/api/**/*"
+
+# Supabase Client Usage
+
+## Best Practices
+
+- Use a single `createServerClient()` helper to avoid multiple client instances
+- Keep database types up-to-date by running `npm run gen:types` after schema changes
+- Never use `any` type in database calls - maintain type safety
+- Enable Row Level Security (RLS) and model expected errors as return types rather than exceptions
+
+## Avoid
+
+- Unnecessary client-side writes when server-side operations are possible
+- Creating multiple Supabase client instances across the application
+- Using untyped database queries or responses

@@ -16,7 +16,7 @@ export default function DashboardPage() {
 
   return (
     <LayoutSidebar title="Dashboard">
-      <div className="py-6 space-y-6">
+      <div className="space-y-6">
         {/* Hero */}
         <Card>
           <CardContent className="p-4 sm:p-6">

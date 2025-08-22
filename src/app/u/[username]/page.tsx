@@ -10,6 +10,7 @@ import { ProfileSectionTabs } from "./section-tabs";
 import { ProfileActions } from "./profile-actions";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { colorFromString } from "@/lib/utils";
 
 async function getProfile(username: string) {
   const hdrs = await headers();
@@ -76,7 +77,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
 
   return (
     <LayoutSidebar>
-      <div className="py-8">
+
         <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <div className="mb-8">
@@ -90,7 +91,10 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
                       className="h-16 w-16 rounded-full object-cover border"
                     />
                   ) : (
-                    <div className="h-16 w-16 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xl font-semibold border">
+                    <div
+                      className="h-16 w-16 rounded-full flex items-center justify-center text-xl font-semibold border text-white"
+                      style={{ backgroundColor: colorFromString(profile.username || title || "unknown") }}
+                    >
                       {getInitial(title || profile.username)}
                     </div>
                   )}
@@ -219,7 +223,6 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
             </Card>
           </div>
         </div>
-      </div>
     </LayoutSidebar>
   );
 } 
