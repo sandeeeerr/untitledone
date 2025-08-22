@@ -14,11 +14,14 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '@/component
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
-const todoSchema = z.object({
-  label: z.string().min(1, 'Label is required'),
+// Create schema function to use translations
+const createTodoSchema = (t: ReturnType<typeof useTranslations>) => z.object({
+  label: z.string().min(1, t('todos.validation.labelRequired')),
 });
 
-type TodoFormValues = z.infer<typeof todoSchema>;
+type TodoFormValues = {
+  label: string;
+};
 
 export default function TodosPage() {
   const t = useTranslations();
@@ -28,6 +31,8 @@ export default function TodosPage() {
   const updateTodoMutation = useUpdateTodo();
   const deleteTodoMutation = useDeleteTodo();
 
+  const todoSchema = createTodoSchema(t);
+  
   const form = useForm<TodoFormValues>({
     resolver: zodResolver(todoSchema),
     defaultValues: {

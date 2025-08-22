@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useTranslations } from 'next-intl';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import LayoutSidebar from '@/components/organisms/layout-sidebar';
@@ -13,24 +14,25 @@ import { Card, CardContent } from '@/components/ui/card';
 
 export default function DashboardPage() {
   const { data: currentUser, isLoading: userLoading } = useCurrentUser();
+  const t = useTranslations('dashboard');
 
   return (
-    <LayoutSidebar title="Dashboard">
+    <LayoutSidebar title={t('title')}>
       <div className="space-y-6">
         {/* Hero */}
         <Card>
-          <CardContent className="p-4 sm:p-6">
+          <CardContent className="p-4 md:p-6">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
                 <div className="flex items-center gap-2 text-sm font-semibold mb-2">
                   <Sparkles className="h-5 w-5 mr-1" />
-                  <span className="truncate">Welcome back,  <br /> {currentUser?.email ? currentUser.email : ''}</span>
+                  <span className="truncate">{t('welcomeBack')} <br /> {currentUser?.email ? currentUser.email : ''}</span>
                 </div>
                 <p className="text-muted-foreground mt-1">
-                  UntitledOne is actively in development. We&#39;re excited you&#39;re here — features will appear and evolve rapidly. Thanks for joining early!
+                  {t('developmentMessage')}
                 </p>
               </div>
-              <Badge variant="secondary" className="shrink-0">Alpha</Badge>
+              <Badge variant="secondary" className="shrink-0">{t('alpha')}</Badge>
             </div>
           </CardContent>
         </Card>
@@ -41,17 +43,17 @@ export default function DashboardPage() {
             <CardContent className="p-4">
               <div className="flex items-center gap-2 text-sm font-medium mb-1">
                 <Rocket className="h-4 w-4" />
-                Quick start
+                {t('quickStart')}
               </div>
               <p className="text-sm text-muted-foreground mb-3">
-                Create a new project and invite collaborators to start working together.
+                {t('quickStartDescription')}
               </p>
               <div className="flex flex-wrap gap-2">
                 <Button asChild size="sm">
-                  <Link href="/projects/new">Create project</Link>
+                  <Link href="/projects/new">{t('createProject')}</Link>
                 </Button>
                 <Button asChild variant="outline" size="sm">
-                  <Link href="/projects">View projects</Link>
+                  <Link href="/projects">{t('viewProjects')}</Link>
                 </Button>
               </div>
             </CardContent>
@@ -61,16 +63,16 @@ export default function DashboardPage() {
             <CardContent className="p-4">
               <div className="flex items-center gap-2 text-sm font-medium mb-1">
                 <BookOpen className="h-4 w-4" />
-                What to expect
+                {t('whatToExpect')}
               </div>
               <p className="text-sm text-muted-foreground">
-                Invitations, team management, and collaboration tools are being built. You might see changes frequently — we&#39;ll keep things as stable as possible.
+                {t('expectationDescription')}
               </p>
               <Separator className="my-3" />
               <ul className="text-sm list-disc pl-5 text-muted-foreground space-y-1">
-                <li>Invite teammates to your projects</li>
-                <li>Manage project details and visibility</li>
-                <li>More collaboration features coming soon</li>
+                <li>{t('features.inviteTeammates')}</li>
+                <li>{t('features.manageProjects')}</li>
+                <li>{t('features.moreFeatures')}</li>
               </ul>
             </CardContent>
           </Card>

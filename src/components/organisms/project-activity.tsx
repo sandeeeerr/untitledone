@@ -1,11 +1,28 @@
 "use client";
 
+import { useDeferredValue, useMemo } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import UserAvatar from "@/components/atoms/user-avatar";
-import { Clock, MessageSquare, Plus, FileAudio, Music, Download } from "lucide-react";
-
-export type ProjectActivityChangeType = "addition" | "feedback" | "update";
+import EmptyState from "@/components/atoms/empty-state";
+import ActivitySkeleton from "@/components/atoms/activity-skeleton";
+import { useProjectActivity } from "@/lib/api/queries";
+import CreateVersionDialog from "@/components/molecules/create-version-dialog";
+import EditVersionDialog from "@/components/molecules/edit-version-dialog";
+import { 
+  getChangeIcon, 
+  getChangePrefix, 
+  getFileIcon, 
+  getGroupLabel, 
+  formatTimeAgo, 
+  truncateText, 
+  safeDateParse, 
+  compareVersions,
+  ProjectActivityChangeType
+} from "@/lib/ui/activity";
 
 export interface ProjectActivityMicroChange {
   id: string;
@@ -27,231 +44,307 @@ export interface ProjectActivityVersion {
   isActive?: boolean; // highlight as current active version
 }
 
-export default function ProjectActivity({
-  versions,
-  locale = "nl-NL",
-  query,
-}: {
-  versions: ProjectActivityVersion[];
-  locale?: string;
+interface ProjectActivityProps {
+  projectId: string;
   query?: string;
-}) {
-  const getChangeIcon = (type: ProjectActivityChangeType) => {
-    switch (type) {
-      case "addition":
-        return <Plus className="h-3 w-3 text-green-600" />;
-      case "feedback":
-        return <MessageSquare className="h-3 w-3 text-blue-600" />;
-      case "update":
-        return <Clock className="h-3 w-3 text-orange-600" />;
-      default:
-        return <Clock className="h-3 w-3 text-muted-foreground" />;
+  sortBy?: 'newest' | 'oldest';
+  onRetry?: () => void;
+  onVersionCreated?: () => void;
+  members?: Array<{
+    user_id: string;
+    profile?: {
+      display_name?: string | null;
+      username?: string | null;
+      avatar_url?: string | null;
+    } | null;
+  }>;
+}
+
+export default function ProjectActivity({ projectId, query, sortBy = 'newest', onRetry, onVersionCreated, members }: ProjectActivityProps) {
+  const { data: versions, isLoading, error, refetch } = useProjectActivity(projectId)
+  const locale = useLocale()
+  const deferredQuery = useDeferredValue(query ?? "")
+  const t = useTranslations('activity')
+  
+  // Helper function to find member data by author name
+  const findMemberByAuthor = (authorName: string) => {
+    if (!members) return null;
+    
+    // Try to match by display name first, then by username
+    return members.find(member => 
+      member.profile?.display_name === authorName || 
+      member.profile?.username === authorName
+    ) || null;
+  }
+
+  // Memoized sorting and filtering
+  const sortedVersions = useMemo(() => {
+    if (!versions) return [];
+    
+    return [...versions].sort((a, b) => {
+      const aDate = safeDateParse(a.date);
+      const bDate = safeDateParse(b.date);
+      const dateDiff = sortBy === 'oldest' ? aDate - bDate : bDate - aDate;
+      
+      // If dates are equal, sort by version name for stability
+      if (dateDiff === 0) {
+        return compareVersions(a.version, b.version, locale);
+      }
+      return dateDiff;
+    });
+  }, [versions, sortBy, locale]);
+
+  const filteredVersions = useMemo(() => {
+    if (!sortedVersions.length) return [];
+    
+    const normalizedQuery = deferredQuery.trim().toLowerCase();
+    if (!normalizedQuery) return sortedVersions;
+
+    return sortedVersions.map(version => ({
+      ...version,
+      microChanges: version.microChanges.filter(change => {
+        const searchFields = [
+          version.version,
+          version.description,
+          change.description,
+          change.author,
+          change.filename ?? ""
+        ].join(" ").toLowerCase();
+        
+        return searchFields.includes(normalizedQuery);
+      })
+    })).filter(version => version.microChanges.length > 0);
+  }, [sortedVersions, deferredQuery]);
+
+  const handleRetry = () => {
+    if (onRetry) {
+      onRetry();
+    } else {
+      refetch();
     }
   };
 
-  const getChangePrefix = (type: ProjectActivityChangeType) => {
-    switch (type) {
-      case "addition":
-        return "+";
-      case "feedback":
-        return "";
-      case "update":
-        return "~";
-      default:
-        return "";
-    }
-  };
+  if (isLoading) {
+    return (
+      <section aria-labelledby="activity-heading">
+        <Card>
+          <CardHeader className="p-4 md:p-6">
+            <CardTitle id="activity-heading" className="text-base">Activity</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 md:p-6" aria-live="polite">
+            <ActivitySkeleton />
+          </CardContent>
+        </Card>
+      </section>
+    )
+  }
 
-  const getFileIcon = (filename?: string) => {
-    if (!filename) return null;
-    const extension = filename.split(".").pop()?.toLowerCase();
-    switch (extension) {
-      case "wav":
-      case "mp3":
-      case "flac":
-        return <FileAudio className="h-3 w-3 text-green-600" />;
-      case "mid":
-      case "midi":
-        return <Music className="h-3 w-3 text-green-600" />;
-      case "als":
-      case "flp":
-      default:
-        return <Download className="h-3 w-3 text-green-600" />;
-    }
-  };
-
-  const formatDateSafe = (value: string, locale: string) => {
-    const d = new Date(value);
-    if (!isNaN(d.getTime())) {
-      return d.toLocaleDateString(locale, { day: "numeric", month: "short" });
-    }
-    // Fallback to raw string if it's not a valid ISO date
-    return value;
-  };
-
-  const startOfDay = (d: Date) => {
-    const c = new Date(d);
-    c.setHours(0, 0, 0, 0);
-    return c;
-  };
-
-  const getGroupLabel = (value: string): string => {
-    const d = new Date(value);
-    if (!isNaN(d.getTime())) {
-      const today = startOfDay(new Date());
-      const day = startOfDay(d);
-      const diffDays = Math.round((today.getTime() - day.getTime()) / (1000 * 60 * 60 * 24));
-      if (diffDays === 0) return "Today";
-      if (diffDays === 1) return "Yesterday";
-      return d.toLocaleDateString(locale, { day: "numeric", month: "short", year: "numeric" });
-    }
-    return value;
-  };
+  if (error) {
+    return (
+      <section aria-labelledby="activity-heading">
+        <Card>
+          <CardHeader className="p-4 md:p-6">
+            <CardTitle id="activity-heading" className="text-base">{t('title')}</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 md:p-6">
+            <EmptyState 
+              title={t('failedToLoad')} 
+              description={t('problemLoadingData')}
+            >
+              <Button onClick={handleRetry} size="sm">
+                {t('tryAgain')}
+              </Button>
+            </EmptyState>
+          </CardContent>
+        </Card>
+      </section>
+    )
+  }
 
   if (!versions || versions.length === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Activity</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">Nog geen activiteit.</p>
-        </CardContent>
-      </Card>
+      <section aria-labelledby="activity-heading">
+        <Card>
+          <CardHeader className="p-4 md:p-6">
+            <CardTitle id="activity-heading" className="text-base">{t('title')}</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 md:p-6">
+            <EmptyState 
+              icon={<Clock className="h-12 w-12" />}
+              title={t('noActivityYet')} 
+              description={t('uploadsAndComments')}
+            >
+              <CreateVersionDialog
+                projectId={projectId}
+                onVersionCreated={onVersionCreated}
+                trigger={<Button size="sm">{t('createFirstVersion')}</Button>}
+              />
+            </EmptyState>
+          </CardContent>
+        </Card>
+      </section>
     );
   }
 
-  const normalizedQuery = (query ?? "").trim().toLowerCase()
-  const filteredVersions = !normalizedQuery
-    ? versions
-    : versions.map(v => ({
-        ...v,
-        microChanges: v.microChanges.filter(c => {
-          const hay = [c.description, c.author, c.filename ?? ""].join(" ").toLowerCase()
-          return hay.includes(normalizedQuery)
-        })
-      })).filter(v => v.microChanges.length > 0)
+  // Handle filtered empty state
+  if (filteredVersions.length === 0 && deferredQuery.trim()) {
+    return (
+      <section aria-labelledby="activity-heading">
+        <Card>
+          <CardHeader className="p-4 md:p-6">
+            <CardTitle id="activity-heading" className="text-base">{t('title')}</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 md:p-6">
+            <EmptyState 
+              title={t('noActivityFound')} 
+              description={t('tryDifferentSearch')}
+            />
+          </CardContent>
+        </Card>
+      </section>
+    );
+  }
 
   return (
-    <div className="space-y-8 mt-8 overflow-x-hidden">
-      {filteredVersions.map((v, idx) => {
-        const currentLabel = getGroupLabel(v.date);
-        const prevLabel = idx > 0 ? getGroupLabel(filteredVersions[idx - 1].date) : null;
-        const showHeader = idx === 0 || currentLabel !== prevLabel;
-        const isActive = v.isActive ?? idx === 0;
-        return (
-          <div className="space-y-2" key={v.version}>
-            {showHeader && (
-              <div className="">
-                <div className="text-xs sm:text-sm font-medium text-muted-foreground">{currentLabel}</div>
-              </div>
-            )}
-            <Card
-              className={`${isActive ? "border-l-4 border-l-green-500" : "border-l-4 border-l-gray-200"} max-w-full overflow-hidden`}
-            >
-            <CardHeader className="pb-5 max-w-full">
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+    <section aria-labelledby="activity-heading">
+      <div className="space-y-8 mt-8 overflow-x-hidden">
+        {filteredVersions.map((version, idx) => {
+          const currentLabel = getGroupLabel(version.date, locale);
+          const prevLabel = idx > 0 ? getGroupLabel(filteredVersions[idx - 1].date, locale) : null;
+          const showHeader = idx === 0 || currentLabel !== prevLabel;
+          const isActive = version.isActive ?? idx === 0;
+          const versionKey = `version-${version.version}-${idx}`;
+          
+          return (
+            <div className="space-y-2" key={versionKey}>
+              {showHeader && (
+                <div className="text-xs sm:text-sm font-medium text-muted-foreground">
+                  {currentLabel}
+                </div>
+              )}
+              <Card className="max-w-full overflow-hidden relative">
+                {/* Active indicator using pseudo-element */}
+                {isActive && (
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-green-500" aria-hidden="true" />
+                )}
+                <CardHeader className="p-4 !pb-3 !md:pb-0 md:p-6 max-w-full">
                 <div className="flex items-start gap-3 min-w-0">
-                  <UserAvatar className="h-9 w-9 mt-1" name={v.author} src={v.avatar || null} />
-                  <div className="min-w-0">
+                  {(() => {
+                    const member = findMemberByAuthor(version.author);
+                    return (
+                      <UserAvatar 
+                        className="h-9 w-9 mt-1" 
+                        name={member?.profile?.display_name || version.author}
+                        username={member?.profile?.username || null}
+                        userId={member?.user_id || null}
+                        src={version.avatar || member?.profile?.avatar_url || null} 
+                      />
+                    );
+                  })()}
+                  <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-3">
-                      <CardTitle className="text-base font-semibold truncate">{v.version}</CardTitle>
+                      <CardTitle className="text-base font-semibold truncate">
+                        {version.version}
+                      </CardTitle>
                       {isActive && (
-                        <Badge variant="default" className="bg-green-600 hover:bg-green-700 text-xs">
-                          Actief
+                        <Badge variant="default" className="text-xs">
+                          Active
                         </Badge>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground truncate" title={v.description}>
-                      {v.description.length > 40 ? `${v.description.slice(0, 40)}...` : v.description}
-                    </p>
+                    {(() => {
+                      const { truncated, isTruncated } = truncateText(version.description);
+                      return (
+                        <p 
+                          className="text-sm text-muted-foreground truncate" 
+                          title={isTruncated ? version.description : undefined}
+                        >
+                          {truncated}
+                        </p>
+                      );
+                    })()}
+
                   </div>
+                  <EditVersionDialog 
+                    versionId={version.version}
+                    currentName={version.version}
+                    currentDescription={version.description}
+                  />
                 </div>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1.5">
-                  <span className="font-medium">{v.author}</span>
-                  <span>•</span>
-                  <span>{formatDateSafe(v.date, locale)}</span>
-                </div>
-              </div>
             </CardHeader>
 
-            <CardContent className="pt-0">
-              <div className="space-y-3">
-                {v.microChanges.map((change) => {
-                  const base =
-                    "flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-all border";
-                  const typeStyles =
-                    change.type === "feedback"
-                      ? "bg-blue-50/30 border-blue-100 hover:bg-blue-50/50 hover:border-blue-200 dark:bg-blue-950/10 dark:border-blue-900/30 dark:hover:bg-blue-950/20"
-                      : change.type === "addition"
-                      ? "bg-green-50/30 border-green-100 hover:bg-green-50/50 hover:border-green-200 dark:bg-green-950/10 dark:border-green-900/30 dark:hover:bg-green-950/20"
-                      : "bg-orange-50/30 border-orange-100 hover:bg-orange-50/50 hover:border-orange-200 dark:bg-orange-950/10 dark:border-orange-900/30 dark:hover:bg-orange-950/20";
+                <CardContent className="p-4 md:p-6 pt-0">
+                  <div className="space-y-3">
+                    {version.microChanges.map((change) => {
+                      const baseClasses = "flex items-start gap-3 p-3 rounded-lg transition-all border w-full max-w-full flex-col sm:flex-row";
+                      const typeStyles = {
+                        feedback: "bg-blue-50/30 border-blue-100 hover:bg-blue-50/50 hover:border-blue-200 dark:bg-blue-950/10 dark:border-blue-900/30 dark:hover:bg-blue-950/20",
+                        addition: "bg-green-50/30 border-green-100 hover:bg-green-50/50 hover:border-green-200 dark:bg-green-950/10 dark:border-green-900/30 dark:hover:bg-green-950/20",
+                        update: "bg-orange-50/30 border-orange-100 hover:bg-orange-50/50 hover:border-orange-200 dark:bg-orange-950/10 dark:border-orange-900/30 dark:hover:bg-orange-950/20"
+                      };
 
-                  return (
-                    <div key={change.id} className={`${base} ${typeStyles} w-full max-w-full flex-col sm:flex-row`}>
-                      <div className="flex items-center gap-2 mt-0.5 shrink-0">
-                        {getChangeIcon(change.type)}
-                        <UserAvatar className="h-6 w-6" name={change.author} src={change.avatar || null} />
-                      </div>
-
-                      <div className="flex-1 min-w-0 w-full">
-                        <p
-                          className={`text-sm break-words ${
-                            change.type === "feedback" ? "italic text-blue-700 dark:text-blue-300" : ""
-                          }`}
+                      return (
+                        <button 
+                          key={change.id} 
+                          className={`${baseClasses} ${typeStyles[change.type] || typeStyles.update}`}
+                          aria-label={`${change.type === 'feedback' ? 'Reply to feedback' : change.filename ? 'View file' : 'View details'}: ${change.description}`}
                         >
-                          <span
-                            className={`font-medium mr-1 ${
-                              change.type === "addition"
-                                ? "text-green-700 dark:text-green-300"
-                                : change.type === "feedback"
-                                ? "text-blue-700 dark:text-blue-300"
-                                : "text-orange-700 dark:text-orange-300"
-                            }`}
-                          >
-                            {getChangePrefix(change.type)}
-                          </span>
-                          {change.description}
-                        </p>
-
-                        {change.filename && (
-                          <div className="flex items-center gap-2 mt-2 p-2 bg-white/80 dark:bg-gray-800/80 rounded border border-green-200 dark:border-green-800 overflow-hidden max-w-full">
-                            {getFileIcon(change.filename)}
-                            <span className="text-xs font-mono text-green-700 dark:text-green-300 break-words">
-                              {change.filename}
-                            </span>
+                          <div className="flex items-center gap-2 mt-0.5 shrink-0">
+                            {getChangeIcon(change.type)}
+                            {(() => {
+                              const member = findMemberByAuthor(change.author);
+                              return (
+                                <UserAvatar 
+                                  className="h-6 w-6" 
+                                  name={member?.profile?.display_name || change.author}
+                                  username={member?.profile?.username || null}
+                                  userId={member?.user_id || null}
+                                  src={change.avatar || member?.profile?.avatar_url || null} 
+                                />
+                              );
+                            })()}
                           </div>
-                        )}
 
-                        <div className="flex flex-wrap sm:flex-nowrap items-start sm:items-center justify-between gap-1 sm:gap-2 mt-2">
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <span className="font-medium">{change.author}</span>
-                            <span>•</span>
-                            <span>{change.time}</span>
-                          </div>
-                          <div className="hidden sm:flex items-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
-                            {change.type === "feedback" && (
-                              <span className="text-xs text-blue-600 dark:text-blue-400">Klik om te reageren</span>
-                            )}
+                          <div className="flex-1 min-w-0 w-full text-left">
+                            <p className={`text-sm break-words ${change.type === "feedback" ? "italic text-blue-700 dark:text-blue-300" : ""}`}>
+                              <span className={`font-medium mr-1 ${
+                                change.type === "addition" ? "text-green-700 dark:text-green-300" :
+                                change.type === "feedback" ? "text-blue-700 dark:text-blue-300" :
+                                "text-orange-700 dark:text-orange-300"
+                              }`}>
+                                {getChangePrefix(change.type)}
+                              </span>
+                              {change.description}
+                            </p>
+
                             {change.filename && (
-                              <span className="text-xs text-green-600 dark:text-green-400">Klik om te bekijken</span>
+                              <div className="flex items-center gap-2 mt-2 p-2 bg-white/80 dark:bg-gray-800/80 rounded border border-muted overflow-hidden max-w-full">
+                                {getFileIcon(change.filename)}
+                                <span className="text-xs font-mono text-muted-foreground break-words">
+                                  {change.filename}
+                                </span>
+                              </div>
                             )}
-                            {change.type !== "feedback" && !change.filename && (
-                              <span className="text-xs text-gray-600 dark:text-gray-400">Klik voor details</span>
-                            )}
+
+                            <div className="flex flex-wrap sm:flex-nowrap items-start sm:items-center justify-between gap-1 sm:gap-2 mt-2">
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <span className="font-medium">{change.author}</span>
+                                <span>•</span>
+                                <span>{formatTimeAgo(change.time, locale)}</span>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-            </Card>
-          </div>
-        );
-      })}
-    </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 

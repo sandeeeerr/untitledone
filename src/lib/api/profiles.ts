@@ -1,4 +1,5 @@
 import { Tables, TablesUpdate } from "@/types/database";
+import { safeParseError } from "@/lib/utils/api";
 
 export type Profile = Tables<"profiles">;
 export type ProfileUpdate = TablesUpdate<"profiles">;
@@ -46,11 +47,3 @@ export async function deleteCurrentProfile() {
   }
 }
 
-async function safeParseError(res: Response) {
-  try {
-    const body = await res.json();
-    return body?.error as string | undefined;
-  } catch {
-    return undefined;
-  }
-} 

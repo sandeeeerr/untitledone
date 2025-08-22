@@ -221,6 +221,86 @@
       }
     }
   },
+  "activity": {
+    "title": "Activiteit",
+    "loadingActivity": "Activiteit laden...",
+    "failedToLoad": "Kan activiteit niet laden",
+    "problemLoadingData": "Er was een probleem bij het laden van de activiteitsgegevens.",
+    "noActivityYet": "Nog geen activiteit",
+    "uploadsAndComments": "Uploads en opmerkingen verschijnen hier.",
+    "noActivityFound": "Geen activiteit gevonden",
+    "tryDifferentSearch": "Probeer een andere zoekterm.",
+    "createFirstVersion": "Eerste versie maken",
+    "tryAgain": "Probeer opnieuw"
+  },
+  "files": {
+    "noFilesFound": "Geen bestanden gevonden",
+    "noFilesYet": "Nog geen bestanden",
+    "tryDifferentSearchTerm": "Probeer een andere zoekterm",
+    "uploadFilesToStart": "Upload bestanden om te beginnen."
+  },
+  "comments": {
+    "noCommentsYet": "Nog geen opmerkingen",
+    "startConversation": "Begin het gesprek met feedback en notities."
+  },
+  "versions": {
+    "missingName": "Naam ontbreekt",
+    "provideName": "Geef een versienaam op.",
+    "missingDescription": "Beschrijving ontbreekt", 
+    "provideDescription": "Geef een beschrijving voor de versie op.",
+    "versionUpdated": "Versie bijgewerkt",
+    "versionUpdatedSuccess": "Versie is succesvol bijgewerkt.",
+    "updateFailed": "Bijwerken mislukt",
+    "failedToUpdate": "Kan versie niet bijwerken. Probeer opnieuw.",
+    "missingVersionName": "Versienaam ontbreekt",
+    "provideCustomVersionName": "Geef een aangepaste versienaam op.",
+    "selectVersionToCopy": "Selecteer een versie om te kopiëren"
+  },
+  "uploads": {
+    "uploadSuccessful": "Upload succesvol",
+    "uploadedFiles": "{count} bestand(en) geüpload",
+    "uploadFailed": "Upload mislukt",
+    "failedToUploadFiles": "Kan bestanden niet uploaden. Probeer opnieuw.",
+    "describeFile": "Beschrijf wat dit bestand bevat..."
+  },
+  "common": {
+    "logo": "Logo",
+    "user": "Gebruiker",
+    "userMenu": "Gebruikersmenu",
+    "home": "Home",
+    "avatarPreview": "Avatar voorvertoning",
+    "displayName": "Weergavenaam",
+    "yourDisplayName": "Jouw weergavenaam",
+    "location": "Locatie",
+    "cityCountry": "Stad, Land",
+    "bio": "Bio",
+    "tellAboutYourself": "Vertel iets over jezelf",
+    "platform": "Platform",
+    "deleting": "Verwijderen...",
+    "deleteProfile": "Profiel verwijderen",
+    "cancel": "Annuleren",
+    "saving": "Opslaan...",
+    "saveChanges": "Wijzigingen opslaan",
+    "sidebar": "Zijbalk",
+    "toggleSidebar": "Zijbalk omschakelen"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcomeBack": "Welkom terug,",
+    "developmentMessage": "UntitledOne is actief in ontwikkeling. We zijn blij dat je er bent — functies zullen snel verschijnen en evolueren. Bedankt dat je vroeg meedoet!",
+    "alpha": "Alpha",
+    "quickStart": "Snel starten",
+    "quickStartDescription": "Maak een nieuw project en nodig medewerkers uit om samen te werken.",
+    "createProject": "Project maken",
+    "viewProjects": "Projecten bekijken",
+    "whatToExpect": "Wat te verwachten",
+    "expectationDescription": "Uitnodigingen, teambeheer en samenwerkingstools worden gebouwd. Je zult mogelijk vaak veranderingen zien — we houden alles zo stabiel mogelijk.",
+    "features": {
+      "inviteTeammates": "Nodig teamgenoten uit voor je projecten",
+      "manageProjects": "Beheer projectdetails en zichtbaarheid", 
+      "moreFeatures": "Meer samenwerkingsfuncties komen binnenkort"
+    }
+  },
   "landing": {
     "nav": {
       "login": "Inloggen",

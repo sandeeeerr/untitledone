@@ -10,7 +10,6 @@ import { ProfileSectionTabs } from "./section-tabs";
 import { ProfileActions } from "./profile-actions";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { colorFromString } from "@/lib/utils";
 import UserAvatar from "@/components/atoms/user-avatar";
 
 async function getProfile(username: string) {
@@ -50,10 +49,7 @@ async function getSocials(username: string) {
   return (await res.json()) as Array<{ platform: string; url: string }>;
 }
 
-function getInitial(nameOrUsername: string) {
-  const char = nameOrUsername.trim().charAt(0).toUpperCase();
-  return char || "U";
-}
+
 
 export default async function PublicProfilePage({ params }: { params: Promise<{ username: string }> }) {
   const { username } = await params;
@@ -65,7 +61,12 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
       const host = hdrs.get("x-forwarded-host") ?? hdrs.get("host");
       const protocol = hdrs.get("x-forwarded-proto") ?? "http";
       const base = host ? `${protocol}://${host}` : "";
-      const res = await fetch(`${base}/api/projects?owner_username=${encodeURIComponent(username)}`, { cache: "no-store" });
+      const res = await fetch(`${base}/api/projects?owner_username=${encodeURIComponent(username)}`, { 
+        cache: "no-store",
+        headers: {
+          'Cookie': hdrs.get('cookie') || '',
+        }
+      });
       if (!res.ok) return [] as Array<{ id: string; name: string; description: string | null; is_private: boolean; file_count: number; collaborators_count: number; likes_count: number }>;
       return (await res.json()) as Array<{ id: string; name: string; description: string | null; is_private: boolean; file_count: number; collaborators_count: number; likes_count: number }>;
     })(),

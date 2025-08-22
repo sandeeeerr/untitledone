@@ -96,7 +96,10 @@
     "title": "Todos",
     "newTodoPlaceholder": "Add a new todo...",
     "noTodos": "No todos yet",
-    "showAll": "Show all"
+    "showAll": "Show all",
+    "validation": {
+      "labelRequired": "Label is required"
+    }
   },
   "profile": {
     "title": "Your profile",
@@ -219,6 +222,86 @@
         "description": "Failed to load project",
         "forbidden": "You are not allowed to edit this project."
       }
+    }
+  },
+  "activity": {
+    "title": "Activity",
+    "loadingActivity": "Loading activity...",
+    "failedToLoad": "Failed to load activity",
+    "problemLoadingData": "There was a problem loading the activity data.",
+    "noActivityYet": "No activity yet",
+    "uploadsAndComments": "Uploads and comments will appear here.",
+    "noActivityFound": "No activity found",
+    "tryDifferentSearch": "Try a different search term.",
+    "createFirstVersion": "Create first version",
+    "tryAgain": "Try again"
+  },
+  "files": {
+    "noFilesFound": "No files found",
+    "noFilesYet": "No files yet",
+    "tryDifferentSearchTerm": "Try a different search term",
+    "uploadFilesToStart": "Upload files to get started."
+  },
+  "comments": {
+    "noCommentsYet": "No comments yet",
+    "startConversation": "Start the conversation with feedback and notes."
+  },
+  "versions": {
+    "missingName": "Missing name",
+    "provideName": "Please provide a version name.",
+    "missingDescription": "Missing description", 
+    "provideDescription": "Please provide a description for the version.",
+    "versionUpdated": "Version updated",
+    "versionUpdatedSuccess": "Version has been updated successfully.",
+    "updateFailed": "Update failed",
+    "failedToUpdate": "Failed to update version. Please try again.",
+    "missingVersionName": "Missing version name",
+    "provideCustomVersionName": "Please provide a custom version name.",
+    "selectVersionToCopy": "Select a version to copy from"
+  },
+  "uploads": {
+    "uploadSuccessful": "Upload successful",
+    "uploadedFiles": "Uploaded {count} file(s)",
+    "uploadFailed": "Upload failed",
+    "failedToUploadFiles": "Failed to upload files. Please try again.",
+    "describeFile": "Describe what this file contains..."
+  },
+  "common": {
+    "logo": "Logo",
+    "user": "User",
+    "userMenu": "User menu",
+    "home": "Home",
+    "avatarPreview": "Avatar preview",
+    "displayName": "Display name",
+    "yourDisplayName": "Your display name",
+    "location": "Location",
+    "cityCountry": "City, Country",
+    "bio": "Bio",
+    "tellAboutYourself": "Tell something about yourself",
+    "platform": "Platform",
+    "deleting": "Deleting...",
+    "deleteProfile": "Delete profile",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "saveChanges": "Save changes",
+    "sidebar": "Sidebar",
+    "toggleSidebar": "Toggle Sidebar"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcomeBack": "Welcome back,",
+    "developmentMessage": "UntitledOne is actively in development. We're excited you're here — features will appear and evolve rapidly. Thanks for joining early!",
+    "alpha": "Alpha",
+    "quickStart": "Quick start",
+    "quickStartDescription": "Create a new project and invite collaborators to start working together.",
+    "createProject": "Create project",
+    "viewProjects": "View projects",
+    "whatToExpect": "What to expect",
+    "expectationDescription": "Invitations, team management, and collaboration tools are being built. You might see changes frequently — we'll keep things as stable as possible.",
+    "features": {
+      "inviteTeammates": "Invite teammates to your projects",
+      "manageProjects": "Manage project details and visibility", 
+      "moreFeatures": "More collaboration features coming soon"
     }
   },
   "landing": {

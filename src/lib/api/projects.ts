@@ -34,6 +34,13 @@ export type Project = {
 	updated_at: string;
 	owner_id: string;
 	likes_count: number;
+	file_count?: number;
+	collaborators_count?: number;
+	creator?: {
+		id: string;
+		name: string;
+		avatar?: string;
+	};
 };
 
 export async function getProjects(): Promise<Project[]> {

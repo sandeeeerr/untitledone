@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useDeferredValue, useMemo, useState } from "react"
 import LayoutSidebar from "@/components/organisms/layout-sidebar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -8,87 +8,34 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import UserAvatar from "@/components/atoms/user-avatar"
-import { Plus, Loader2, Search, Filter, Heart, FileAudio, Users, Calendar, ArrowUpDown } from "lucide-react"
+import EmptyState from "@/components/atoms/empty-state"
+import { Plus, Loader2, Search, Filter, Heart, FileAudio, Users, Calendar, ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react"
 import { useTranslations } from "next-intl"
 import Link from "next/link"
-import { getProjects, type Project } from "@/lib/api/projects"
-import { useToast } from "@/hooks/use-toast"
+import { useProjects } from "@/lib/api/queries"
+import { type Project } from "@/lib/api/projects"
+import { formatRelativeTimeWithTranslations } from "@/lib/utils/time"
+import { getPaginationWindow } from "@/lib/utils/pagination"
 
-interface ExtendedProject extends Project {
-  creator?: {
-    id: string
-    name: string
-    avatar?: string
-  }
-  file_count?: number
-  collaborators_count?: number
-}
-
-function formatDate(value: string) {
-  try {
-    return new Date(value).toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "2-digit",
-    })
-  } catch {
-    return value
-  }
-}
-
-// Localized time-ago formatting will be handled inline where translations are available
+// ExtendedProject is no longer needed since Project type now includes these fields
 
 export default function ProjectsPage() {
   const t = useTranslations("projects")
-  const { toast } = useToast()
-  const [projects, setProjects] = useState<ExtendedProject[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { data: projects = [], isLoading, error, refetch } = useProjects()
 
   const [searchQuery, setSearchQuery] = useState("")
+  const deferredSearchQuery = useDeferredValue(searchQuery)
   const [visibilityFilter, setVisibilityFilter] = useState<"all" | "public" | "private">("all")
   const [sortBy, setSortBy] = useState<"updated_at" | "created_at" | "name" | "likes">("updated_at")
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
+  const [currentPage, setCurrentPage] = useState(1)
+  const projectsPerPage = 6
 
-  useEffect(() => {
-    async function fetchProjects() {
-      try {
-        setLoading(true)
-        setError(null)
-        const data = await getProjects()
+  // Projects now come with the correct fields from the API
 
-        const extendedData: ExtendedProject[] = (data as ExtendedProject[]).map((project) => ({
-          ...project,
-          file_count: project.file_count ?? 0,
-          collaborators_count: project.collaborators_count ?? 0,
-        }))
-
-        setProjects(extendedData)
-      } catch (err: unknown) {
-        const errorMessage = (() => {
-          if (err && typeof err === 'object' && 'message' in err) {
-            const m = (err as { message?: unknown }).message
-            return typeof m === 'string' ? m : t("error.loadFailed")
-          }
-          return t("error.loadFailed")
-        })()
-        setError(errorMessage)
-        toast({
-          variant: "destructive",
-          title: t("error.title"),
-          description: errorMessage,
-        })
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchProjects()
-  }, [toast, t])
-
-  const filteredProjects = useMemo(() => {
-    const normalizedQuery = searchQuery.trim().toLowerCase()
-    let filtered: ExtendedProject[] = projects
+  const { filteredProjects, totalPages, paginatedProjects } = useMemo(() => {
+    const normalizedQuery = deferredSearchQuery.trim().toLowerCase()
+    let filtered: Project[] = projects
 
     if (normalizedQuery) {
       filtered = filtered.filter((project) => {
@@ -110,11 +57,11 @@ export default function ProjectsPage() {
         case "name": {
           const aName = a.name.toLowerCase()
           const bName = b.name.toLowerCase()
-          return sortOrder === "asc" ? aName.localeCompare(bName) : bName.localeCompare(aName)
+          return sortOrder === "asc" ? aName.localeCompare(bName, undefined, { numeric: true }) : bName.localeCompare(aName, undefined, { numeric: true })
         }
         case "likes": {
-          const aLikes = a.likes_count
-          const bLikes = b.likes_count
+          const aLikes = a.likes_count ?? 0
+          const bLikes = b.likes_count ?? 0
           return sortOrder === "asc" ? aLikes - bLikes : bLikes - aLikes
         }
         case "created_at": {
@@ -130,10 +77,35 @@ export default function ProjectsPage() {
       }
     })
 
-    return sorted
-  }, [projects, searchQuery, visibilityFilter, sortBy, sortOrder])
+    const totalPages = Math.ceil(sorted.length / projectsPerPage)
+    const startIndex = (currentPage - 1) * projectsPerPage
+    const endIndex = startIndex + projectsPerPage
+    const paginated = sorted.slice(startIndex, endIndex)
 
-  if (loading) {
+    return {
+      filteredProjects: sorted,
+      totalPages,
+      paginatedProjects: paginated
+    }
+  }, [projects, deferredSearchQuery, visibilityFilter, sortBy, sortOrder, currentPage, projectsPerPage])
+
+  // Reset to page 1 only when search query or visibility filter changes (not sort changes)
+  const prevSearchQuery = useMemo(() => deferredSearchQuery, [deferredSearchQuery])
+  const prevVisibilityFilter = useMemo(() => visibilityFilter, [visibilityFilter])
+  
+  useMemo(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(Math.max(1, totalPages))
+    }
+  }, [currentPage, totalPages])
+
+  useMemo(() => {
+    if (prevSearchQuery !== deferredSearchQuery || prevVisibilityFilter !== visibilityFilter) {
+      setCurrentPage(1)
+    }
+  }, [prevSearchQuery, deferredSearchQuery, prevVisibilityFilter, visibilityFilter])
+
+  if (isLoading) {
     return (
       <LayoutSidebar
         title={t("title")}
@@ -157,6 +129,7 @@ export default function ProjectsPage() {
   }
 
   if (error) {
+    const errorMessage = error instanceof Error ? error.message : t("error.loadFailed")
     return (
       <LayoutSidebar
         title={t("title")}
@@ -170,10 +143,13 @@ export default function ProjectsPage() {
         }
       >
         <div className="container">
-          <div className="text-center py-12">
-            <p className="text-muted-foreground mb-4">{error}</p>
-            <Button onClick={() => window.location.reload()}>{t("error.tryAgain")}</Button>
-          </div>
+          <EmptyState
+            title={t("error.title")}
+            description={errorMessage}
+            className="py-12"
+          >
+            <Button onClick={() => refetch()}>{t("error.tryAgain")}</Button>
+          </EmptyState>
         </div>
       </LayoutSidebar>
     )
@@ -202,6 +178,7 @@ export default function ProjectsPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
+                aria-label={t("searchPlaceholder")}
               />
             </div>
 
@@ -246,14 +223,25 @@ export default function ProjectsPage() {
             </div>
           </div>
 
-          {/* Results count */}
-          <div className="text-sm text-muted-foreground">{t("resultsCount", { count: filteredProjects.length, total: projects.length })}</div>
+          {/* Results count and pagination info */}
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-muted-foreground">
+              {t("resultsCount", { count: filteredProjects.length, total: projects.length })}
+              {totalPages > 1 && (
+                <span className="ml-2">
+                  • Page {currentPage} of {totalPages}
+                </span>
+              )}
+            </div>
+          </div>
         </div>
 
         {filteredProjects.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground mb-4">{searchQuery || visibilityFilter !== "all" ? t("empty.noResults") : t("empty.message")}</p>
-            {!searchQuery && visibilityFilter === "all" && (
+          <EmptyState
+            title={deferredSearchQuery || visibilityFilter !== "all" ? t("empty.noResults") : t("empty.message")}
+            className="py-12"
+          >
+            {!deferredSearchQuery && visibilityFilter === "all" && (
               <Button asChild>
                 <Link href="/projects/new">
                   <Plus className="mr-2 h-4 w-4" />
@@ -261,24 +249,25 @@ export default function ProjectsPage() {
                 </Link>
               </Button>
             )}
-          </div>
+          </EmptyState>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredProjects.map((project) => (
-              <Link key={project.id} href={`/projects/${project.id}`}>
-                <Card className="group transition-all duration-200 hover:shadow-md hover:shadow-primary/5 hover:border-primary/20 cursor-pointer h-full">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between gap-3 min-w-0">
-                      <CardTitle className="text-lg font-semibold truncate group-hover:text-primary transition-colors">
-                        {project.name}
-                      </CardTitle>
-                      <Badge variant={project.is_private ? "secondary" : "default"} className="shrink-0">
-                        {project.is_private ? t("private") : t("public")}
-                      </Badge>
-                    </div>
-                  </CardHeader>
+          <div className="space-y-6">
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {paginatedProjects.map((project) => (
+                <Link key={project.id} href={`/projects/${project.id}`} className="group">
+                  <Card className="transition-all duration-200 hover:shadow-md hover:shadow-primary/5 hover:border-primary/20 cursor-pointer h-full">
+                    <CardHeader className="!pb-2">
+                      <div className="flex items-start justify-between gap-3 min-w-0">
+                        <CardTitle className="text-lg font-semibold truncate group-hover:text-primary transition-colors">
+                          {project.name}
+                        </CardTitle>
+                        <Badge variant={project.is_private ? "secondary" : "default"} className="shrink-0">
+                          {project.is_private ? t("private") : t("public")}
+                        </Badge>
+                      </div>
+                    </CardHeader>
 
-                  <CardContent className="space-y-4">
+                    <CardContent className="space-y-4 p-4 md:p-6">
                     {/* Creator info */}
                     <div className="flex items-center gap-3 min-w-0">
                       <UserAvatar
@@ -291,21 +280,12 @@ export default function ProjectsPage() {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{project.creator?.name || t("unknownCreator")}</p>
                         <p className="text-xs text-muted-foreground">
-                          {(() => {
-                            try {
-                              const date = new Date(project.updated_at)
-                              const now = new Date()
-                              const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60))
-
-                              if (diffInHours < 1) return t("time.justNow")
-                              if (diffInHours < 24) return t("time.hoursAgo", { count: diffInHours })
-                              if (diffInHours < 48) return t("time.yesterday")
-                              if (diffInHours < 168) return t("time.daysAgo", { count: Math.floor(diffInHours / 24) })
-                              return formatDate(project.updated_at)
-                            } catch {
-                              return project.updated_at
-                            }
-                          })()}
+                          {formatRelativeTimeWithTranslations(project.updated_at, {
+                            justNow: t("time.justNow"),
+                            hoursAgo: (count) => t("time.hoursAgo", { count }),
+                            yesterday: t("time.yesterday"),
+                            daysAgo: (count) => t("time.daysAgo", { count })
+                          })}
                         </p>
                       </div>
                     </div>
@@ -339,22 +319,74 @@ export default function ProjectsPage() {
                       <div className="flex items-center gap-4 text-xs text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <FileAudio className="h-3 w-3" />
-                          <span>{project.file_count || 0}</span>
+                          <span>{project.file_count ?? 0}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Users className="h-3 w-3" />
-                          <span>{project.collaborators_count || 1}</span>
+                          <span>{project.collaborators_count ?? 1}</span>
                         </div>
                       </div>
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <Heart className="h-3 w-3" />
-                        <span>{project.likes_count || 0}</span>
+                        <span>{project.likes_count ?? 0}</span>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="gap-2"
+                  aria-label="Go to previous page"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Previous
+                </Button>
+                
+                <div className="flex items-center gap-1">
+                  {getPaginationWindow(currentPage, totalPages).map((page, index) => (
+                    page === "ellipsis" ? (
+                      <span key={`ellipsis-${index}`} className="px-2 py-1 text-sm text-muted-foreground">
+                        …
+                      </span>
+                    ) : (
+                      <Button
+                        key={page}
+                        variant={currentPage === page ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCurrentPage(page)}
+                        className="w-8 h-8"
+                        aria-label={`Go to page ${page}`}
+                        aria-current={currentPage === page ? "page" : undefined}
+                      >
+                        {page}
+                      </Button>
+                    )
+                  ))}
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="gap-2"
+                  aria-label="Go to next page"
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </div>

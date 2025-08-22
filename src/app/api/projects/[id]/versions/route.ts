@@ -91,6 +91,19 @@ export async function POST(
     }
 
     // Start a transaction
+    // Create new version as active by default and deactivate others in the same project
+    // 1) Deactivate all current active versions for this project
+    const { error: deactivateErr } = await (supabase as SupabaseClient)
+      .from("project_versions")
+      .update({ is_active: false })
+      .eq("project_id", projectId)
+      .eq("is_active", true);
+
+    if (deactivateErr) {
+      console.warn("Failed to deactivate previous active versions (continuing):", deactivateErr);
+    }
+
+    // 2) Insert new active version
     const { data: version, error: versionError } = await (supabase as SupabaseClient)
       .from("project_versions")
       .insert({
@@ -99,7 +112,7 @@ export async function POST(
         version_name: input.data.version_name || null, // Will be auto-generated if null
         description: input.data.description,
         created_by: user.id,
-        is_active: false, // New versions start as inactive
+        is_active: true,
       })
       .select()
       .single();

@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast'
 import { Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useCurrentUser } from '@/hooks/use-current-user'
-import InviteDialog from '@/components/molecules/invite-dialog'
+// Removed InviteDialog usage on edit page per request
 
 export default function EditProjectPage({ params }: { params: Promise<{ id: string }> }) {
 	const t = useTranslations('projects.edit')
@@ -152,19 +152,6 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
 							cancelLabel={t('actions.cancel')}
 							onSubmit={onSubmit}
 						/>
-						<div className="mt-8">
-							<div className="flex items-center justify-between mb-3">
-								<h3 className="text-sm font-medium">Team</h3>
-								<InviteDialog projectId={id} />
-							</div>
-							<div className="space-y-2">
-								<p className="text-sm text-muted-foreground">Pending invitations</p>
-								<div className="rounded border divide-y">
-									{/* Team moved to project page */}
-								</div>
-							</div>
-							{/* Team moved to project page */}
-						</div>
 					</CardContent>
 				</Card>
 			</div>

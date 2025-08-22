@@ -55,6 +55,7 @@ export default function ProjectForm({ initialValues, submitLabel, submittingLabe
 	return (
 		<Form {...form}>
 			<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8" aria-busy={isSubmitting}>
+				{/* Name */}
 				<FormField
 					control={form.control}
 					name="name"
@@ -68,6 +69,41 @@ export default function ProjectForm({ initialValues, submitLabel, submittingLabe
 						</FormItem>
 					)}
 				/>
+
+				{/* Move toggles directly under the project name */}
+				<div className="grid gap-4 sm:grid-cols-2">
+					<FormField
+						control={form.control}
+						name="is_private"
+						render={({ field }) => (
+							<FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3">
+								<FormControl>
+									<Checkbox checked={Boolean(field.value)} onCheckedChange={(v: boolean | 'indeterminate') => field.onChange(Boolean(v))} disabled={isSubmitting} />
+								</FormControl>
+								<div className="space-y-1 leading-none">
+									<FormLabel>{t('fields.is_private.label')}</FormLabel>
+									<FormDescription>{t('fields.is_private.help')}</FormDescription>
+								</div>
+							</FormItem>
+						)}
+					/>
+
+					<FormField
+						control={form.control}
+						name="downloads_enabled"
+						render={({ field }) => (
+							<FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3">
+								<FormControl>
+									<Checkbox checked={Boolean(field.value)} onCheckedChange={(v: boolean | 'indeterminate') => field.onChange(Boolean(v))} disabled={isSubmitting} />
+								</FormControl>
+								<div className="space-y-1 leading-none">
+									<FormLabel>{t('fields.downloads_enabled.label')}</FormLabel>
+									<FormDescription>{t('fields.downloads_enabled.help')}</FormDescription>
+								</div>
+							</FormItem>
+						)}
+					/>
+				</div>
 
 				<FormField
 					control={form.control}
@@ -165,39 +201,7 @@ export default function ProjectForm({ initialValues, submitLabel, submittingLabe
 					)}
 				/>
 
-				<div className="grid gap-4 sm:grid-cols-2">
-					<FormField
-						control={form.control}
-						name="is_private"
-						render={({ field }) => (
-							<FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3">
-								<FormControl>
-									<Checkbox checked={Boolean(field.value)} onCheckedChange={(v: boolean | 'indeterminate') => field.onChange(Boolean(v))} disabled={isSubmitting} />
-								</FormControl>
-								<div className="space-y-1 leading-none">
-									<FormLabel>{t('fields.is_private.label')}</FormLabel>
-									<FormDescription>{t('fields.is_private.help')}</FormDescription>
-								</div>
-							</FormItem>
-						)}
-					/>
 
-					<FormField
-						control={form.control}
-						name="downloads_enabled"
-						render={({ field }) => (
-							<FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3">
-								<FormControl>
-									<Checkbox checked={Boolean(field.value)} onCheckedChange={(v: boolean | 'indeterminate') => field.onChange(Boolean(v))} disabled={isSubmitting} />
-								</FormControl>
-								<div className="space-y-1 leading-none">
-									<FormLabel>{t('fields.downloads_enabled.label')}</FormLabel>
-									<FormDescription>{t('fields.downloads_enabled.help')}</FormDescription>
-								</div>
-							</FormItem>
-						)}
-					/>
-				</div>
 
 				<div className="flex justify-end gap-2">
 					<Button type="button" variant="outline" onClick={() => history.back()} disabled={isSubmitting}>

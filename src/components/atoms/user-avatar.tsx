@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { colorFromString, cn } from "@/lib/utils";
 
@@ -13,14 +14,16 @@ export interface UserAvatarProps {
 }
 
 export function UserAvatar({ name, username, userId, src, className }: UserAvatarProps) {
+  const t = useTranslations('common');
   const display = (name || username || "").trim();
   const initial = (display || "U").charAt(0).toUpperCase();
-  const key = username || userId || name || "unknown";
+  // Prefer userId for stable, cross-view colors; then username; then name
+  const key = (userId && String(userId)) || (username && String(username)) || (name && String(name)) || "unknown";
   const bg = colorFromString(key);
 
   return (
     <Avatar className={cn("h-8 w-8", className)}>
-      <AvatarImage src={src || undefined} alt={display || "User"} />
+      <AvatarImage src={src || undefined} alt={display || t('user')} />
       <AvatarFallback
         className="flex items-center justify-center leading-none"
         style={{ backgroundColor: bg, color: "white" }}

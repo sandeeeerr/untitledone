@@ -1,3 +1,5 @@
+import { safeParseError } from "@/lib/utils/api";
+
 export type SocialPlatform =
   | "soundcloud"
   | "spotify"
@@ -46,11 +48,4 @@ export async function getSocialsByUsername(username: string): Promise<SocialLink
   return (await res.json()) as SocialLinkDto[];
 }
 
-async function safeParseError(res: Response) {
-  try {
-    const body = await res.json();
-    return (body as { error?: string })?.error;
-  } catch {
-    return undefined;
-  }
-} 
+ 

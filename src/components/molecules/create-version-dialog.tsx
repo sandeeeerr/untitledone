@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -11,22 +12,24 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Plus, Copy, Upload } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { useCreateProjectVersion, useProjectVersions } from '@/lib/api/queries'
-import { type ProjectVersion } from '@/lib/api/projects'
+
 
 export type CreateVersionDialogProps = {
 	projectId: string
 	trigger?: React.ReactNode
+	onVersionCreated?: () => void
 }
 
-export default function CreateVersionDialog({ projectId, trigger }: CreateVersionDialogProps) {
+export default function CreateVersionDialog({ projectId, trigger, onVersionCreated }: CreateVersionDialogProps) {
 	const [open, setOpen] = useState(false)
 	const [versionType, setVersionType] = useState<'semantic' | 'date' | 'custom'>('semantic')
 	const [customVersionName, setCustomVersionName] = useState('')
 	const [description, setDescription] = useState('')
-	const [startOption, setStartOption] = useState<'fresh' | 'copy' | 'select'>('copy')
+	const [startOption, setStartOption] = useState<'fresh' | 'copy' | 'select'>('fresh')
 	const [selectedVersionId, setSelectedVersionId] = useState<string>('')
 	
 	const { toast } = useToast()
+	const t = useTranslations('versions')
 	const createVersion = useCreateProjectVersion(projectId)
 	const { data: existingVersions } = useProjectVersions(projectId)
 
@@ -34,8 +37,8 @@ export default function CreateVersionDialog({ projectId, trigger }: CreateVersio
 		if (!description.trim()) {
 			toast({
 				variant: "destructive",
-				title: "Missing description",
-				description: "Please provide a description for the version.",
+				title: t('missingDescription'),
+				description: t('provideDescription'),
 			})
 			return
 		}
@@ -43,8 +46,8 @@ export default function CreateVersionDialog({ projectId, trigger }: CreateVersio
 		if (versionType === 'custom' && !customVersionName.trim()) {
 			toast({
 				variant: "destructive",
-				title: "Missing version name",
-				description: "Please provide a custom version name.",
+				title: t('missingVersionName'),
+				description: t('provideCustomVersionName'),
 			})
 			return
 		}
@@ -63,7 +66,10 @@ export default function CreateVersionDialog({ projectId, trigger }: CreateVersio
 			setDescription('')
 			setCustomVersionName('')
 			setSelectedVersionId('')
-		} catch (error) {
+			
+			// Notify parent component that version was created
+			onVersionCreated?.()
+		} catch {
 			// Error handling is done in the mutation
 		}
 	}
@@ -207,9 +213,9 @@ export default function CreateVersionDialog({ projectId, trigger }: CreateVersio
 						<div className="space-y-2">
 							<Label>Copy from version</Label>
 							<Select value={selectedVersionId} onValueChange={setSelectedVersionId}>
-								<SelectTrigger>
-									<SelectValue placeholder="Select a version to copy from" />
-								</SelectTrigger>
+															<SelectTrigger>
+								<SelectValue placeholder={t('selectVersionToCopy')} />
+							</SelectTrigger>
 								<SelectContent>
 									{existingVersions.map((version) => (
 										<SelectItem key={version.id} value={version.id}>

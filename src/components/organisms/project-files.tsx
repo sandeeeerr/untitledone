@@ -1,24 +1,41 @@
 "use client"
 
 import React from 'react'
+import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2, FileAudio, Music } from 'lucide-react'
 import VersionAccordion from '@/components/molecules/version-accordion'
 import FileCard from '@/components/molecules/file-card'
 import { useProjectFiles } from '@/lib/api/queries'
 import FileDrawer from '@/components/organisms/file-drawer'
+import EmptyState from '@/components/atoms/empty-state'
 
-export default function ProjectFiles({ projectId, query }: { projectId: string; query?: string }) {
+export default function ProjectFiles({ projectId, query, sortBy = 'newest' }: { projectId: string; query?: string; sortBy?: 'newest' | 'oldest' | 'name' }) {
 	const { data: files, isLoading, error } = useProjectFiles(projectId)
+	const t = useTranslations('files')
 	const [openKeys, setOpenKeys] = React.useState<Set<string>>(new Set())
 	const [drawerOpen, setDrawerOpen] = React.useState(false)
 	const [selectedFileId, setSelectedFileId] = React.useState<string | null>(null)
 
 	const normalizedQuery = (query ?? '').trim().toLowerCase()
 	const baseFiles = files ?? []
+	
+	// Apply sorting
+	const sortedFiles = [...baseFiles].sort((a, b) => {
+		switch (sortBy) {
+			case 'oldest':
+				return new Date(a.uploadedAt).getTime() - new Date(b.uploadedAt).getTime()
+			case 'name':
+				return a.filename.toLowerCase().localeCompare(b.filename.toLowerCase())
+			case 'newest':
+			default:
+				return new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
+		}
+	})
+	
 	const filtered = !normalizedQuery
-		? baseFiles
-		: baseFiles.filter(f => {
+		? sortedFiles
+		: sortedFiles.filter(f => {
 				const hay = [f.filename, f.uploadedBy?.name || '', f.description || '', f.versionName || ''].join(' ').toLowerCase()
 				return hay.includes(normalizedQuery)
 			})
@@ -104,17 +121,18 @@ export default function ProjectFiles({ projectId, query }: { projectId: string; 
 	}
 
 	if (!filtered || filtered.length === 0) {
+		const isFiltered = normalizedQuery.length > 0
 		return (
 			<Card>
 				<CardHeader>
 					<CardTitle className="text-base">Files</CardTitle>
 				</CardHeader>
-				<CardContent>
-					<div className="text-center py-8">
-						<FileAudio className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-						<p className="text-sm text-muted-foreground mb-2">No files found</p>
-						<p className="text-xs text-muted-foreground">Try a different query or upload a new file</p>
-					</div>
+				<CardContent className="p-4 md:p-6">
+					<EmptyState 
+						icon={<FileAudio className="h-12 w-12" />} 
+						title={isFiltered ? t('noFilesFound') : t('noFilesYet')} 
+						description={isFiltered ? t('tryDifferentSearchTerm') : t('uploadFilesToStart')} 
+					/>
 				</CardContent>
 			</Card>
 		)

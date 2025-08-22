@@ -9,7 +9,7 @@ import {
 } from "./todos";
 import { useToast } from "@/hooks/use-toast";
 import { getCurrentProfile, updateCurrentProfile, type Profile, type ProfileUpdate, deleteCurrentProfile } from "./profiles";
-import { getProjects, type Project, uploadProjectFile, getProjectFiles, type ProjectFile, type UploadFileInput, createProjectVersion, getProjectVersions, type ProjectVersion, type CreateVersionInput, getProjectActivity, type ProjectActivityVersion } from "./projects";
+import { getProjects, getProject, type Project, uploadProjectFile, getProjectFiles, type ProjectFile, type UploadFileInput, createProjectVersion, getProjectVersions, type ProjectVersion, type CreateVersionInput, getProjectActivity, type ProjectActivityVersion } from "./projects";
 import { createProjectInvitation, listProjectInvitations, type ProjectInvitation, type ProjectInvitationInsert, acceptInvitation, listProjectMembers, type ProjectMember } from "./projects";
 
 export function useTodos({ done }: { done?: boolean } = {}) {
@@ -122,6 +122,15 @@ export function useProjects() {
     return useQuery<Project[]>({
         queryKey: ["projects", "list"],
         queryFn: () => getProjects(),
+    });
+}
+
+export function useProject(id: string, initialData?: Project) {
+    return useQuery<Project>({
+        queryKey: ["project", id],
+        queryFn: () => getProject(id),
+        enabled: Boolean(id),
+        initialData,
     });
 }
 

@@ -185,18 +185,21 @@ export async function GET(
         };
       });
 
-      // If no activity changes, create a default one for the version creation
-      if (microChanges.length === 0) {
-        const author = profileMap.get(version.created_by) || { name: "Unknown", avatar: null };
-        microChanges.push({
-          id: `version-${version.id}`,
-          type: "addition" as const,
-          description: `Version ${version.version_name} created`,
-          author: author.name,
-          time: formatTime(version.created_at),
-          avatar: author.avatar,
-          filename: undefined,
-        });
+      // Always add version creation entry first
+      const versionAuthor = profileMap.get(version.created_by) || { name: "Unknown", avatar: null };
+      const versionCreationEntry = {
+        id: `version-${version.id}`,
+        type: "addition" as const,
+        description: `Version ${version.version_name} created`,
+        author: versionAuthor.name,
+        time: formatTime(version.created_at),
+        avatar: versionAuthor.avatar,
+        filename: undefined,
+      };
+      
+      // Only add if not already present (to avoid duplicates)
+      if (!microChanges.some(mc => mc.id === `version-${version.id}`)) {
+        microChanges.unshift(versionCreationEntry); // Add at the beginning
       }
 
       // Add file additions if there are files but no activity changes for them

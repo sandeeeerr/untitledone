@@ -93,7 +93,7 @@ export async function GET(req: Request) {
 		.order("updated_at", { ascending: false });
 
 	if (ownerUsername) {
-		// Filter by owner username; only return public projects for that user
+		// Filter by owner username; include private if the viewer is the owner
 		const { data: profile } = await supabase
 			.from('profiles')
 			.select('id, username')
@@ -102,7 +102,14 @@ export async function GET(req: Request) {
 		if (!profile) {
 			return NextResponse.json([], { status: 200 });
 		}
-		query = query.eq('owner_id', profile.id).eq('is_private', false);
+
+		const { data: auth } = await supabase.auth.getUser();
+		const isOwnerViewing = Boolean(auth?.user && auth.user.id === profile.id);
+
+		query = query.eq('owner_id', profile.id);
+		if (!isOwnerViewing) {
+			query = query.eq('is_private', false);
+		}
 	} else {
 		// Return projects owned by the current user OR where the user is a member
 		const [{ data: owned, error: ownedErr }, { data: memberData, error: memberErr }] = await Promise.all([
@@ -184,16 +191,54 @@ export async function GET(req: Request) {
 		}
 	}
 
+	// Get member counts for all projects
+	const memberCounts = new Map<string, number>();
+	const fileCounts = new Map<string, number>();
+	
+	if (projects.length > 0) {
+		const projectIds = projects.map(p => p.id);
+		
+		// Get member counts (including owner)
+		const { data: memberCountData } = await supabase
+			.from('project_members')
+			.select('project_id')
+			.in('project_id', projectIds);
+			
+		// Count members per project (+ 1 for owner)
+		for (const member of memberCountData || []) {
+			const current = memberCounts.get(member.project_id) || 0;
+			memberCounts.set(member.project_id, current + 1);
+		}
+		
+		// Add owner to count for each project (owner is not in project_members table)
+		for (const project of projects) {
+			const currentCount = memberCounts.get(project.id) || 0;
+			memberCounts.set(project.id, currentCount + 1); // +1 for owner
+		}
+		
+		// Get file counts
+		const { data: fileCountData } = await supabase
+			.from('project_files')
+			.select('project_id')
+			.in('project_id', projectIds);
+			
+		// Count files per project
+		for (const file of fileCountData || []) {
+			const current = fileCounts.get(file.project_id) || 0;
+			fileCounts.set(file.project_id, current + 1);
+		}
+	}
+
 	const enriched = projects.map((p) => {
 		const profile = profilesById.get(p.owner_id);
 		return {
 			...p,
 			// client expects arrays
 			tags: Array.isArray(p.tags) ? (p.tags as string[]) : [],
-			// defaults for counts (can be replaced later when we add real aggregations)
-			file_count: 0,
-			collaborators_count: 0,
-			likes_count: 0,
+			// real counts from database
+			file_count: fileCounts.get(p.id) || 0,
+			collaborators_count: memberCounts.get(p.id) || 1, // at least owner
+			likes_count: 0, // TODO: implement likes system
 			creator: profile
 				? {
 					id: profile.id,

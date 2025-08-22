@@ -30,6 +30,7 @@ export function AppHeader({
   const tLanding = useTranslations("landing");
   const tNav = useTranslations("navigation");
   const tActions = useTranslations("actions");
+  const t = useTranslations("common");
   const [showSettings, setShowSettings] = useState(false);
 
   const innerBase = fullWidth
@@ -60,7 +61,7 @@ export function AppHeader({
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button aria-label="User menu" className="rounded-full">
+                  <button aria-label={t('userMenu')} className="rounded-full">
                     <UserAvatar
                       className="h-9 w-9 border"
                       name={profile?.display_name || null}
