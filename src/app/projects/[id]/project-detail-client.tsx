@@ -124,7 +124,7 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
               <div className="flex flex-col gap-2 mb-2">
                 {/* Mobile: visibility tag above title */}
                 <div className="flex items-center sm:hidden">
-                  <Badge className={!project.is_private ? 'bg-green-600 hover:bg-green-700 text-white' : ''} variant={project.is_private ? 'secondary' : 'default'}>
+                  <Badge className={!project.is_private ? 'bg-blue-600 hover:bg-blue-700 text-white' : ''} variant={project.is_private ? 'secondary' : 'default'}>
                     {project.is_private ? t('private') : t('public')}
                   </Badge>
                 </div>
@@ -176,6 +176,14 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                     <CardTitle className="text-base">Details</CardTitle>
                   </CardHeader>
                   <CardContent className="p-4 md:p-6 space-y-6">
+                    {/* Project Description */}
+                    {project.description && (
+                      <div>
+                        <div className="text-sm text-muted-foreground mb-2">Description</div>
+                        <p className="text-sm leading-relaxed">{project.description}</p>
+                      </div>
+                    )}
+
                     {(project.tags?.length ?? 0) > 0 && (
                       <div>
                         <div className="flex items-center gap-2 mb-2 text-sm font-medium">
@@ -417,6 +425,14 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                 <CardTitle className="text-base">Details</CardTitle>
               </CardHeader>
               <CardContent className="p-4 md:p-6 space-y-6">
+                {/* Project Description */}
+                {project.description && (
+                  <div>
+                    <div className="text-sm text-muted-foreground mb-2">Description</div>
+                    <p className="text-sm leading-relaxed">{project.description}</p>
+                  </div>
+                )}
+
                 {(project.tags?.length ?? 0) > 0 && (
                   <div>
                     <div className="flex items-center gap-2 mb-2 text-sm font-medium">

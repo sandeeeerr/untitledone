@@ -247,9 +247,10 @@ export default function ProjectActivity({ projectId, query, sortBy = 'newest', o
                         {version.version}
                       </CardTitle>
                       {isActive && (
-                        <Badge variant="default" className="text-xs">
-                          Active
-                        </Badge>
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                          <span className="text-xs text-green-600 dark:text-green-400 font-medium">Active</span>
+                        </div>
                       )}
                     </div>
                     {(() => {
