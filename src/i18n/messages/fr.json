@@ -250,5 +250,35 @@
       "privacy": "Politique de confidentialité",
       "terms": "Conditions d'utilisation"
     }
+  },
+  "comments": {
+    "title": "Commentaires",
+    "loading": "Chargement des commentaires...",
+    "failedToLoad": "Échec du chargement des commentaires",
+    "noCommentsYet": "Pas encore de commentaires",
+    "startConversation": "Commencez la conversation avec des retours et des notes.",
+    "addComment": "Ajouter un commentaire...",
+    "post": "Publier",
+    "posting": "Publication...",
+    "edited": "modifié",
+    "viewThread": "Voir le fil",
+    "hideThread": "Masquer le fil",
+    "noReplies": "Aucune réponse",
+    "viewMore": "Voir plus",
+    "edit": "Modifier",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "resolve": "Marquer résolu",
+    "unresolve": "Marquer non résolu",
+    "updated": "Commentaire mis à jour",
+    "deleted": "Commentaire supprimé",
+    "posted": "Commentaire publié",
+    "reply": "Répondre",
+    "markResolved": "Marquer comme résolu",
+    "markUnresolved": "Marquer comme non résolu",
+    "addReply": "Ajouter une réponse...",
+    "contextSpecific": "Les commentaires sont spécifiques au contexte",
+    "openActivityOrFileToComment": "Ouvrez un changement d'activité, une version ou un fichier pour voir et ajouter des commentaires."
   }
 }

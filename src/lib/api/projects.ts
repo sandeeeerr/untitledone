@@ -333,12 +333,16 @@ export type ProjectActivityMicroChange = {
   type: "addition" | "feedback" | "update";
   description: string;
   author: string;
+  authorId: string;
   time: string;
+  fullTimestamp: string; // ISO timestamp for accurate sorting
   avatar?: string | null;
   filename?: string;
+  fileId?: string | null;
 };
 
 export type ProjectActivityVersion = {
+  id?: string;
   version: string;
   description: string;
   author: string;
@@ -364,4 +368,44 @@ export async function getProjectActivity(projectId: string): Promise<ProjectActi
   }
 
   return (await res.json()) as ProjectActivityVersion[];
+}
+
+export async function createFeedbackChange(projectId: string, versionId: string, description?: string): Promise<{ id: string; version_id: string }> {
+  const res = await fetch(`/api/projects/${projectId}/activity`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ versionId, description }),
+  });
+  if (!res.ok) {
+    let message = "Failed to create feedback change";
+    try {
+      const body = await res.json();
+      if (body?.error) message = body.error as string;
+    } catch {}
+    throw new Error(message);
+  }
+  return (await res.json()) as { id: string; version_id: string };
+}
+
+export async function updateFeedbackChange(projectId: string, changeId: string, description: string): Promise<{ id: string; description: string }> {
+  const res = await fetch(`/api/projects/${projectId}/activity/${changeId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ description }),
+  });
+  if (!res.ok) {
+    let message = "Failed to update feedback";
+    try { const body = await res.json(); if (body?.error) message = body.error as string; } catch {}
+    throw new Error(message);
+  }
+  return (await res.json()) as { id: string; description: string };
+}
+
+export async function deleteFeedbackChange(projectId: string, changeId: string): Promise<void> {
+  const res = await fetch(`/api/projects/${projectId}/activity/${changeId}`, { method: "DELETE" });
+  if (!res.ok) {
+    let message = "Failed to delete feedback";
+    try { const body = await res.json(); if (body?.error) message = body.error as string; } catch {}
+    throw new Error(message);
+  }
 }

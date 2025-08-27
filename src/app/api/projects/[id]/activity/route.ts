@@ -179,9 +179,12 @@ export async function GET(
           type: ac.type as "addition" | "feedback" | "update",
           description: ac.description,
           author: author.name,
+          authorId: ac.author_id,
           time: formatTime(ac.created_at),
+          fullTimestamp: ac.created_at, // Add full timestamp for proper sorting
           avatar: author.avatar,
           filename: file?.filename,
+          fileId: ac.file_id ?? null,
         };
       });
 
@@ -192,9 +195,12 @@ export async function GET(
         type: "addition" as const,
         description: `Version ${version.version_name} created`,
         author: versionAuthor.name,
+        authorId: version.created_by,
         time: formatTime(version.created_at),
+        fullTimestamp: version.created_at, // Add full timestamp for proper sorting
         avatar: versionAuthor.avatar,
         filename: undefined,
+        fileId: null,
       };
       
       // Only add if not already present (to avoid duplicates)
@@ -212,9 +218,12 @@ export async function GET(
             type: "addition" as const,
             description: `File uploaded: ${file.filename}`,
             author: author.name,
+            authorId: file.uploaded_by,
             time: formatTime(file.uploaded_at),
+            fullTimestamp: file.uploaded_at, // Add full timestamp for proper sorting
             avatar: author.avatar,
             filename: file.filename,
+            fileId: file.id,
           });
         }
       }
@@ -222,16 +231,15 @@ export async function GET(
       const author = profileMap.get(version.created_by) || { name: "Unknown", avatar: null };
       
       return {
+        id: version.id,
         version: version.version_name,
         description: version.description,
         author: author.name,
         date: version.created_at,
         avatar: author.avatar,
         microChanges: microChanges.sort((a, b) => {
-          // Sort by time, newest first
-          const timeA = a.time.split(':').map(Number);
-          const timeB = b.time.split(':').map(Number);
-          return (timeB[0] * 60 + timeB[1]) - (timeA[0] * 60 + timeA[1]);
+          // Sort by full timestamp (ISO string), newest first
+          return new Date(b.fullTimestamp).getTime() - new Date(a.fullTimestamp).getTime();
         }),
         isActive: version.is_active,
       };
@@ -246,5 +254,63 @@ export async function GET(
       { error: "Internal server error" },
       { status: 500 }
     );
+  }
+}
+
+export async function POST(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const supabase = await createServerClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    }
+
+    const { id } = await params;
+    const validation = paramsSchema.safeParse({ id });
+    if (!validation.success) {
+      return NextResponse.json({ error: "Invalid project ID" }, { status: 400 });
+    }
+
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    }
+
+    const payloadSchema = z.object({
+      versionId: z.string().uuid(),
+      description: z.string().trim().max(4000).optional(),
+    });
+    const parsed = payloadSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+    }
+
+    const { versionId, description } = parsed.data;
+
+    // Insert feedback activity change (general comment placeholder)
+    const { data, error } = await (supabase as SupabaseClient)
+      .from("activity_changes")
+      .insert({
+        version_id: versionId,
+        type: "feedback",
+        description: (description || "").replace(/[\u0000-\u001F\u007F]/g, ""),
+        author_id: user.id,
+        file_id: null,
+      })
+      .select("id, version_id")
+      .single();
+
+    if (error || !data) {
+      return NextResponse.json({ error: error?.message || "Failed to create feedback change" }, { status: 500 });
+    }
+
+    return NextResponse.json({ id: data.id, version_id: data.version_id }, { status: 201 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

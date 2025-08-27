@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { listComments, countComments, createComment, updateComment, deleteComment, type ProjectComment, type ListCommentsParams, type CreateCommentInput, type UpdateCommentInput } from "./comments";
 import {
     createTodo,
     deleteTodo,
@@ -9,7 +10,7 @@ import {
 } from "./todos";
 import { useToast } from "@/hooks/use-toast";
 import { getCurrentProfile, updateCurrentProfile, type Profile, type ProfileUpdate, deleteCurrentProfile } from "./profiles";
-import { getProjects, getProject, type Project, uploadProjectFile, getProjectFiles, type ProjectFile, type UploadFileInput, createProjectVersion, getProjectVersions, type ProjectVersion, type CreateVersionInput, getProjectActivity, type ProjectActivityVersion } from "./projects";
+import { getProjects, getProject, type Project, uploadProjectFile, getProjectFiles, type ProjectFile, type UploadFileInput, createProjectVersion, getProjectVersions, type ProjectVersion, type CreateVersionInput, getProjectActivity, type ProjectActivityVersion, createFeedbackChange, updateFeedbackChange, deleteFeedbackChange } from "./projects";
 import { createProjectInvitation, listProjectInvitations, type ProjectInvitation, type ProjectInvitationInsert, acceptInvitation, listProjectMembers, type ProjectMember } from "./projects";
 
 export function useTodos({ done }: { done?: boolean } = {}) {
@@ -272,5 +273,214 @@ export function useProjectActivity(projectId: string) {
         queryKey: ["project", projectId, "activity"],
         queryFn: () => getProjectActivity(projectId),
         enabled: Boolean(projectId),
+    });
+}
+
+export function useCreateFeedbackChange(projectId: string) {
+    const queryClient = useQueryClient();
+    const { toast } = useToast();
+    return useMutation({
+        mutationFn: ({ versionId, description }: { versionId: string; description?: string }) => createFeedbackChange(projectId, versionId, description),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["project", projectId, "activity"] });
+            toast({ title: "Feedback change created", description: "You can now add comments inline." });
+        },
+        onError: (error: unknown) => {
+            const errorMessage = error && typeof error === 'object' && 'message' in error && typeof (error as any).message === 'string' ? (error as any).message : "Failed to create feedback";
+            toast({ variant: "destructive", title: "Error", description: errorMessage });
+        },
+    });
+}
+
+export function useUpdateFeedbackChange(projectId: string) {
+    const queryClient = useQueryClient();
+    const { toast } = useToast();
+    return useMutation({
+        mutationFn: ({ changeId, description }: { changeId: string; description: string }) => updateFeedbackChange(projectId, changeId, description),
+        onMutate: async ({ changeId, description }) => {
+            const key = ["project", projectId, "activity"] as const;
+            await queryClient.cancelQueries({ queryKey: key });
+            const previous = queryClient.getQueryData<ProjectActivityVersion[]>(key);
+            if (previous) {
+                const next = previous.map(v => ({
+                    ...v,
+                    microChanges: v.microChanges.map(mc => mc.id === changeId ? { ...mc, description } : mc)
+                }));
+                queryClient.setQueryData(key, next);
+            }
+            return { previous } as const;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["project", projectId, "activity"] });
+            toast({ title: "Feedback updated" });
+        },
+        onError: (error: unknown) => {
+            const errorMessage = error && typeof error === 'object' && 'message' in error && typeof (error as any).message === 'string' ? (error as any).message : "Failed to update feedback";
+            toast({ variant: "destructive", title: "Error", description: errorMessage });
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ["project", projectId, "activity"] });
+        },
+    });
+}
+
+export function useDeleteFeedbackChange(projectId: string) {
+    const queryClient = useQueryClient();
+    const { toast } = useToast();
+    return useMutation({
+        mutationFn: ({ changeId }: { changeId: string }) => deleteFeedbackChange(projectId, changeId),
+        onMutate: async ({ changeId }) => {
+            const key = ["project", projectId, "activity"] as const;
+            await queryClient.cancelQueries({ queryKey: key });
+            const previous = queryClient.getQueryData<ProjectActivityVersion[]>(key);
+            if (previous) {
+                const next = previous.map(v => ({
+                    ...v,
+                    microChanges: v.microChanges.filter(mc => mc.id !== changeId)
+                }));
+                queryClient.setQueryData(key, next);
+            }
+            return { previous } as const;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["project", projectId, "activity"] });
+            toast({ title: "Feedback deleted" });
+        },
+        onError: (error: unknown, _vars, context) => {
+            // rollback
+            if (context?.previous) {
+                queryClient.setQueryData(["project", projectId, "activity"], context.previous);
+            }
+            const errorMessage = error && typeof error === 'object' && 'message' in error && typeof (error as any).message === 'string' ? (error as any).message : "Failed to delete feedback";
+            toast({ variant: "destructive", title: "Error", description: errorMessage });
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ["project", projectId, "activity"] });
+        },
+    });
+}
+
+// Comments
+export function useProjectComments(params: ListCommentsParams, options?: { enabled?: boolean; staleTime?: number }) {
+    const { projectId, activityChangeId, versionId, fileId, limit, cursor } = params;
+    const contextKey = activityChangeId ? { activityChangeId } : versionId ? { versionId } : fileId ? { fileId } : {};
+    return useQuery<ProjectComment[]>({
+        queryKey: ["project", projectId, "comments", { ...contextKey }],
+        queryFn: () => listComments(params),
+        enabled: (options?.enabled ?? (Boolean(projectId) && Boolean(activityChangeId || versionId || fileId))),
+        staleTime: options?.staleTime ?? 5 * 60 * 1000,
+    });
+}
+
+export function useCommentsCount(params: Omit<ListCommentsParams, "limit" | "cursor">, options?: { enabled?: boolean; staleTime?: number }) {
+    const { projectId, activityChangeId, versionId, fileId } = params;
+    const contextKey = activityChangeId ? { activityChangeId } : versionId ? { versionId } : fileId ? { fileId } : {};
+    return useQuery<number>({
+        queryKey: ["project", projectId, "comments", "count", { ...contextKey }],
+        queryFn: () => countComments(params),
+        enabled: (options?.enabled ?? (Boolean(projectId) && Boolean(activityChangeId || versionId || fileId))),
+        staleTime: options?.staleTime ?? 60 * 1000,
+    });
+}
+
+export function useCreateProjectComment() {
+    const queryClient = useQueryClient();
+    const { toast } = useToast();
+    return useMutation({
+        mutationFn: (input: CreateCommentInput) => createComment(input),
+        onMutate: async (input) => {
+            const { projectId, activityChangeId, versionId, fileId } = input;
+            const contextKey = activityChangeId ? { activityChangeId } : versionId ? { versionId } : { fileId } as Record<string, string | undefined>;
+            const queryKey = ["project", projectId, "comments", { ...contextKey }];
+            await queryClient.cancelQueries({ queryKey: ["project", projectId, "comments"] });
+            const previous = queryClient.getQueryData<ProjectComment[]>(queryKey) || [];
+            const optimistic: ProjectComment = {
+                id: `optimistic-${Date.now()}` as unknown as any,
+                project_id: projectId,
+                parent_id: input.parentId ?? null,
+                activity_change_id: activityChangeId ?? null,
+                version_id: versionId ?? null,
+                file_id: fileId ?? null,
+                user_id: "me" as unknown as any,
+                comment: input.comment,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+                edited: false,
+                resolved: false,
+                timestamp_ms: input.timestampMs ?? null,
+                profiles: null,
+            } as unknown as ProjectComment;
+            queryClient.setQueryData<ProjectComment[]>(queryKey, [optimistic, ...previous]);
+            return { previous, queryKey } as const;
+        },
+        onError: (error: unknown, _input, context) => {
+            if (context) {
+                queryClient.setQueryData(context.queryKey, context.previous);
+            }
+            const errorMessage = error && typeof error === 'object' && 'message' in error && typeof (error as any).message === 'string' ? (error as any).message : "Failed to post comment";
+            toast({ variant: "destructive", title: "Error", description: errorMessage });
+        },
+        onSuccess: (created) => {
+            // Replace optimistic with fresh fetch
+            queryClient.invalidateQueries({ queryKey: ["project", created.project_id, "comments"] });
+            queryClient.invalidateQueries({ queryKey: ["project", created.project_id, "activity"] });
+            toast({ title: "Comment posted", description: "Your comment has been posted." });
+        },
+    });
+}
+
+export function useUpdateProjectComment() {
+    const queryClient = useQueryClient();
+    const { toast } = useToast();
+    return useMutation({
+        mutationFn: (input: UpdateCommentInput) => updateComment(input),
+        onMutate: async (input) => {
+            const { projectId } = input;
+            // Optimistically update across all comment contexts for this project
+            const keys = queryClient.getQueriesData<ProjectComment[]>({ queryKey: ["project", projectId, "comments"] });
+            const previous = keys.map(([key, data]) => ({ key, data }));
+            previous.forEach(({ key, data }) => {
+                if (!data) return;
+                const updated = data.map((c) => (c.id === input.commentId ? { ...c, comment: input.comment ?? c.comment, resolved: typeof input.resolved === 'boolean' ? input.resolved : c.resolved, edited: true } : c));
+                queryClient.setQueryData(key, updated);
+            });
+            return { previous } as const;
+        },
+        onError: (error: unknown, input, context) => {
+            context?.previous.forEach(({ key, data }) => queryClient.setQueryData(key, data));
+            const errorMessage = error && typeof error === 'object' && 'message' in error && typeof (error as any).message === 'string' ? (error as any).message : "Failed to update comment";
+            toast({ variant: "destructive", title: "Error", description: errorMessage });
+        },
+        onSuccess: (updated) => {
+            queryClient.invalidateQueries({ queryKey: ["project", updated.project_id, "comments"] });
+            toast({ title: "Updated", description: "Comment updated." });
+        },
+    });
+}
+
+export function useDeleteProjectComment(projectId: string) {
+    const queryClient = useQueryClient();
+    const { toast } = useToast();
+    return useMutation({
+        mutationFn: (commentId: string) => deleteComment(projectId, commentId),
+        onMutate: async (commentId: string) => {
+            const keys = queryClient.getQueriesData<ProjectComment[]>({ queryKey: ["project", projectId, "comments"] });
+            const previous = keys.map(([key, data]) => ({ key, data }));
+            previous.forEach(({ key, data }) => {
+                if (!data) return;
+                const filtered = data.filter((c) => c.id !== commentId && c.parent_id !== commentId);
+                queryClient.setQueryData(key, filtered);
+            });
+            return { previous } as const;
+        },
+        onError: (error: unknown, _id, context) => {
+            context?.previous.forEach(({ key, data }) => queryClient.setQueryData(key, data));
+            const errorMessage = error && typeof error === 'object' && 'message' in error && typeof (error as any).message === 'string' ? (error as any).message : "Failed to delete comment";
+            toast({ variant: "destructive", title: "Error", description: errorMessage });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["project", projectId, "comments"] });
+            toast({ title: "Deleted", description: "Comment deleted." });
+        },
     });
 }

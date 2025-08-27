@@ -277,10 +277,7 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                       <FileAudio className="h-4 w-4" /> 
                       Files
                     </TabsTrigger>
-                    <TabsTrigger value="comments" className="flex items-center gap-2">
-                      <MessageSquare className="h-4 w-4" /> 
-                      Comments
-                    </TabsTrigger>
+                    {/* Comments tab removed per new model */}
                   </TabsList>
                   <div className="hidden sm:block text-xs sm:text-sm text-muted-foreground">
                     {`Last update: ${formatTimeAgo(project.updated_at)}`}
@@ -411,9 +408,7 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                 <TabsContent value="files" className="mt-4 px-0">
                   <ProjectFiles projectId={project.id} query={deferredFilesQuery} sortBy={filesSort} />
                 </TabsContent>
-                <TabsContent value="comments" className="mt-4 px-0">
-                  <ProjectComments />
-                </TabsContent>
+                {/* Removed comments tab content */}
               </Tabs>
             </div>
           </div>
