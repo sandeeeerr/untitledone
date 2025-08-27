@@ -71,23 +71,31 @@ export async function POST(
     // Resolve target version (prefer provided, else active version if any)
     let resolvedVersionId: string | null = input.data.versionId ?? null;
     if (!resolvedVersionId) {
-      const { data: activeVersion } = await (supabase as SupabaseClient)
+      const { data: activeVersion, error: activeVersionError } = await (supabase as SupabaseClient)
         .from("project_versions")
         .select("id")
         .eq("project_id", projectId)
         .eq("is_active", true)
         .maybeSingle();
+      
+      console.log("Active version lookup:", { activeVersion, activeVersionError, projectId });
       resolvedVersionId = activeVersion?.id ?? null;
     }
 
     if (resolvedVersionId) {
+      console.log("Linking file to version:", { fileId: fileRecord.id, versionId: resolvedVersionId });
+      
       // Link file to version
-      await (supabase as SupabaseClient)
+      const { error: linkError } = await (supabase as SupabaseClient)
         .from("version_files")
         .insert({ version_id: resolvedVersionId, file_id: fileRecord.id });
+      
+      if (linkError) {
+        console.error("Failed to link file to version:", linkError);
+      }
 
       // Log activity change (addition)
-      await (supabase as SupabaseClient)
+      const { error: activityError } = await (supabase as SupabaseClient)
         .from("activity_changes")
         .insert({
           version_id: resolvedVersionId,
@@ -96,6 +104,12 @@ export async function POST(
           author_id: user.id,
           file_id: fileRecord.id,
         });
+        
+      if (activityError) {
+        console.error("Failed to create activity change:", activityError);
+      }
+    } else {
+      console.log("No version found - file will remain unversioned");
     }
 
     return NextResponse.json({
