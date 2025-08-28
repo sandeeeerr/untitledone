@@ -52,16 +52,53 @@ export function useBreadcrumbs(): BreadcrumbItem[] {
         label: t('projects'), 
         href: '/projects' 
       });
-      
-      // If there's a project ID, add it
-      if (segments.length > 1) {
+
+      // /projects -> Projects current
+      if (segments.length === 1) {
+        breadcrumbs[1].isCurrentPage = true;
+        return breadcrumbs;
+      }
+
+      const projectId = segments[1];
+
+      // /projects/[id] -> Project page
+      if (segments.length === 2) {
         breadcrumbs.push({ 
-          label: override.currentPageLabel || `Project ${segments[1]}`, 
+          label: override.currentPageLabel || `Project ${projectId}`, 
           isCurrentPage: true 
         });
-      } else {
-        breadcrumbs[1].isCurrentPage = true;
+        return breadcrumbs;
       }
+
+      // Deeper routes under a project
+      // Example: /projects/[id]/files/[fileId]
+      // Project crumb (link)
+      breadcrumbs.push({ 
+        label: `Project ${projectId}`, 
+        href: `/projects/${projectId}` 
+      });
+
+      // Files section
+      if (segments[2] === 'files') {
+        breadcrumbs.push({ 
+          label: 'Files', 
+          href: `/projects/${projectId}#files` 
+        });
+        if (segments.length >= 4) {
+          breadcrumbs.push({ 
+            label: override.currentPageLabel || segments[3], 
+            isCurrentPage: true 
+          });
+          return breadcrumbs;
+        }
+        // /projects/[id]/files
+        breadcrumbs[breadcrumbs.length - 1].isCurrentPage = true;
+        return breadcrumbs;
+      }
+
+      // Generic extra segment under project, mark last as current
+      breadcrumbs.push({ label: segments[2].charAt(0).toUpperCase() + segments[2].slice(1), isCurrentPage: true });
+      return breadcrumbs;
     } else if (segments[0] === 'todos') {
       breadcrumbs.push({ 
         label: t('todos'), 

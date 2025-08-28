@@ -10,7 +10,7 @@ import {
 } from "./todos";
 import { useToast } from "@/hooks/use-toast";
 import { getCurrentProfile, updateCurrentProfile, type Profile, type ProfileUpdate, deleteCurrentProfile } from "./profiles";
-import { getProjects, getProject, type Project, uploadProjectFile, getProjectFiles, type ProjectFile, type UploadFileInput, createProjectVersion, getProjectVersions, type ProjectVersion, type CreateVersionInput, getProjectActivity, type ProjectActivityVersion, createFeedbackChange, updateFeedbackChange, deleteFeedbackChange } from "./projects";
+import { getProjects, getProject, type Project, uploadProjectFile, getProjectFiles, getProjectFileDetail, type ProjectFile, type ProjectFileDetail, type UploadFileInput, createProjectVersion, getProjectVersions, type ProjectVersion, type CreateVersionInput, getProjectActivity, type ProjectActivityVersion, createFeedbackChange, updateFeedbackChange, deleteFeedbackChange } from "./projects";
 import { createProjectInvitation, listProjectInvitations, type ProjectInvitation, type ProjectInvitationInsert, acceptInvitation, listProjectMembers, type ProjectMember } from "./projects";
 
 export function useTodos({ done }: { done?: boolean } = {}) {
@@ -222,6 +222,14 @@ export function useProjectFiles(projectId: string) {
     });
 }
 
+export function useProjectFileDetail(projectId: string, fileId: string) {
+    return useQuery<ProjectFileDetail>({
+        queryKey: ["project", projectId, "files", fileId],
+        queryFn: () => getProjectFileDetail(projectId, fileId),
+        enabled: Boolean(projectId) && Boolean(fileId),
+    });
+}
+
 export function useUploadProjectFile(projectId: string) {
     const queryClient = useQueryClient();
     const { toast } = useToast();
@@ -279,15 +287,65 @@ export function useProjectActivity(projectId: string) {
 export function useCreateFeedbackChange(projectId: string) {
     const queryClient = useQueryClient();
     const { toast } = useToast();
+    const { data: currentProfile } = useProfile();
+    
     return useMutation({
         mutationFn: ({ versionId, description }: { versionId: string; description?: string }) => createFeedbackChange(projectId, versionId, description),
+        onMutate: async ({ versionId, description = "Nieuwe feedback" }) => {
+            const key = ["project", projectId, "activity"] as const;
+            await queryClient.cancelQueries({ queryKey: key });
+            const previous = queryClient.getQueryData<ProjectActivityVersion[]>(key);
+            
+            if (previous) {
+                // Find the version to add the feedback to
+                const versionIndex = previous.findIndex(v => v.id === versionId);
+                if (versionIndex !== -1) {
+                    const tempId = `temp-${Date.now()}`;
+                    const now = new Date().toISOString();
+                    
+                    // Get current user info for optimistic display
+                    const authorName = currentProfile?.display_name || currentProfile?.username || "You";
+                    const authorId = currentProfile?.id || "temp-user-id";
+                    const avatar = currentProfile?.avatar_url || null;
+                    
+                    // Create optimistic feedback change
+                    const optimisticChange = {
+                        id: tempId,
+                        type: "feedback" as const,
+                        description,
+                        author: authorName,
+                        authorId: authorId,
+                        time: now.substring(11, 16), // HH:mm format
+                        fullTimestamp: now,
+                        avatar: avatar,
+                        fileId: null,
+                    };
+                    
+                    const next = [...previous];
+                    next[versionIndex] = {
+                        ...next[versionIndex],
+                        microChanges: [optimisticChange, ...next[versionIndex].microChanges]
+                    };
+                    
+                    queryClient.setQueryData(key, next);
+                }
+            }
+            return { previous } as const;
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["project", projectId, "activity"] });
-            toast({ title: "Feedback change created", description: "You can now add comments inline." });
+            toast({ title: "Feedback toegevoegd", description: "Je feedback is succesvol toegevoegd." });
         },
-        onError: (error: unknown) => {
+        onError: (error: unknown, _vars, context) => {
+            // Rollback optimistic update
+            if (context?.previous) {
+                queryClient.setQueryData(["project", projectId, "activity"], context.previous);
+            }
             const errorMessage = error && typeof error === 'object' && 'message' in error && typeof (error as any).message === 'string' ? (error as any).message : "Failed to create feedback";
             toast({ variant: "destructive", title: "Error", description: errorMessage });
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ["project", projectId, "activity"] });
         },
     });
 }
@@ -390,18 +448,18 @@ export function useCreateProjectComment() {
         mutationFn: (input: CreateCommentInput) => createComment(input),
         onMutate: async (input) => {
             const { projectId, activityChangeId, versionId, fileId } = input;
-            const contextKey = activityChangeId ? { activityChangeId } : versionId ? { versionId } : { fileId } as Record<string, string | undefined>;
+            const contextKey: Record<string, string> = activityChangeId ? { activityChangeId } : versionId ? { versionId } : fileId ? { fileId } : {};
             const queryKey = ["project", projectId, "comments", { ...contextKey }];
             await queryClient.cancelQueries({ queryKey: ["project", projectId, "comments"] });
             const previous = queryClient.getQueryData<ProjectComment[]>(queryKey) || [];
             const optimistic: ProjectComment = {
-                id: `optimistic-${Date.now()}` as unknown as any,
+                id: `optimistic-${Date.now()}` as unknown as ProjectComment["id"],
                 project_id: projectId,
                 parent_id: input.parentId ?? null,
                 activity_change_id: activityChangeId ?? null,
                 version_id: versionId ?? null,
                 file_id: fileId ?? null,
-                user_id: "me" as unknown as any,
+                user_id: "me" as unknown as ProjectComment["user_id"],
                 comment: input.comment,
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString(),
@@ -409,7 +467,7 @@ export function useCreateProjectComment() {
                 resolved: false,
                 timestamp_ms: input.timestampMs ?? null,
                 profiles: null,
-            } as unknown as ProjectComment;
+            } as ProjectComment;
             queryClient.setQueryData<ProjectComment[]>(queryKey, [optimistic, ...previous]);
             return { previous, queryKey } as const;
         },
@@ -480,6 +538,10 @@ export function useDeleteProjectComment(projectId: string) {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["project", projectId, "comments"] });
+            // Also refresh comment counts across contexts
+            queryClient.invalidateQueries({ queryKey: ["project", projectId, "comments", "count"] });
+            // Refresh activity to sync badges/threads if needed
+            queryClient.invalidateQueries({ queryKey: ["project", projectId, "activity"] });
             toast({ title: "Deleted", description: "Comment deleted." });
         },
     });

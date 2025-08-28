@@ -10,7 +10,7 @@ import { FileAudio, Music, Settings, Tags, Wrench, UserPlus, Clock, MessageSquar
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useCurrentUser } from '@/hooks/use-current-user';
-import { useProject } from '@/lib/api/queries';
+import { useProject, useProjectActivity } from '@/lib/api/queries';
 import { type Project } from '@/lib/api/projects';
 
 import InviteDialog from '@/components/molecules/invite-dialog';
@@ -39,6 +39,7 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
   const router = useRouter();
   const { data: currentUser } = useCurrentUser();
   const { data: project, isLoading, error, refetch } = useProject(id, initialProject);
+  const { data: activity } = useProjectActivity(id);
   const { data: members } = useProjectMembers(id);
   
   const [activeTab, setActiveTab] = useState<'activity' | 'files' | 'comments'>('activity');
@@ -68,6 +69,22 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
     refetch();
   }, [refetch]);
 
+  const lastActivityIso = React.useMemo(() => {
+    if (!activity || activity.length === 0) return project?.updated_at ?? null;
+    let maxTs = 0;
+    for (const v of activity) {
+      // version date
+      const vd = new Date(v.date).getTime();
+      if (!Number.isNaN(vd)) maxTs = Math.max(maxTs, vd);
+      // micro changes
+      for (const mc of v.microChanges) {
+        const ts = new Date(mc.fullTimestamp).getTime();
+        if (!Number.isNaN(ts)) maxTs = Math.max(maxTs, ts);
+      }
+    }
+    return maxTs > 0 ? new Date(maxTs).toISOString() : (project?.updated_at ?? null);
+  }, [activity, project?.updated_at]);
+
   if (isLoading) {
     return (
       <LayoutSidebar title="Loading...">
@@ -93,7 +110,7 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                 Try again
               </Button>
               <Button variant="outline" onClick={handleBack}>
-                Back to projects
+                Terug naar projecten
               </Button>
             </div>
           </EmptyState>
@@ -110,7 +127,7 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={handleBack}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
+            Terug
           </Button>
         </div>
       }
@@ -280,7 +297,7 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                     {/* Comments tab removed per new model */}
                   </TabsList>
                   <div className="hidden sm:block text-xs sm:text-sm text-muted-foreground">
-                    {`Last update: ${formatTimeAgo(project.updated_at)}`}
+                    {`Last update: ${lastActivityIso ? formatTimeAgo(lastActivityIso) : '—'}`}
                   </div>
                 </div>
 

@@ -4,24 +4,28 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { useCreateFeedbackChange } from "@/lib/api/queries";
 
 export default function CreateFeedbackDialog({ projectId, versionId, trigger, onCreated }: { projectId: string; versionId: string; trigger: React.ReactNode; onCreated?: (id: string) => void }) {
   const [open, setOpen] = React.useState(false);
   const [title, setTitle] = React.useState("");
+  const createFeedback = useCreateFeedbackChange(projectId);
 
   const handleSubmit = async () => {
+    if (!title.trim()) return;
+    
     try {
-      const res = await fetch(`/api/projects/${projectId}/activity`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ versionId, description: title.trim() }),
+      const result = await createFeedback.mutateAsync({ 
+        versionId, 
+        description: title.trim() 
       });
-      if (!res.ok) throw new Error("Failed");
-      const body = await res.json();
       setOpen(false);
       setTitle("");
-      onCreated?.(body.id);
-    } catch {}
+      onCreated?.(result.id);
+    } catch (error) {
+      // Error handling is already done in the mutation hook via toast
+      console.error('Failed to create feedback:', error);
+    }
   };
 
   return (
@@ -37,8 +41,10 @@ export default function CreateFeedbackDialog({ projectId, versionId, trigger, on
           <Input placeholder="Titel omschrijving..." value={title} onChange={(e) => setTitle(e.target.value)} />
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={() => setOpen(false)}>Annuleer</Button>
-          <Button onClick={handleSubmit} disabled={!title.trim()}>Opslaan</Button>
+          <Button variant="ghost" onClick={() => setOpen(false)} disabled={createFeedback.isPending}>Annuleer</Button>
+          <Button onClick={handleSubmit} disabled={!title.trim() || createFeedback.isPending}>
+            {createFeedback.isPending ? "Opslaan..." : "Opslaan"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

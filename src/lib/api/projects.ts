@@ -223,6 +223,31 @@ export type ProjectFile = {
 	description: string | null;
 };
 
+export type ProjectFileDetail = {
+	id: string;
+	filename: string;
+	filePath: string;
+	fileSize: number;
+	fileType: string;
+	uploadedAt: string;
+	uploadedBy: {
+		id: string;
+		name: string;
+		username: string | null;
+		avatar: string | null;
+	};
+	description: string | null;
+	version: {
+		id: string;
+		name: string;
+		description: string;
+	} | null;
+	project: {
+		id: string;
+		name: string;
+	};
+};
+
 export type UploadFileInput = {
 	filename: string;
 	fileSize: number;
@@ -266,6 +291,24 @@ export async function getProjectFiles(projectId: string): Promise<ProjectFile[]>
 	}
 
 	return (await res.json()) as ProjectFile[];
+}
+
+export async function getProjectFileDetail(projectId: string, fileId: string): Promise<ProjectFileDetail> {
+	const res = await fetch(`/api/projects/${projectId}/files/${fileId}`, {
+		method: "GET",
+		headers: { "Content-Type": "application/json" },
+	});
+
+	if (!res.ok) {
+		let message = "Failed to fetch file details";
+		try {
+			const body = await res.json();
+			if (body?.error) message = body.error as string;
+		} catch {}
+		throw new Error(message);
+	}
+
+	return (await res.json()) as ProjectFileDetail;
 }
 
 // Project Versions

@@ -169,6 +169,59 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: insertError?.message || "Failed to create comment" }, { status: 500 });
   }
 
+  // If this is a head comment on a file (no parent, file context), create an activity change for it
+  try {
+    const isHeadFileComment = Boolean(input.fileId) && !input.parentId && !input.activityChangeId;
+    if (isHeadFileComment) {
+      // Resolve version_id for the file. Prefer linked version via version_files; fall back to most recent/active version.
+      let versionId: string | null = null;
+      const { data: vf } = await (supabase as SupabaseClient)
+        .from("version_files")
+        .select("version_id")
+        .eq("file_id", input.fileId!)
+        .single();
+      if (vf?.version_id) {
+        versionId = vf.version_id as string;
+      } else {
+        const { data: pv } = await (supabase as SupabaseClient)
+          .from("project_versions")
+          .select("id, is_active, created_at")
+          .eq("project_id", paramValidation.data.id)
+          .order("is_active", { ascending: false })
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .single();
+        versionId = pv?.id ?? null;
+      }
+
+      if (versionId) {
+        // Create the activity change linked to the file
+        const { data: ac, error: acError } = await (supabase as SupabaseClient)
+          .from("activity_changes")
+          .insert({
+            version_id: versionId,
+            type: "feedback",
+            description: sanitizedComment,
+            author_id: user.id,
+            file_id: input.fileId!,
+          })
+          .select("id")
+          .single();
+
+        if (!acError && ac?.id) {
+          // Link the comment to the activity change for traceability
+          await (supabase as SupabaseClient)
+            .from("project_comments")
+            .update({ activity_change_id: ac.id })
+            .eq("id", created.id);
+        }
+      }
+    }
+  } catch (e) {
+    // Best-effort: do not fail the comment creation if activity linkage fails
+    console.error("Failed to create activity change for file head comment:", e);
+  }
+
   return NextResponse.json(created, { status: 201 });
 }
 

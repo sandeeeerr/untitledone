@@ -121,6 +121,7 @@ export default function ProjectActivity({ projectId, query, sortBy = 'newest', o
         onClick={() => toggleComments(changeId)}
         className="h-auto py-1 px-2 text-xs flex items-center gap-1.5"
         aria-label={label}
+        title={label}
       >
         <MessageSquare className="h-3.5 w-3.5" />
         <span>{label}</span>
@@ -130,24 +131,16 @@ export default function ProjectActivity({ projectId, query, sortBy = 'newest', o
   };
 
   // File CTAs (for file add/update and file-linked feedback)
-  const FileCTAs = ({ fileId, commentAnchor }: { fileId: string; commentAnchor?: string }) => {
-    const { data: count = 0 } = useCommentsCount({ projectId, fileId }, { enabled: Boolean(fileId), staleTime: 60_000 });
+  const FileCTAs = ({ fileId, label, anchor, icon }: { fileId: string; label?: string; anchor?: string; icon?: React.ReactElement }) => {
+    const href = `/projects/${projectId}/files/${fileId}${anchor ? `#${anchor}` : ''}`;
     return (
       <div className="flex items-center gap-2">
         <Button asChild variant="ghost" size="sm" className="h-auto py-1 px-2 text-xs gap-1.5">
-          <Link href={`/projects/${projectId}/files/${fileId}`}>
-            <FileIcon className="h-3.5 w-3.5" />
-            <span>Toon bestand</span>
+          <Link href={href}>
+            {icon ?? <FileIcon className="h-3.5 w-3.5" />}
+            <span>{label ?? 'Toon bestand'}</span>
           </Link>
         </Button>
-        {count > 0 && (
-          <Button asChild variant="ghost" size="sm" className="h-auto py-1 px-2 text-xs gap-1.5">
-            <Link href={`/projects/${projectId}/files/${fileId}${commentAnchor ? `#${commentAnchor}` : '#comments'}`}>
-              <MessageSquare className="h-3.5 w-3.5" />
-              <span>{`Toon ${count} reacties`}</span>
-            </Link>
-          </Button>
-        )}
       </div>
     );
   }
@@ -462,12 +455,11 @@ export default function ProjectActivity({ projectId, query, sortBy = 'newest', o
                                 </div>
                                 {isFeedback ? (
                                   isFileLinked ? (
-                                    <FileCTAs fileId={change.fileId as string} commentAnchor={change.id} />
+                                    <FileCTAs fileId={change.fileId as string} label="Ga naar reactie" anchor={change.id} icon={<MessageSquare className="h-3.5 w-3.5 text-foreground" />} />
                                   ) : (
                                     <CommentButton changeId={change.id} />
                                   )
                                 ) : (change.filename ? (
-                                  // Treat as file add/update
                                   <FileCTAs fileId={change.fileId as string} />
                                 ) : null)}
                               </div>
