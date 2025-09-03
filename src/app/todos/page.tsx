@@ -106,7 +106,7 @@ export default function TodosPage() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" disabled={createTodoMutation.isPending} className="px-6">
+                <Button type="submit" disabled={createTodoMutation.isPending} className="px-6" variant="outline">
                   {createTodoMutation.isPending ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : null}
