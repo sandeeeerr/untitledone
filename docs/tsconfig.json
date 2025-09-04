@@ -9,9 +9,9 @@
     "allowJs": true,
     "skipLibCheck": true,
     "strict": false,
-    "forceConsistentCasingInFileNames": true,
     "noEmit": true,
     "incremental": true,
+    "module": "esnext",
     "esModuleInterop": true,
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
@@ -21,12 +21,7 @@
       {
         "name": "next"
       }
-    ],
-    "module": "esnext",
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./*"]
-    }
+    ]
   },
   "include": [
     "next-env.d.ts",

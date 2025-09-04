@@ -1,0 +1,142 @@
+# API Reference
+
+UntitledOne provides a comprehensive API for integrating with external tools and building custom workflows.
+
+## Authentication
+
+All API requests require authentication using Supabase JWT tokens.
+
+### Getting Started
+
+```javascript
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+)
+```
+
+## Projects API
+
+### List Projects
+
+```javascript
+const { data: projects, error } = await supabase
+  .from('projects')
+  .select('*')
+```
+
+### Create Project
+
+```javascript
+const { data: project, error } = await supabase
+  .from('projects')
+  .insert({
+    name: 'My New Project',
+    description: 'Project description',
+    tags: ['electronic', 'collaboration']
+  })
+```
+
+### Update Project
+
+```javascript
+const { data: project, error } = await supabase
+  .from('projects')
+  .update({ name: 'Updated Name' })
+  .eq('id', projectId)
+```
+
+## Files API
+
+### Upload File
+
+```javascript
+const { data: file, error } = await supabase.storage
+  .from('project-files')
+  .upload(`${projectId}/${fileName}`, fileBlob)
+```
+
+### List Project Files
+
+```javascript
+const { data: files, error } = await supabase
+  .from('project_files')
+  .select('*')
+  .eq('project_id', projectId)
+```
+
+## Comments API
+
+### Add Comment
+
+```javascript
+const { data: comment, error } = await supabase
+  .from('file_comments')
+  .insert({
+    file_id: fileId,
+    content: 'Great work on this track!',
+    timestamp_seconds: 45.2
+  })
+```
+
+### Get Comments
+
+```javascript
+const { data: comments, error } = await supabase
+  .from('file_comments')
+  .select(`
+    *,
+    profiles:author_id (
+      username,
+      full_name
+    )
+  `)
+  .eq('file_id', fileId)
+  .order('created_at', { ascending: true })
+```
+
+## Error Handling
+
+All API responses follow this structure:
+
+```typescript
+interface ApiResponse<T> {
+  data: T | null
+  error: Error | null
+}
+```
+
+## Rate Limiting
+
+API requests are rate limited to:
+- 100 requests per minute for authenticated users
+- 20 requests per minute for anonymous users
+
+## Webhooks
+
+UntitledOne supports webhooks for real-time notifications:
+
+### Available Events
+
+- `project.created`
+- `project.updated` 
+- `file.uploaded`
+- `comment.created`
+- `collaborator.added`
+
+### Webhook Payload
+
+```json
+{
+  "event": "file.uploaded",
+  "data": {
+    "project_id": "123",
+    "file_id": "456",
+    "uploaded_by": "user_id",
+    "timestamp": "2025-01-27T10:00:00Z"
+  }
+}
+```
+
