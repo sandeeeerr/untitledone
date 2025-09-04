@@ -1,10 +1,11 @@
 'use client'
 
 import * as React from 'react'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { ArrowRight, Star, Users, Zap, Shield } from 'lucide-react'
+import { ArrowRight, Star, Users, Zap, Shield, Github } from 'lucide-react'
 import { useCurrentUser } from '@/hooks/use-current-user'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
@@ -70,15 +71,29 @@ export default function LandingPage() {
       <LandingHeader />
 
       {/* Hero Section */}
-      <section className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-44 pb-24 text-center">
-        <Badge variant="secondary" className="mb-4">
-          {t('hero.badge')}
-        </Badge>
+      <section className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-36 pb-16 text-center">
+        <div className="mb-10 flex items-center justify-center">
+          <div className="inline-flex items-center gap-3 rounded-full border bg-background/70 px-3 py-1.5 text-sm">
+            <Badge variant="secondary" className="px-2 py-0.5">{t('hero.badge')}</Badge>
+            <span className="text-muted-foreground hidden sm:inline">{t('contributePrefix')}</span>
+            <a
+              href="https://github.com/sandeeeerr/untitledone"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 font-medium hover:underline"
+            >
+              <Github className="h-4 w-4" /> {t('contributeLink')}
+            </a>
+          </div>
+        </div>
         <h1 className="mb-6 text-4xl font-bold tracking-tighter sm:text-6xl lg:text-7xl">
           {t('hero.title')}
         </h1>
-        <p className="mx-auto mb-8 max-w-2xl text-lg text-muted-foreground">
+        <p className="mx-auto mb-3 max-w-2xl text-lg text-muted-foreground">
           {t('hero.description')}
+        </p>
+        <p className="mx-auto mb-8 max-w-3xl text-base text-muted-foreground">
+          {t('hero.tagline')}
         </p>
         <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
           <Button size="lg" onClick={handleGetStarted} className="group">
@@ -91,6 +106,19 @@ export default function LandingPage() {
             </Button>
           )}
         </div>
+        {/* Mockup screenshot */}
+        <div className="mt-16  hidden sm:block">
+          <div className="mx-auto max-w-6xl">
+            <Image
+              src="/images/screenshot.png"
+              alt="UntitledOne dashboard with files and feedback"
+              width={2000}
+              height={1125}
+              priority
+              className="w-full h-auto"
+            />
+          </div>
+        </div>
       </section>
 
       {/* Features */}
@@ -102,6 +130,14 @@ export default function LandingPage() {
           <p className="mx-auto max-w-2xl text-muted-foreground">
             {t('features.description')}
           </p>
+          <div className="mx-auto mt-6 max-w-2xl text-left text-sm text-muted-foreground">
+            <ul className="grid gap-2 sm:grid-cols-2">
+              <li>• {t('features.bullets.fileSharing')}</li>
+              <li>• {t('features.bullets.timeFeedback')}</li>
+              <li>• {t('features.bullets.versioning')}</li>
+              <li>• {t('features.bullets.ownership')}</li>
+            </ul>
+          </div>
         </div>
         <div className="grid gap-8 md:grid-cols-3 max-w-5xl mx-auto">
           {features.map((feature, index) => (
@@ -176,6 +212,12 @@ export default function LandingPage() {
               <Link href="/terms" className="hover:text-foreground">
                 {t('footer.terms')}
               </Link>
+              <a href="https://github.com/sandeeeerr/untitledone" className="hover:text-foreground" target="_blank" rel="noopener noreferrer">
+                {t('footer.links.github')}
+              </a>
+              <a href="https://docs.untitledone.nl" className="hover:text-foreground" target="_blank" rel="noopener noreferrer">
+                {t('footer.links.docs')}
+              </a>
             </div>
           </div>
         </div>

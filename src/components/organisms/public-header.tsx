@@ -4,7 +4,7 @@ import Link from "next/link"
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { User2, LogOut, Monitor } from "lucide-react"
+import { User2, LogOut, Monitor, BookOpen } from "lucide-react"
 import UserAvatar from "@/components/atoms/user-avatar"
 import { Logo } from "@/components/ui/logo"
 import { useCurrentUser } from "@/hooks/use-current-user"
@@ -32,12 +32,14 @@ export default function LandingHeader() {
 		<header className="fixed top-0 left-0 right-0 z-40 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
 			<div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
 				<div className="flex items-center ">
-					<Link href="/" aria-label={t('home')} className="inline-flex items-center">
+					<Link href="/" aria-label={t('home')} className="inline-flex items-center mr-3">
 						<Logo alt="Logo" width={26} height={16} className="h-[16px] w-[26px]" />
 					</Link>
 					<div className="flex items-center gap-2">
-						<Button variant="ghost" disabled>
-							{tNav("explore")}
+						<Button variant="ghost" asChild>
+							<a href="https://docs.untitledone.nl" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2">
+								<BookOpen className="h-4 w-4" /> {tLanding("nav.docs")}
+							</a>
 						</Button>
 					</div>
 				</div>

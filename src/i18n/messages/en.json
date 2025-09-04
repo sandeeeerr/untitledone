@@ -335,19 +335,29 @@
       "login": "Login",
       "signup": "Sign up",
       "dashboard": "Dashboard",
-      "todos": "Todos"
+      "todos": "Todos",
+      "docs": "Docs"
     },
     "hero": {
       "badge": "🛠 In development",
       "title": "Create together. Grow together.",
       "description": "UntitledOne is an open platform for audio creatives to collaborate remotely, exchange ideas and give targeted feedback. All in one place, without noise.",
+      "tagline": "Collaboration, file sharing and time-based feedback — built for audio creatives.",
       "getStarted": "Get started",
       "login": "Sign in",
       "dashboard": "Go to dashboard"
     },
+    "contributePrefix": "We’re building in the open —",
+    "contributeLink": "Help build UntitledOne",
     "features": {
       "title": "Why UntitledOne?",
       "description": "Built for creative collaboration, ownership and freedom — before the release phase.",
+      "bullets": {
+        "fileSharing": "Fast, private file sharing",
+        "timeFeedback": "Precise, time-based feedback",
+        "versioning": "Versioning with context",
+        "ownership": "Open-source and creator-owned"
+      },
       "collaboration": {
         "title": "Smart Collaboration",
         "description": "Work with others on projects, share files and maintain overview in versions, tasks and agreements."
@@ -377,7 +387,13 @@
     "footer": {
       "copyright": "All rights reserved.",
       "privacy": "Privacy Policy",
-      "terms": "Terms of Service"
+      "terms": "Terms of Service",
+      "links": {
+        "github": "View on GitHub",
+        "docs": "Read the Docs",
+        "demo": "Live Demo",
+        "contact": "Contact"
+      }
     }
   }
 }
