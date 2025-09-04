@@ -69,7 +69,7 @@ INSERT INTO public.profiles (id, username, display_name, bio, avatar_url, websit
 VALUES
   ('11111111-1111-1111-1111-111111111111', 'alice', 'Alice', NULL, NULL, NULL, 'Amsterdam', '{}'::jsonb, now(), now()),
   ('22222222-2222-2222-2222-222222222222', 'bob',   'Bob',   NULL, NULL, NULL, 'Rotterdam', '{}'::jsonb, now(), now()),
-  ('33333333-3333-3333-3333-333333333333', 'sandeeeerr', 'Sander de Vries', 'Producer / DJ from NL', NULL, 'sandervries.me', 'Leeuwarden, NL', '{}'::jsonb, now(), now());
+  ('33333333-3333-3333-3333-333333333333', 'sandeeeerr', 'Sander de Vries', 'Audio creative from NL', NULL, 'sandervries.me', 'Leeuwarden, NL', '{}'::jsonb, now(), now());
 
 -- Social links for Sander
 INSERT INTO public.profile_socials (profile_id, platform, url, created_at, updated_at) VALUES
