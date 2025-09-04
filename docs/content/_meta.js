@@ -3,6 +3,7 @@ export default {
   installation: 'Installation',
   'getting-started': 'Getting Started',
   api: 'API Reference',
-  contributing: 'Contributing'
+  contributing: 'Contributing',
+  personas: 'Personas & HMW'
 }
 

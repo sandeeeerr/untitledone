@@ -206,19 +206,29 @@
       "login": "Se connecter",
       "signup": "S'inscrire",
       "dashboard": "Tableau de bord",
-      "todos": "Tâches"
+      "todos": "Tâches",
+      "docs": "Docs"
     },
     "hero": {
       "badge": "🛠 En développement",
       "title": "Créer ensemble. Grandir ensemble.",
-      "description": "UntitledOne est une plateforme ouverte pour les créateurs musicaux — des producteurs et auteurs-compositeurs aux groupes, vocalistes et compositeurs — pour collaborer à distance, échanger des idées et donner des retours ciblés. Tout en un seul endroit, sans bruit.",
+      "description": "UntitledOne est une plateforme ouverte pour les créateurs audio pour collaborer à distance, échanger des idées et donner des retours ciblés. Tout en un seul endroit, sans bruit.",
+      "tagline": "Collaboration, partage de fichiers et retours temporels — conçu pour les créateurs audio.",
       "getStarted": "Commencer",
       "login": "Se connecter",
       "dashboard": "Aller au tableau de bord"
     },
+    "contributePrefix": "Nous construisons en public —",
+    "contributeLink": "Aidez à construire UntitledOne",
     "features": {
       "title": "Pourquoi UntitledOne ?",
       "description": "Construit pour la collaboration créative, la propriété et la liberté — avant la phase de sortie.",
+      "bullets": {
+        "fileSharing": "Partage de fichiers rapide et privé",
+        "timeFeedback": "Retours précis basés sur le temps",
+        "versioning": "Versionnage avec contexte",
+        "ownership": "Open-source et propriété des créateurs"
+      },
       "collaboration": {
         "title": "Collaboration Intelligente",
         "description": "Travaillez avec d'autres sur des projets, partagez des fichiers et maintenez une vue d'ensemble dans les versions, tâches et accords."
@@ -248,7 +258,13 @@
     "footer": {
       "copyright": "Tous droits réservés.",
       "privacy": "Politique de confidentialité",
-      "terms": "Conditions d'utilisation"
+      "terms": "Conditions d'utilisation",
+      "links": {
+        "github": "Voir sur GitHub",
+        "docs": "Lire la documentation",
+        "demo": "Démo en ligne",
+        "contact": "Contact"
+      }
     }
   },
   "comments": {

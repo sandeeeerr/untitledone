@@ -7,6 +7,19 @@
 
 —
 
+## Visual Overview
+
+Current UI snapshot:
+
+![Dashboard](public/images/screenshot.png)
+
+## Quick Links
+
+- Docs: `https://docs.untitledone.nl`
+- Live Demo: `https://untitledone.nl`
+- GitHub: `https://github.com/sandeeeerr/untitledone`
+- Roadmap (GitHub Projects): `https://github.com/sandeeeerr/untitledone/projects`
+
 ## Table of Contents
 
 - [Overview](#overview)
@@ -89,28 +102,32 @@ Useful scripts:
 3. Add timestamped comments; discuss versions in context
 4. Invite collaborators to work together
 
-## Screenshots
+## Roadmap
 
-Add images to `/assets` and reference them here:
+We maintain a public roadmap and backlog using MoSCoW priorities:
 
-- `assets/screenshot-dashboard.png`
-- `assets/screenshot-project.png`
+- Must: core collaboration, timestamped comments, versioning, invitations
+- Should: waveform player, roles/permissions, public sharing options
+- Could: integrations (DAW metadata), AI-assisted feedback
+- Won’t (for now): heavy DAW sync, full-blown task management
+
+See GitHub Projects for milestones and progress: `https://github.com/sandeeeerr/untitledone/projects`
 
 ## Documentation
 
-Docs will be available at `https://docs.untitledone.nl` (separate app). Link will be added when live.
+Product docs live at `https://docs.untitledone.nl`. API and contribution guides are there, too.
 
 ## Contributing
 
 Contributions are welcome! Please follow Conventional Commits and our guidelines.
 
-- See `CONTRIBUTING.md` (coming soon)
+- See `CONTRIBUTING.md`
 - Code of Conduct: `CODE_OF_CONDUCT.md`
 - Style & quality: ESLint, Prettier and TypeScript strict are enabled
 
 ## Help & Support
 
-Open an issue for bugs or questions. Provide a clear title, reproduction steps, and expected/actual behavior.
+Open an issue for bugs or questions. Provide a clear title, reproduction steps, and expected/actual behavior. Use labels like `good first issue`, `enhancement`, and `bug` to help the community engage.
 
 ## Security
 
