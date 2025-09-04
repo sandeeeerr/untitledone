@@ -12,7 +12,7 @@ export const metadata = {
 const banner = <Banner storageKey="some-key">This template was created with 🩸 and 💦 by <Link href="https://github.com/phucbm">PHUCBM</Link> 🐧</Banner>
 const navbar = (
     <Navbar
-        logo={<img src="/images/general/logo.svg" alt="Logo" width={100} height={20}/>}
+        logo={<img src="/logo.svg" alt="UntitledOne" width={36} height={7}/>}
         // ... Your additional navbar options
     />
 )
@@ -31,7 +31,7 @@ export default async function RootLayout({children}) {
         <Head
             // ... Your additional head options
         >
-            <link rel="shortcut icon" href="/images/general/icon.svg"/>
+            <link rel="shortcut icon" href="/favicon.svg"/>
             {/* Your additional tags should be passed as `children` of `<Head>` element */}
         </Head>
         <body>

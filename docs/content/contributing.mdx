@@ -1,0 +1,115 @@
+# Contributing
+
+We welcome contributions to UntitledOne! This guide will help you get started with contributing to the project.
+
+## Development Setup
+
+1. Fork the repository on GitHub
+2. Clone your fork locally
+3. Follow the [Installation Guide](/installation) to set up the development environment
+4. Create a new branch for your feature or bug fix
+
+## Code Style
+
+We use the following tools to maintain code quality:
+
+- **ESLint**: For code linting
+- **Prettier**: For code formatting
+- **TypeScript**: For type safety
+
+### Running Code Quality Checks
+
+```bash
+# Type checking
+npm run typecheck
+
+# Linting
+npm run lint
+
+# Formatting
+npm run format
+
+# Run all checks
+npm run check
+```
+
+## Project Structure
+
+UntitledOne follows these architectural principles:
+
+### Server-First Development
+- Data fetching via React Server Components and Server Actions
+- Minimize client-side components
+- Use Suspense boundaries for loading states
+
+### Atomic Design
+- **Atoms**: Basic UI elements (buttons, inputs)
+- **Molecules**: Simple component combinations
+- **Organisms**: Complex UI sections
+- **Templates**: Page layouts
+
+### Database Guidelines
+
+#### Migrations
+- All migrations must be idempotent
+- Use `if not exists` / `if exists` clauses
+- Include rollback instructions as comments
+
+#### RLS Policies
+- Always specify policies per operation (select/insert/update/delete)
+- Use `(select auth.uid())` for user filtering
+- Explicit `to authenticated/anon` clauses
+
+## Testing
+
+### Unit Tests
+```bash
+npm run test
+```
+
+### End-to-End Tests
+```bash
+npm run cypress:open
+```
+
+### Component Testing
+```bash
+npm run storybook
+```
+
+## Submitting Changes
+
+1. **Create a Branch**: Use descriptive branch names like `feature/audio-player` or `fix/upload-bug`
+2. **Make Changes**: Follow our coding standards and write tests
+3. **Test Locally**: Run all tests and quality checks
+4. **Commit**: Use clear, descriptive commit messages
+5. **Push**: Push your branch to your fork
+6. **Pull Request**: Create a pull request with a clear description
+
+### Pull Request Guidelines
+
+- Provide a clear description of changes
+- Reference any related issues
+- Include screenshots for UI changes
+- Ensure all tests pass
+- Update documentation if needed
+
+## Issue Reporting
+
+When reporting issues:
+
+1. Use our issue templates
+2. Provide clear reproduction steps
+3. Include environment details
+4. Add relevant screenshots or logs
+
+## Community
+
+- Join our Discord for real-time discussions
+- Follow our GitHub for updates
+- Check out our roadmap for planned features
+
+## License
+
+By contributing to UntitledOne, you agree that your contributions will be licensed under the MIT License.
+
