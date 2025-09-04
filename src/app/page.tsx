@@ -45,8 +45,8 @@ export default function LandingPage() {
 
   const testimonials = [
     {
-      name: 'Daan de Producer',
-      role: 'Bedroom DJ',
+      name: 'Daan de Maker',
+      role: 'Audio Creative',
       content: t('testimonials.daan'),
       rating: 5,
     },
