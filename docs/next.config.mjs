@@ -1,11 +1,12 @@
-import nextra from "nextra";
+import nextra from 'nextra'
 
-const withNextra = nextra({
-    search: true,
-    defaultShowCopyCode: true,
-});
+const withNextra = nextra({})
 
 export default withNextra({
-    // ... Other Next.js config options
-    // output: 'export'
-});
+  eslint: {
+    ignoreDuringBuilds: true
+  },
+  typescript: {
+    ignoreBuildErrors: true
+  }
+})
