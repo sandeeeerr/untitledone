@@ -1,5 +1,11 @@
-import { withNextra } from 'nextra-theme-docs'
+import nextra from "nextra";
+
+const withNextra = nextra({
+    search: true,
+    defaultShowCopyCode: true,
+});
 
 export default withNextra({
-  reactStrictMode: true
-})
+    // ... Other Next.js config options
+    // output: 'export'
+});
