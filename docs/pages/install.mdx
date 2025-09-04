@@ -1,0 +1,17 @@
+# Installation & `.env`
+
+Copy the example env file in the app repository and fill your local or production values.
+
+```bash
+cp .env.example .env
+```
+
+### Required variables
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` (server only)
+- Optional: `RESEND_API_KEY`, `MAIL_FROM`
+
+> Never commit real secrets. Use Vercel project environment variables in production.
