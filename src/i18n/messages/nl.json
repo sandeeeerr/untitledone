@@ -332,19 +332,29 @@
       "login": "Inloggen",
       "signup": "Aanmelden",
       "dashboard": "Dashboard",
-      "todos": "Taken"
+      "todos": "Taken",
+      "docs": "Docs"
     },
     "hero": {
       "badge": "🛠 In ontwikkeling",
       "title": "Samen creëren. Samen groeien.",
       "description": "UntitledOne is een open platform voor audio creatievelingen om op afstand samen te werken, ideeën uit te wisselen en gerichte feedback te geven. Alles op één plek, zonder ruis.",
+      "tagline": "Samenwerken, bestanden delen en tijdgebonden feedback — gebouwd voor audio creatives.",
       "getStarted": "Aan de slag",
       "login": "Inloggen",
       "dashboard": "Ga naar dashboard"
     },
+    "contributePrefix": "We bouwen in het open —",
+    "contributeLink": "Help UntitledOne mee bouwen",
     "features": {
       "title": "Waarom UntitledOne?",
       "description": "Gebouwd voor creatieve samenwerking, eigendom en vrijheid — vóór de release fase.",
+      "bullets": {
+        "fileSharing": "Snel, privé bestanden delen",
+        "timeFeedback": "Precieze, tijdgebonden feedback",
+        "versioning": "Versiebeheer met context",
+        "ownership": "Open-source en van de maker"
+      },
       "collaboration": {
         "title": "Slimme Samenwerking",
         "description": "Werk met anderen aan projecten, deel bestanden en behoud overzicht in versies, taken en afspraken."
@@ -374,7 +384,13 @@
     "footer": {
       "copyright": "Alle rechten voorbehouden.",
       "privacy": "Privacybeleid",
-      "terms": "Gebruiksvoorwaarden"
+      "terms": "Gebruiksvoorwaarden",
+      "links": {
+        "github": "Bekijk op GitHub",
+        "docs": "Lees de Docs",
+        "demo": "Live Demo",
+        "contact": "Contact"
+      }
     }
   }
 } 

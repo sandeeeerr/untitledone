@@ -9,7 +9,8 @@ Thanks for your interest — contributions are welcome!
 - Propose features via an issue first
 
 ## Local setup
-1. Clone and create a branch: `git checkout -b feat/short-name`
+1. Fork the repo and clone your fork
+2. Create a branch: `git checkout -b feat/short-name`
 2. Install: `pnpm i` (or `npm i`)
 3. Copy env: `cp .env.example .env` and fill your local values
 4. Run dev server: `pnpm dev`
@@ -37,6 +38,15 @@ Keep messages short and meaningful.
 - Include screenshots for UI changes.
 - Ensure lint/typecheck pass and docs are updated.
 - Be kind and responsive to review comments.
+
+### PR checklist
+
+- [ ] Includes a clear title and description
+- [ ] Links related issue(s)
+- [ ] Lint + typecheck pass locally
+- [ ] Tests updated/added (if applicable)
+- [ ] Screenshots for UI changes
+- [ ] No secrets committed; env via `.env`
 
 ## Code style
 - TypeScript strict; avoid `any` unless justified.
