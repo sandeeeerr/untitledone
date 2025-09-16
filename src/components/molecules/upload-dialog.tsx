@@ -82,9 +82,7 @@ export default function UploadDialog({ projectId, trigger }: UploadDialogProps) 
 		try {
 			for (const fileToUpload of files) {
 				await uploadFile.mutateAsync({
-					filename: fileToUpload.file.name,
-					fileSize: fileToUpload.file.size,
-					fileType: fileToUpload.file.type || 'application/octet-stream',
+					file: fileToUpload.file,
 					description: fileToUpload.description,
 					versionId: targetVersionId,
 				})
