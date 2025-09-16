@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import UserAvatar from "@/components/atoms/user-avatar";
 import EmptyState from "@/components/atoms/empty-state";
 import LoadingState from "@/components/atoms/loading-state";
-import { Download, FileIcon, Clock, User, HardDrive, Tag, Pencil } from "lucide-react";
+import { Download, FileIcon, Clock, User, HardDrive, Tag, Pencil, Trash2, Replace } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { nl } from "date-fns/locale";
 import ThreadedComments from "@/components/molecules/threaded-comments";
@@ -38,6 +38,32 @@ function getFileIcon(fileType: string) {
 export default function FileDetailClient({ projectId, fileId }: FileDetailClientProps) {
   const { data: file, isLoading, error, refetch } = useProjectFileDetail(projectId, fileId);
   const { data: comments = [], isLoading: commentsLoading } = useProjectComments({ projectId, fileId, limit: 200 }, { enabled: Boolean(fileId) });
+  async function handleDownload() {
+    try {
+      const res = await fetch(`/api/projects/${projectId}/files/${fileId}?action=download`, { method: 'POST' });
+      if (!res.ok) throw new Error('Failed to get download URL');
+      const { url } = await res.json();
+      window.open(url, '_blank');
+    } catch {}
+  }
+
+  async function handleReplace(e: React.ChangeEvent<HTMLInputElement>) {
+    const fileInput = e.target.files?.[0];
+    if (!fileInput) return;
+    const form = new FormData();
+    form.append('file', fileInput);
+    const res = await fetch(`/api/projects/${projectId}/files/${fileId}?action=replace`, { method: 'POST', body: form });
+    if (res.ok) refetch();
+    e.target.value = '';
+  }
+
+  async function handleDelete() {
+    if (!confirm('Delete this file?')) return;
+    const res = await fetch(`/api/projects/${projectId}/files/${fileId}?action=delete`, { method: 'POST' });
+    if (res.ok) {
+      window.history.back();
+    }
+  }
 
   if (isLoading) {
     return <LoadingState />;
@@ -77,13 +103,19 @@ export default function FileDetailClient({ projectId, fileId }: FileDetailClient
               <h1 className="text-2xl font-semibold leading-tight truncate" title={file.filename}>{file.filename}</h1>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <Button size="sm" variant="outline" disabled>
-                <Pencil className="h-4 w-4" />
-                Bewerken
-              </Button>
-              <Button size="sm" disabled>
+              <Button size="sm" variant="outline" onClick={handleDownload}>
                 <Download className="h-4 w-4" />
                 Download
+              </Button>
+              <label className="inline-flex">
+                <input type="file" className="hidden" onChange={handleReplace} />
+                <Button size="sm" variant="secondary" asChild>
+                  <span className="inline-flex items-center gap-2"><Replace className="h-4 w-4" />Replace</span>
+                </Button>
+              </label>
+              <Button size="sm" variant="destructive" onClick={handleDelete}>
+                <Trash2 className="h-4 w-4" />
+                Delete
               </Button>
             </div>
           </div>
