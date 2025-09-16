@@ -13,6 +13,14 @@ import { getCurrentProfile, updateCurrentProfile, type Profile, type ProfileUpda
 import { getProjects, getProject, type Project, uploadProjectFile, getProjectFiles, getProjectFileDetail, type ProjectFile, type ProjectFileDetail, type UploadFileInput, createProjectVersion, getProjectVersions, type ProjectVersion, type CreateVersionInput, getProjectActivity, type ProjectActivityVersion, createFeedbackChange, updateFeedbackChange, deleteFeedbackChange } from "./projects";
 import { createProjectInvitation, listProjectInvitations, type ProjectInvitation, type ProjectInvitationInsert, acceptInvitation, listProjectMembers, type ProjectMember } from "./projects";
 
+// Utility function to safely extract error message
+function getErrorMessage(error: unknown, fallback: string): string {
+    if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
+        return error.message;
+    }
+    return fallback;
+}
+
 export function useTodos({ done }: { done?: boolean } = {}) {
     return useQuery({
         queryKey: ["todos", { done }],
@@ -341,7 +349,7 @@ export function useCreateFeedbackChange(projectId: string) {
             if (context?.previous) {
                 queryClient.setQueryData(["project", projectId, "activity"], context.previous);
             }
-            const errorMessage = error && typeof error === 'object' && 'message' in error && typeof (error as any).message === 'string' ? (error as any).message : "Failed to create feedback";
+            const errorMessage = getErrorMessage(error, "Failed to create feedback");
             toast({ variant: "destructive", title: "Error", description: errorMessage });
         },
         onSettled: () => {
@@ -373,7 +381,7 @@ export function useUpdateFeedbackChange(projectId: string) {
             toast({ title: "Feedback updated" });
         },
         onError: (error: unknown) => {
-            const errorMessage = error && typeof error === 'object' && 'message' in error && typeof (error as any).message === 'string' ? (error as any).message : "Failed to update feedback";
+            const errorMessage = getErrorMessage(error, "Failed to update feedback");
             toast({ variant: "destructive", title: "Error", description: errorMessage });
         },
         onSettled: () => {
@@ -409,7 +417,7 @@ export function useDeleteFeedbackChange(projectId: string) {
             if (context?.previous) {
                 queryClient.setQueryData(["project", projectId, "activity"], context.previous);
             }
-            const errorMessage = error && typeof error === 'object' && 'message' in error && typeof (error as any).message === 'string' ? (error as any).message : "Failed to delete feedback";
+            const errorMessage = getErrorMessage(error, "Failed to delete feedback");
             toast({ variant: "destructive", title: "Error", description: errorMessage });
         },
         onSettled: () => {
@@ -420,7 +428,7 @@ export function useDeleteFeedbackChange(projectId: string) {
 
 // Comments
 export function useProjectComments(params: ListCommentsParams, options?: { enabled?: boolean; staleTime?: number }) {
-    const { projectId, activityChangeId, versionId, fileId, limit, cursor } = params;
+    const { projectId, activityChangeId, versionId, fileId } = params;
     const contextKey = activityChangeId ? { activityChangeId } : versionId ? { versionId } : fileId ? { fileId } : {};
     return useQuery<ProjectComment[]>({
         queryKey: ["project", projectId, "comments", { ...contextKey }],
@@ -475,7 +483,7 @@ export function useCreateProjectComment() {
             if (context) {
                 queryClient.setQueryData(context.queryKey, context.previous);
             }
-            const errorMessage = error && typeof error === 'object' && 'message' in error && typeof (error as any).message === 'string' ? (error as any).message : "Failed to post comment";
+            const errorMessage = getErrorMessage(error, "Failed to post comment");
             toast({ variant: "destructive", title: "Error", description: errorMessage });
         },
         onSuccess: (created) => {
@@ -506,7 +514,7 @@ export function useUpdateProjectComment() {
         },
         onError: (error: unknown, input, context) => {
             context?.previous.forEach(({ key, data }) => queryClient.setQueryData(key, data));
-            const errorMessage = error && typeof error === 'object' && 'message' in error && typeof (error as any).message === 'string' ? (error as any).message : "Failed to update comment";
+            const errorMessage = getErrorMessage(error, "Failed to update comment");
             toast({ variant: "destructive", title: "Error", description: errorMessage });
         },
         onSuccess: (updated) => {
@@ -533,7 +541,7 @@ export function useDeleteProjectComment(projectId: string) {
         },
         onError: (error: unknown, _id, context) => {
             context?.previous.forEach(({ key, data }) => queryClient.setQueryData(key, data));
-            const errorMessage = error && typeof error === 'object' && 'message' in error && typeof (error as any).message === 'string' ? (error as any).message : "Failed to delete comment";
+            const errorMessage = getErrorMessage(error, "Failed to delete comment");
             toast({ variant: "destructive", title: "Error", description: errorMessage });
         },
         onSuccess: () => {

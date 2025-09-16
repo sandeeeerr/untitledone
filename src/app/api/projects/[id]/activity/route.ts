@@ -3,6 +3,14 @@ import { z } from "zod";
 import { SupabaseClient } from "@supabase/supabase-js";
 import createServerClient from "@/lib/supabase/server";
 
+// Type for file metadata
+interface FileMetadata {
+  superseded_by?: string | null;
+  deleted_at?: string | null;
+  replaced_at?: string | null;
+  [key: string]: unknown;
+}
+
 const paramsSchema = z.object({
   id: z.string().uuid("Invalid project ID format"),
 });
@@ -175,7 +183,7 @@ export async function GET(
       // Create microChanges from activity changes
       const microChanges = versionActivityChanges.map(ac => {
         const file = ac.file_id ? fileMap.get(ac.file_id) : null;
-        const replacedBy = file?.metadata && typeof file.metadata === 'object' ? (file.metadata as any).superseded_by ?? null : null;
+        const replacedBy = file?.metadata && typeof file.metadata === 'object' ? (file.metadata as FileMetadata).superseded_by ?? null : null;
         const author = profileMap.get(ac.author_id) || { name: "Unknown", avatar: null };
         
         // Detect deletion entries and extract filename from description pattern "Deleted file: <name>"
@@ -211,6 +219,8 @@ export async function GET(
         avatar: versionAuthor.avatar,
         filename: undefined,
         fileId: null,
+        fileReplaced: false,
+        replacedByFileId: null,
       };
       
       // Only add if not already present (to avoid duplicates)
@@ -223,7 +233,7 @@ export async function GET(
         const file = fileMap.get(vf.file_id);
         if (file && !microChanges.some(mc => mc.filename === file.filename)) {
           const author = profileMap.get(file.uploaded_by) || { name: "Unknown", avatar: null };
-          const replacedBy = file?.metadata && typeof file.metadata === 'object' ? (file.metadata as any).superseded_by ?? null : null;
+          const replacedBy = file?.metadata && typeof file.metadata === 'object' ? (file.metadata as FileMetadata).superseded_by ?? null : null;
           microChanges.push({
             id: `file-${vf.id}`,
             type: "addition" as const,

@@ -42,6 +42,9 @@ export interface ProjectActivityMicroChange {
   avatar?: string | null;
   filename?: string; // optional file reference to preview
   fileId?: string | null;
+  // Additional properties that might exist
+  fileReplaced?: boolean;
+  replacedByFileId?: string | null;
 }
 
 export interface ProjectActivityVersion {
@@ -54,6 +57,7 @@ export interface ProjectActivityVersion {
   microChanges: ProjectActivityMicroChange[];
   isActive?: boolean; // highlight as current active version
 }
+
 
 interface ProjectActivityProps {
   projectId: string;
@@ -378,7 +382,7 @@ export default function ProjectActivity({ projectId, query, sortBy = 'newest', o
 
                       const isFeedback = change.type === "feedback";
                       const isFileLinked = Boolean(change.fileId);
-                      const isDeletion = (change as any).type === "deletion";
+                      const isDeletion = change.type === "deletion";
                       return (
                         <div 
                           key={change.id} 
@@ -408,12 +412,12 @@ export default function ProjectActivity({ projectId, query, sortBy = 'newest', o
                                     <span className={`font-medium ${
                                       change.type === "addition" ? "text-green-700 dark:text-green-300 mr-1" :
                                       change.type === "feedback" ? "text-blue-700 dark:text-blue-300" :
-                                      (change as any).type === "deletion" ? "text-red-700 dark:text-red-300 mr-1" :
+                                      change.type === "deletion" ? "text-red-700 dark:text-red-300 mr-1" :
                                       "text-orange-700 dark:text-orange-300 mr-1"
                                     }`}>
                                       {getChangePrefix(change.type)}
                                     </span>
-                                    <span className="break-words pr-12">{(change as any).type === 'deletion' ? 'Deleted file:' : change.description}</span>
+                                    <span className="break-words pr-12">{change.type === 'deletion' ? 'Deleted file:' : change.description}</span>
                                   </div>
                                 </div>
                                 {/* Owner-only dropdown for feedback without fileId, top-right */}
@@ -447,9 +451,8 @@ export default function ProjectActivity({ projectId, query, sortBy = 'newest', o
                                 <div className="flex items-center gap-2 mt-1 p-2 bg-white/80 dark:bg-gray-800/80 rounded border border-muted overflow-hidden max-w-full">
                                   {getFileIconForName(change.filename, { className: "h-3.5 w-3.5" })}
                                   {(() => {
-                                    const anyChange = change as unknown as { fileReplaced?: boolean; replacedByFileId?: string | null }
-                                    const isOld = Boolean(anyChange.fileReplaced)
-                                    const isDeletion = (change as any).type === 'deletion'
+                                    const isOld = Boolean(change.fileReplaced)
+                                    const isDeletion = change.type === 'deletion'
                                     const href = (!isDeletion && change.fileId) ? `/projects/${projectId}/files/${change.fileId}` : undefined
                                     return href ? (
                                       <div className="flex items-center gap-2 min-w-0">
@@ -467,8 +470,7 @@ export default function ProjectActivity({ projectId, query, sortBy = 'newest', o
                                     )
                                   })()}
                                   {(() => {
-                                    const anyChange = change as unknown as { fileReplaced?: boolean; replacedByFileId?: string | null };
-                                    if (anyChange.fileReplaced) {
+                                    if (change.fileReplaced) {
                                       return (
                                         <span className="ml-2 inline-flex items-center rounded bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-200 px-1.5 py-0.5 text-[10px] uppercase tracking-wide">
                                           Replaced

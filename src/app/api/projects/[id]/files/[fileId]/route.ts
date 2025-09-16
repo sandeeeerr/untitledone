@@ -4,6 +4,38 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import createServerClient from "@/lib/supabase/server";
 import { getSignedDownloadUrl, uploadProjectObject, removeObject } from "@/lib/supabase/storage";
 
+// Type for file metadata
+interface FileMetadata {
+  superseded_by?: string | null;
+  supersedes?: string | null;
+  deleted_at?: string | null;
+  replaced_at?: string | null;
+  description?: string | null;
+  [key: string]: unknown;
+}
+
+// Type for project file with metadata
+interface ProjectFileWithMetadata {
+  id: string;
+  filename: string;
+  file_type: string;
+  file_path: string;
+  file_size: number;
+  uploaded_by: string;
+  uploaded_at: string;
+  last_activity: string;
+  metadata: FileMetadata | null;
+  project_id: string;
+  collaboration_mode: string | null;
+}
+
+// Type for old comment
+interface OldComment {
+  user_id: string;
+  comment: string;
+  timestamp_ms: number | null;
+}
+
 export const runtime = "nodejs";
 
 const paramsSchema = z.object({
@@ -108,7 +140,7 @@ export async function GET(
       .single();
 
     // Enrich file data
-    const isDeleted = Boolean((file as any)?.metadata?.deleted_at);
+    const isDeleted = Boolean((file as ProjectFileWithMetadata)?.metadata?.deleted_at);
     const enrichedFile = {
       id: file.id,
       filename: file.filename,
@@ -123,9 +155,9 @@ export async function GET(
         avatar: uploaderProfile?.avatar_url || null,
       },
       description: file.metadata?.description || null,
-      supersededByFileId: (file.metadata && typeof file.metadata === 'object' ? (file.metadata as any).superseded_by ?? null : null),
-      supersedesFileId: (file.metadata && typeof file.metadata === 'object' ? (file.metadata as any).supersedes ?? null : null),
-      deletedAt: isDeleted ? (file as any).metadata.deleted_at : null,
+      supersededByFileId: (file.metadata as FileMetadata | null)?.superseded_by ?? null,
+      supersedesFileId: (file.metadata as FileMetadata | null)?.supersedes ?? null,
+      deletedAt: isDeleted ? (file as ProjectFileWithMetadata).metadata?.deleted_at ?? null : null,
       version: versionMeta ? {
         id: versionMeta.id,
         name: versionMeta.version_name,
@@ -192,7 +224,7 @@ export async function POST(
 
     const { data: file } = await (supabase as SupabaseClient)
       .from("project_files")
-      .select("id, file_path, filename, uploaded_by, metadata")
+      .select("id, file_path, filename, uploaded_by, metadata, file_type")
       .eq("id", validFileId)
       .eq("project_id", projectId)
       .single();
@@ -200,13 +232,13 @@ export async function POST(
 
     if (action === "download") {
       // Block download if file is soft-deleted
-      const isDeleted = Boolean((file as any)?.metadata?.deleted_at);
+      const isDeleted = Boolean((file as ProjectFileWithMetadata)?.metadata?.deleted_at);
       if (isDeleted) return NextResponse.json({ error: "File deleted" }, { status: 410 });
       if (!project.downloads_enabled) return NextResponse.json({ error: "Downloads disabled" }, { status: 403 });
       try {
         const signed = await getSignedDownloadUrl(file.file_path, 60 * 5);
         return NextResponse.json({ url: signed }, { status: 200 });
-      } catch (e) {
+      } catch {
         // Storage object missing or unauthorized
         return NextResponse.json({ error: "File not found" }, { status: 404 });
       }
@@ -232,7 +264,7 @@ export async function POST(
         /\.(wav|mp3|flac|aac|aiff|ogg|m4a|opus|mid|midi|syx|als|flp|logicx|band|cpr|ptx|rpp|song|bwproject|reason|nki|adg|fst|fxp|fxb|nmsv|h2p|zip|rar|7z|tar|gz|txt|md|doc|docx|pdf|png|jpg|jpeg|gif|webp|svg|mp4|mov|mkv|json|xml)$/i,
       ];
       const name = newFile.name || file.filename || "file";
-      const type = newFile.type || file.file_type || "application/octet-stream";
+      const type = newFile.type || (file as ProjectFileWithMetadata).file_type || "application/octet-stream";
       const size = Number(newFile.size || 0);
       const maxBytes = 200 * 1024 * 1024; // 200MB
       const allowed = allowMimeOrExt.some((re) => re.test(type) || re.test(name));
@@ -292,25 +324,25 @@ export async function POST(
       if (linkVersionId) {
         // Link the new file to the version
         {
-          const { error: linkErr } = await (supabase as SupabaseClient)
+          const { error } = await (supabase as SupabaseClient)
             .from("version_files")
             .insert({ version_id: linkVersionId, file_id: newFileRow.id });
-          // ignore linkErr (best-effort)
+          void error; // ignore error (best-effort)
         }
 
         // Optional: unlink the old file from that version so the list shows the new one
         {
-          const { error: unlinkErr } = await (supabase as SupabaseClient)
+          const { error } = await (supabase as SupabaseClient)
             .from("version_files")
             .delete()
             .eq("version_id", linkVersionId)
             .eq("file_id", validFileId);
-          // ignore unlinkErr
+          void error; // ignore error
         }
 
         // Log activity change
         {
-          const { error: actErr } = await (supabase as SupabaseClient)
+          const { error } = await (supabase as SupabaseClient)
             .from("activity_changes")
             .insert({
               version_id: linkVersionId,
@@ -319,7 +351,7 @@ export async function POST(
               author_id: user.id,
               file_id: newFileRow.id,
             });
-          // ignore actErr
+          void error; // ignore error
         }
       }
 
@@ -344,7 +376,7 @@ export async function POST(
           .order("created_at", { ascending: false })
           .limit(50);
         if ((oldComments || []).length > 0) {
-          const payload = (oldComments || []).map((c: any) => ({
+          const payload = (oldComments || []).map((c: OldComment) => ({
             project_id: projectId,
             user_id: c.user_id,
             comment: c.comment,
@@ -354,8 +386,8 @@ export async function POST(
             file_id: newFileRow.id,
             timestamp_ms: c.timestamp_ms ?? null,
           }));
-          const { error: copyErr } = await (supabase as SupabaseClient).from("project_comments").insert(payload);
-          // ignore copyErr
+          const { error } = await (supabase as SupabaseClient).from("project_comments").insert(payload);
+          void error; // ignore error
         }
       } catch {}
 

@@ -18,6 +18,19 @@ import BasicWaveform from "@/components/molecules/basic-waveform";
 import type { BasicWaveformHandle } from "@/components/molecules/basic-waveform";
 import ReplaceFileDialog from "@/components/molecules/replace-file-dialog";
 
+// Type for file with superseded info
+interface FileWithSupersededInfo {
+  supersededByFileId?: string | null;
+  [key: string]: unknown;
+}
+
+// Extended Window interface for webkit audio context
+declare global {
+  interface Window {
+    webkitAudioContext?: typeof AudioContext;
+  }
+}
+
 interface FileDetailClientProps {
   projectId: string;
   fileId: string;
@@ -187,10 +200,10 @@ export default function FileDetailClient({ projectId, fileId }: FileDetailClient
           </div>
 
           {/* Superseded banner */}
-          {file && (file as any).supersededByFileId ? (
+          {file && (file as FileWithSupersededInfo).supersededByFileId ? (
             <div className="rounded-md border bg-muted/40 p-3 text-sm">
               Dit bestand is vervangen. Bekijk de nieuwste versie:
-              <Button variant="link" className="px-2" onClick={() => navigateToNewFile((file as any).supersededByFileId)}>Open nieuwe file</Button>
+              <Button variant="link" className="px-2" onClick={() => navigateToNewFile((file as FileWithSupersededInfo).supersededByFileId!)}>Open nieuwe file</Button>
             </div>
           ) : null}
 
@@ -342,7 +355,7 @@ function SimpleWaveWrapper({ projectId, fileId, onTime, forwardRef, onAnalyzed }
       try {
         const response = await fetch(url);
         const arrayBuf = await response.arrayBuffer();
-        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
         const audioBuf = await ctx.decodeAudioData(arrayBuf.slice(0));
         const durationMs = Math.floor(audioBuf.duration * 1000);
         const sampleRate = audioBuf.sampleRate;
@@ -355,5 +368,5 @@ function SimpleWaveWrapper({ projectId, fileId, onTime, forwardRef, onAnalyzed }
     return () => { mounted = false };
   }, [projectId, fileId]);
   if (!url) return null;
-  return <BasicWaveform ref={forwardRef as any} url={url} height={96} onTime={onTime} />;
+  return <BasicWaveform ref={forwardRef as React.RefObject<BasicWaveformHandle>} url={url} height={96} onTime={onTime} />;
 }

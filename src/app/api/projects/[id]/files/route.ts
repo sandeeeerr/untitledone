@@ -4,6 +4,27 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import createServerClient from "@/lib/supabase/server";
 import { uploadProjectObject } from "@/lib/supabase/storage";
 
+// Type for file metadata
+interface FileMetadata {
+  deleted_at?: string | null;
+  [key: string]: unknown;
+}
+
+// Type for project file with metadata
+interface ProjectFileWithMetadata {
+  id: string;
+  filename: string;
+  file_type: string;
+  file_path: string;
+  file_size: number;
+  uploaded_by: string;
+  uploaded_at: string;
+  last_activity: string;
+  metadata: FileMetadata | null;
+  project_id: string;
+  collaboration_mode: string | null;
+}
+
 const paramsSchema = z.object({
   id: z.string().uuid("Invalid project ID format"),
 });
@@ -192,8 +213,8 @@ export async function GET(
     const enrichedFiles = (files || [])
       .filter((f) => {
         try {
-          const meta = (f as any)?.metadata;
-          return !(meta && typeof meta === 'object' && (meta as any).deleted_at);
+          const meta = (f as ProjectFileWithMetadata)?.metadata;
+          return !(meta && typeof meta === 'object' && (meta as FileMetadata).deleted_at);
         } catch {
           return true;
         }
