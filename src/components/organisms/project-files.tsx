@@ -8,12 +8,14 @@ import VersionAccordion from '@/components/molecules/version-accordion'
 import FileCard from '@/components/molecules/file-card'
 import { useProjectFiles } from '@/lib/api/queries'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import EmptyState from '@/components/atoms/empty-state'
 
 export default function ProjectFiles({ projectId, query, sortBy = 'newest' }: { projectId: string; query?: string; sortBy?: 'newest' | 'oldest' | 'name' }) {
 	const { data: files, isLoading, error } = useProjectFiles(projectId)
 	const t = useTranslations('files')
 	const [openKeys, setOpenKeys] = React.useState<Set<string>>(new Set())
+  const router = useRouter()
 
 	const normalizedQuery = (query ?? '').trim().toLowerCase()
 	const baseFiles = files ?? []
@@ -153,15 +155,23 @@ export default function ProjectFiles({ projectId, query, sortBy = 'newest' }: { 
 					>
 						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
 							{filesInGroup.map((file) => (
-								<Link key={file.id} href={`/projects/${projectId}/files/${file.id}`} className="block">
-									<FileCard
-										filename={file.filename}
-										description={file.description}
-										fileSizeLabel={formatFileSize(file.fileSize)}
-										dateLabel={formatDate(file.uploadedAt)}
-										icon={getFileIcon(file.filename)}
-									/>
-								</Link>
+								<FileCard
+									key={file.id}
+									filename={file.filename}
+									description={file.description}
+									fileSizeLabel={formatFileSize(file.fileSize)}
+									dateLabel={formatDate(file.uploadedAt)}
+									icon={getFileIcon(file.filename)}
+									onClick={() => router.push(`/projects/${projectId}/files/${file.id}`)}
+									onDownload={async () => {
+										try {
+											const res = await fetch(`/api/projects/${projectId}/files/${file.id}?action=download`, { method: 'POST' })
+											if (!res.ok) throw new Error('Failed to get download URL')
+											const { url } = await res.json()
+											window.open(url, '_blank')
+										} catch {}
+									}}
+								/>
 							))}
 						</div>
 					</VersionAccordion>

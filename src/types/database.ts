@@ -7,10 +7,30 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "13.0.4"
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
   public: {
     Tables: {
@@ -142,39 +162,78 @@ export type Database = {
       }
       project_comments: {
         Row: {
+          activity_change_id: string | null
           comment: string
           created_at: string
+          edited: boolean
           file_id: string | null
           id: string
+          parent_id: string | null
           project_id: string
+          resolved: boolean
+          timestamp_ms: number | null
+          updated_at: string
           user_id: string
           version_id: string | null
         }
         Insert: {
+          activity_change_id?: string | null
           comment: string
           created_at?: string
+          edited?: boolean
           file_id?: string | null
           id?: string
+          parent_id?: string | null
           project_id: string
+          resolved?: boolean
+          timestamp_ms?: number | null
+          updated_at?: string
           user_id: string
           version_id?: string | null
         }
         Update: {
+          activity_change_id?: string | null
           comment?: string
           created_at?: string
+          edited?: boolean
           file_id?: string | null
           id?: string
+          parent_id?: string | null
           project_id?: string
+          resolved?: boolean
+          timestamp_ms?: number | null
+          updated_at?: string
           user_id?: string
           version_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "project_comments_activity_change_id_fkey"
+            columns: ["activity_change_id"]
+            isOneToOne: false
+            referencedRelation: "activity_changes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "project_comments_file_id_fkey"
             columns: ["file_id"]
             isOneToOne: false
             referencedRelation: "project_files"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "project_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_comments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "_project_visibility"
+            referencedColumns: ["project_id"]
           },
           {
             foreignKeyName: "project_comments_project_id_fkey"
@@ -244,6 +303,13 @@ export type Database = {
             foreignKeyName: "project_files_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
+            referencedRelation: "_project_visibility"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_files_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
@@ -298,6 +364,13 @@ export type Database = {
             foreignKeyName: "project_invitations_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
+            referencedRelation: "_project_visibility"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_invitations_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
@@ -323,6 +396,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "project_likes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "_project_visibility"
+            referencedColumns: ["project_id"]
+          },
           {
             foreignKeyName: "project_likes_project_id_fkey"
             columns: ["project_id"]
@@ -368,6 +448,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "project_members_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "_project_visibility"
+            referencedColumns: ["project_id"]
+          },
           {
             foreignKeyName: "project_members_project_id_fkey"
             columns: ["project_id"]
@@ -422,6 +509,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_versions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "_project_visibility"
+            referencedColumns: ["project_id"]
           },
           {
             foreignKeyName: "project_versions_project_id_fkey"
@@ -566,7 +660,21 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      _project_visibility: {
+        Row: {
+          is_public: boolean | null
+          project_id: string | null
+        }
+        Insert: {
+          is_public?: never
+          project_id?: string | null
+        }
+        Update: {
+          is_public?: never
+          project_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       accept_invitation: {
@@ -751,6 +859,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       social_platform: [
@@ -768,3 +879,4 @@ export const Constants = {
     },
   },
 } as const
+
