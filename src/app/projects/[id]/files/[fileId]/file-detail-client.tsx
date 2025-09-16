@@ -16,6 +16,20 @@ import ThreadedComments from "@/components/molecules/threaded-comments";
 import { useProjectComments } from "@/lib/api/queries";
 import BasicWaveform from "@/components/molecules/basic-waveform";
 import type { BasicWaveformHandle } from "@/components/molecules/basic-waveform";
+import ReplaceFileDialog from "@/components/molecules/replace-file-dialog";
+
+// Type for file with superseded info
+interface FileWithSupersededInfo {
+  supersededByFileId?: string | null;
+  [key: string]: unknown;
+}
+
+// Extended Window interface for webkit audio context
+declare global {
+  interface Window {
+    webkitAudioContext?: typeof AudioContext;
+  }
+}
 
 interface FileDetailClientProps {
   projectId: string;
@@ -56,6 +70,12 @@ export default function FileDetailClient({ projectId, fileId }: FileDetailClient
 
   const displayFilename = React.useMemo(() => truncateText(file?.filename ?? "", 80), [file?.filename]);
 
+  const isAudioFile = React.useMemo(() => {
+    if (!file) return false;
+    const ft = file.fileType?.toLowerCase() || "";
+    return ft.includes("audio") || /\.(wav|mp3|flac|aac|aiff|ogg|m4a|opus)$/i.test(file.filename);
+  }, [file]);
+
   const formatMs = (ms: number) => {
     const total = Math.max(0, Math.floor(ms / 1000));
     const mm = Math.floor(total / 60).toString().padStart(2, '0');
@@ -72,14 +92,12 @@ export default function FileDetailClient({ projectId, fileId }: FileDetailClient
     } catch {}
   }
 
-  async function handleReplace(e: React.ChangeEvent<HTMLInputElement>) {
-    const fileInput = e.target.files?.[0];
-    if (!fileInput) return;
-    const form = new FormData();
-    form.append('file', fileInput);
-    const res = await fetch(`/api/projects/${projectId}/files/${fileId}?action=replace`, { method: 'POST', body: form });
-    if (res.ok) refetch();
-    e.target.value = '';
+  function navigateToNewFile(newFileId?: string) {
+    if (!newFileId) {
+      refetch();
+      return;
+    }
+    window.location.href = `/projects/${projectId}/files/${newFileId}`;
   }
 
   async function handleDelete() {
@@ -163,18 +181,31 @@ export default function FileDetailClient({ projectId, fileId }: FileDetailClient
                 <Download className="h-4 w-4" />
                 Download
               </Button>
-              <label className="inline-flex">
-                <input type="file" className="hidden" onChange={handleReplace} />
-                <Button size="sm" variant="secondary" asChild>
-                  <span className="inline-flex items-center gap-2"><Replace className="h-4 w-4" />Replace</span>
-                </Button>
-              </label>
+              <ReplaceFileDialog 
+                projectId={projectId} 
+                fileId={fileId} 
+                onReplaced={navigateToNewFile}
+                trigger={
+                  <Button size="sm" variant="outline" className="gap-2">
+                    <Replace className="h-4 w-4" />
+                    Replace
+                  </Button>
+                }
+              />
               <Button size="sm" variant="destructive" onClick={handleDelete}>
                 <Trash2 className="h-4 w-4" />
                 Delete
               </Button>
             </div>
           </div>
+
+          {/* Superseded banner */}
+          {file && (file as FileWithSupersededInfo).supersededByFileId ? (
+            <div className="rounded-md border bg-muted/40 p-3 text-sm">
+              Dit bestand is vervangen. Bekijk de nieuwste versie:
+              <Button variant="link" className="px-2" onClick={() => navigateToNewFile((file as FileWithSupersededInfo).supersededByFileId!)}>Open nieuwe file</Button>
+            </div>
+          ) : null}
 
           {/* Compact meta under title (like project page) */}
           <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mt-2">
@@ -192,8 +223,7 @@ export default function FileDetailClient({ projectId, fileId }: FileDetailClient
 
           {/* Waveform */}
           {(() => {
-            const isAudio = file.fileType?.toLowerCase().includes("audio") || /\.(wav|mp3|flac|aac|aiff|ogg)$/i.test(file.filename);
-            if (!isAudio) return null;
+            if (!isAudioFile) return null;
             return (
               <SimpleWaveWrapper
                 projectId={projectId}
@@ -216,7 +246,7 @@ export default function FileDetailClient({ projectId, fileId }: FileDetailClient
                 context={{ fileId }}
                 comments={comments}
                 isLoading={commentsLoading}
-                getTimestampMs={getTimestampMs}
+                getTimestampMs={isAudioFile ? getTimestampMs : undefined}
                 onSeekToTimestamp={seekToMs}
               />
             </CardContent>
@@ -325,7 +355,7 @@ function SimpleWaveWrapper({ projectId, fileId, onTime, forwardRef, onAnalyzed }
       try {
         const response = await fetch(url);
         const arrayBuf = await response.arrayBuffer();
-        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
         const audioBuf = await ctx.decodeAudioData(arrayBuf.slice(0));
         const durationMs = Math.floor(audioBuf.duration * 1000);
         const sampleRate = audioBuf.sampleRate;
@@ -338,5 +368,5 @@ function SimpleWaveWrapper({ projectId, fileId, onTime, forwardRef, onAnalyzed }
     return () => { mounted = false };
   }, [projectId, fileId]);
   if (!url) return null;
-  return <BasicWaveform ref={forwardRef as any} url={url} height={96} onTime={onTime} />;
+  return <BasicWaveform ref={forwardRef as React.RefObject<BasicWaveformHandle>} url={url} height={96} onTime={onTime} />;
 }

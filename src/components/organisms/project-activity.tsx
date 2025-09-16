@@ -42,6 +42,9 @@ export interface ProjectActivityMicroChange {
   avatar?: string | null;
   filename?: string; // optional file reference to preview
   fileId?: string | null;
+  // Additional properties that might exist
+  fileReplaced?: boolean;
+  replacedByFileId?: string | null;
 }
 
 export interface ProjectActivityVersion {
@@ -54,6 +57,7 @@ export interface ProjectActivityVersion {
   microChanges: ProjectActivityMicroChange[];
   isActive?: boolean; // highlight as current active version
 }
+
 
 interface ProjectActivityProps {
   projectId: string;
@@ -369,14 +373,16 @@ export default function ProjectActivity({ projectId, query, sortBy = 'newest', o
                   <div className="space-y-3">
                     {version.microChanges.map((change) => {
                       const baseClasses = "flex flex-col gap-3 p-3 rounded-lg border w-full max-w-full";
-                      const typeStyles = {
+                      const typeStyles: Record<string, string> = {
                         feedback: "bg-blue-50/30 border-blue-100 dark:bg-blue-950/10 dark:border-blue-900/30",
                         addition: "bg-green-50/30 border-green-100 dark:bg-green-950/10 dark:border-green-900/30",
-                        update: "bg-orange-50/30 border-orange-100 dark:bg-orange-950/10 dark:border-orange-900/30"
+                        update: "bg-orange-50/30 border-orange-100 dark:bg-orange-950/10 dark:border-orange-900/30",
+                        deletion: "bg-red-50/30 border-red-100 dark:bg-red-950/10 dark:border-red-900/30",
                       };
 
                       const isFeedback = change.type === "feedback";
                       const isFileLinked = Boolean(change.fileId);
+                      const isDeletion = change.type === "deletion";
                       return (
                         <div 
                           key={change.id} 
@@ -401,16 +407,19 @@ export default function ProjectActivity({ projectId, query, sortBy = 'newest', o
 
                             <div className="flex-1 min-w-0">
                               <div className="flex items-start justify-between gap-2">
-                                <p className={`text-sm break-words ${change.type === "feedback" ? "italic text-blue-700 dark:text-blue-300" : ""}`}>
-                                  <span className={`font-medium ${
-                                    change.type === "addition" ? "text-green-700 dark:text-green-300 mr-1" :
-                                    change.type === "feedback" ? "text-blue-700 dark:text-blue-300" :
-                                    "text-orange-700 dark:text-orange-300 mr-1"
-                                  }`}>
-                                    {getChangePrefix(change.type)}
-                                  </span>
-                                  <span className="inline-block break-words pr-12">{change.description}</span>
-                                </p>
+                                <div className={`text-sm ${change.type === "feedback" ? "italic text-blue-700 dark:text-blue-300" : "text-foreground"}`}>
+                                  <div className="flex items-start">
+                                    <span className={`font-medium ${
+                                      change.type === "addition" ? "text-green-700 dark:text-green-300 mr-1" :
+                                      change.type === "feedback" ? "text-blue-700 dark:text-blue-300" :
+                                      change.type === "deletion" ? "text-red-700 dark:text-red-300 mr-1" :
+                                      "text-orange-700 dark:text-orange-300 mr-1"
+                                    }`}>
+                                      {getChangePrefix(change.type)}
+                                    </span>
+                                    <span className="break-words pr-12">{change.type === 'deletion' ? 'Deleted file:' : change.description}</span>
+                                  </div>
+                                </div>
                                 {/* Owner-only dropdown for feedback without fileId, top-right */}
                                 {isFeedback && !isFileLinked && change.authorId && me?.id === change.authorId && (
                                   <DropdownMenu>
@@ -441,9 +450,35 @@ export default function ProjectActivity({ projectId, query, sortBy = 'newest', o
                               {change.filename && (
                                 <div className="flex items-center gap-2 mt-1 p-2 bg-white/80 dark:bg-gray-800/80 rounded border border-muted overflow-hidden max-w-full">
                                   {getFileIconForName(change.filename, { className: "h-3.5 w-3.5" })}
-                                  <span className="text-xs font-mono text-muted-foreground break-words">
-                                    {change.filename}
-                                  </span>
+                                  {(() => {
+                                    const isOld = Boolean(change.fileReplaced)
+                                    const isDeletion = change.type === 'deletion'
+                                    const href = (!isDeletion && change.fileId) ? `/projects/${projectId}/files/${change.fileId}` : undefined
+                                    return href ? (
+                                      <div className="flex items-center gap-2 min-w-0">
+                                        <Link href={href} className="text-xs font-mono text-foreground hover:underline break-words">
+                                          {change.filename}
+                                        </Link>
+                                        {isOld && (
+                                          <span className="ml-1 inline-flex items-center rounded bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-200 px-1.5 py-0.5 text-[10px] uppercase tracking-wide whitespace-nowrap">
+                                            Old version
+                                          </span>
+                                        )}
+                                      </div>
+                                    ) : (
+                                      <span className={`text-xs font-mono break-words ${isDeletion ? 'text-red-700 dark:text-red-300' : 'text-muted-foreground'}`}>{change.filename}</span>
+                                    )
+                                  })()}
+                                  {(() => {
+                                    if (change.fileReplaced) {
+                                      return (
+                                        <span className="ml-2 inline-flex items-center rounded bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-200 px-1.5 py-0.5 text-[10px] uppercase tracking-wide">
+                                          Replaced
+                                        </span>
+                                      );
+                                    }
+                                    return null;
+                                  })()}
                                 </div>
                               )}
 
@@ -459,7 +494,7 @@ export default function ProjectActivity({ projectId, query, sortBy = 'newest', o
                                   ) : (
                                     <CommentButton changeId={change.id} />
                                   )
-                                ) : (change.filename ? (
+                                ) : (!isDeletion && change.fileId ? (
                                   <FileCTAs fileId={change.fileId as string} />
                                 ) : null)}
                               </div>

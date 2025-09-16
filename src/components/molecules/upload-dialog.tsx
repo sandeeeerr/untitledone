@@ -10,7 +10,7 @@ import { Upload, X } from 'lucide-react'
 import { getFileIconForName } from '@/lib/ui/file-icons'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
-import { useUploadProjectFile, useProjectVersions } from '@/lib/api/queries'
+import { useUploadProjectFile } from '@/lib/api/queries'
 
 export type UploadDialogProps = {
 	projectId: string
@@ -28,17 +28,17 @@ export default function UploadDialog({ projectId, trigger }: UploadDialogProps) 
 	const [open, setOpen] = useState(false)
 	const [files, setFiles] = useState<FileToUpload[]>([])
 	const [isUploading, setIsUploading] = useState(false)
-	const [targetVersionId, setTargetVersionId] = useState<string | undefined>(undefined)
+	// Removed targetVersionId; server will link to active version if any
 	const { toast } = useToast()
 	const uploadFile = useUploadProjectFile(projectId)
-	const { data: versions } = useProjectVersions(projectId)
+	// No version fetching
 
 	const onDrop = useCallback((acceptedFiles: File[]) => {
 		const newFiles = acceptedFiles.map(file => ({
 			file,
 			id: crypto.randomUUID(),
 			version: 1,
-			description: `Uploaded ${file.name}`
+			description: ''
 		}))
 		setFiles(prev => [...prev, ...newFiles])
 	}, [])
@@ -70,7 +70,6 @@ export default function UploadDialog({ projectId, trigger }: UploadDialogProps) 
 				await uploadFile.mutateAsync({
 					file: fileToUpload.file,
 					description: fileToUpload.description,
-					versionId: targetVersionId,
 				})
 			}
 			toast({ title: "Upload successful", description: `Uploaded ${files.length} file(s)` })
@@ -102,23 +101,6 @@ export default function UploadDialog({ projectId, trigger }: UploadDialogProps) 
 				</DialogHeader>
 
 				<div className="space-y-4">
-					{/* Target version selector */}
-					<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-						<div className="space-y-2">
-							<Label className="text-xs">Target version</Label>
-							<select
-								className="h-9 text-sm w-full rounded-md border bg-background"
-								value={targetVersionId ?? ''}
-								onChange={(e) => setTargetVersionId(e.target.value || undefined)}
-							>
-								<option value="">Active version (default)</option>
-								{(versions ?? []).map(v => (
-									<option key={v.id} value={v.id}>{v.version_name} — {v.description}</option>
-								))}
-							</select>
-						</div>
-					</div>
-
 					{/* Drag & Drop Zone */}
 					<div
 						className={cn(

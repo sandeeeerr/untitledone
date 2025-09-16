@@ -32,6 +32,7 @@ export default function CreateVersionDialog({ projectId, trigger, onVersionCreat
 	const t = useTranslations('versions')
 	const createVersion = useCreateProjectVersion(projectId)
 	const { data: existingVersions } = useProjectVersions(projectId)
+	const hasExistingVersions = (existingVersions?.length ?? 0) > 0
 
 	const handleCreate = async () => {
 		if (!description.trim()) {
@@ -187,26 +188,28 @@ export default function CreateVersionDialog({ projectId, trigger, onVersionCreat
 						/>
 					</div>
 
-					{/* Start Options */}
-					<div className="space-y-2">
-						<Label>Start with</Label>
-						<RadioGroup value={startOption} onValueChange={(value: 'fresh' | 'copy' | 'select') => setStartOption(value)}>
-							<div className="flex items-center space-x-2">
-								<RadioGroupItem value="fresh" id="start-fresh" />
-								<Label htmlFor="start-fresh" className="flex items-center gap-2">
-									<Upload className="h-4 w-4" />
-									Start fresh (upload new files)
-								</Label>
-							</div>
-							<div className="flex items-center space-x-2">
-								<RadioGroupItem value="copy" id="start-copy" />
-								<Label htmlFor="start-copy" className="flex items-center gap-2">
-									<Copy className="h-4 w-4" />
-									Copy files from previous version
-								</Label>
-							</div>
-						</RadioGroup>
-					</div>
+					{/* Start Options (only show when there is at least one existing version) */}
+					{hasExistingVersions && (
+						<div className="space-y-2">
+							<Label>Start with</Label>
+							<RadioGroup value={startOption} onValueChange={(value: 'fresh' | 'copy' | 'select') => setStartOption(value)}>
+								<div className="flex items-center space-x-2">
+									<RadioGroupItem value="fresh" id="start-fresh" />
+									<Label htmlFor="start-fresh" className="flex items-center gap-2">
+										<Upload className="h-4 w-4" />
+										Start fresh (upload new files)
+									</Label>
+								</div>
+								<div className="flex items-center space-x-2">
+									<RadioGroupItem value="copy" id="start-copy" />
+									<Label htmlFor="start-copy" className="flex items-center gap-2">
+										<Copy className="h-4 w-4" />
+										Copy files from previous version
+									</Label>
+								</div>
+							</RadioGroup>
+						</div>
+					)}
 
 					{/* Version Selection for copying */}
 					{startOption === 'copy' && existingVersions && existingVersions.length > 0 && (
