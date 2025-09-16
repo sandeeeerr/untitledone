@@ -249,18 +249,20 @@ export type ProjectFileDetail = {
 };
 
 export type UploadFileInput = {
-	filename: string;
-	fileSize: number;
-	fileType: string;
+	file: File;
 	description?: string;
 	versionId?: string;
 };
 
 export async function uploadProjectFile(projectId: string, payload: UploadFileInput): Promise<{ id: string; filename: string; uploaded_at: string }> {
+	const form = new FormData();
+	form.append("file", payload.file);
+	if (payload.description) form.append("description", payload.description);
+	if (payload.versionId) form.append("versionId", payload.versionId);
+
 	const res = await fetch(`/api/projects/${projectId}/files`, {
 		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify(payload),
+		body: form,
 	});
 
 	if (!res.ok) {

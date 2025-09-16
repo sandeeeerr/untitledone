@@ -2,15 +2,13 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { SupabaseClient } from "@supabase/supabase-js";
 import createServerClient from "@/lib/supabase/server";
+import { uploadProjectObject } from "@/lib/supabase/storage";
 
 const paramsSchema = z.object({
   id: z.string().uuid("Invalid project ID format"),
 });
 
-const uploadSchema = z.object({
-  filename: z.string().min(1, "Filename is required"),
-  fileSize: z.number().positive("File size must be positive"),
-  fileType: z.string().min(1, "File type is required"),
+const metaSchema = z.object({
   description: z.string().optional(),
   versionId: z.string().uuid().optional(),
 });
@@ -33,30 +31,38 @@ export async function POST(
     }
     const projectId = validation.data.id;
 
-    // Parse body
-    let body: unknown;
-    try {
-      body = await req.json();
-    } catch {
-      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    // Parse multipart form-data
+    const form = await req.formData().catch(() => null);
+    if (!form) {
+      return NextResponse.json({ error: "Invalid form data" }, { status: 400 });
     }
-    const input = uploadSchema.safeParse(body);
-    if (!input.success) {
-      return NextResponse.json({ error: "Invalid input", details: input.error.issues }, { status: 400 });
+
+    const file = form.get("file");
+    if (!(file instanceof File)) {
+      return NextResponse.json({ error: "Missing file" }, { status: 400 });
     }
+    const description = (form.get("description") as string | null) || undefined;
+    const versionIdRaw = (form.get("versionId") as string | null) || undefined;
+    const meta = metaSchema.safeParse({ description, versionId: versionIdRaw });
+    if (!meta.success) {
+      return NextResponse.json({ error: "Invalid input", details: meta.error.issues }, { status: 400 });
+    }
+
+    // Upload to Supabase Storage (key: projectId/<uuid>-filename)
+    const storageKey = await uploadProjectObject({ projectId, file });
 
     // Insert file metadata
     const { data: fileRecord, error: insertError } = await (supabase as SupabaseClient)
       .from("project_files")
       .insert({
         project_id: projectId,
-        filename: input.data.filename,
-        file_path: `/uploads/${projectId}/${input.data.filename}`,
-        file_size: input.data.fileSize,
-        file_type: input.data.fileType,
+        filename: file.name,
+        file_path: storageKey,
+        file_size: Number(file.size || 0),
+        file_type: file.type || "application/octet-stream",
         uploaded_by: user.id,
         metadata: {
-          description: input.data.description || null,
+          description: meta.data.description || null,
           uploaded_at: new Date().toISOString(),
         },
       })
@@ -69,7 +75,7 @@ export async function POST(
     }
 
     // Resolve target version (prefer provided, else active version if any)
-    let resolvedVersionId: string | null = input.data.versionId ?? null;
+    let resolvedVersionId: string | null = meta.data.versionId ?? null;
     if (!resolvedVersionId) {
       const { data: activeVersion, error: activeVersionError } = await (supabase as SupabaseClient)
         .from("project_versions")
@@ -100,7 +106,7 @@ export async function POST(
         .insert({
           version_id: resolvedVersionId,
           type: "addition",
-          description: input.data.description?.trim() || `Uploaded ${input.data.filename}`,
+          description: (meta.data.description?.trim() || `Uploaded ${file.name}`),
           author_id: user.id,
           file_id: fileRecord.id,
         });
