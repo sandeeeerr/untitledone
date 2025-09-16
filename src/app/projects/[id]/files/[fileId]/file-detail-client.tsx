@@ -1,6 +1,6 @@
 "use client";
 
-import { useProjectFileDetail } from "@/lib/api/queries";
+import { useProject, useProjectFileDetail } from "@/lib/api/queries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +36,7 @@ function getFileIcon(fileType: string) {
 }
 
 export default function FileDetailClient({ projectId, fileId }: FileDetailClientProps) {
+  const { data: project } = useProject(projectId);
   const { data: file, isLoading, error, refetch } = useProjectFileDetail(projectId, fileId);
   const { data: comments = [], isLoading: commentsLoading } = useProjectComments({ projectId, fileId, limit: 200 }, { enabled: Boolean(fileId) });
   async function handleDownload() {
@@ -103,7 +104,7 @@ export default function FileDetailClient({ projectId, fileId }: FileDetailClient
               <h1 className="text-2xl font-semibold leading-tight truncate" title={file.filename}>{file.filename}</h1>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <Button size="sm" variant="outline" onClick={handleDownload}>
+              <Button size="sm" variant="outline" onClick={handleDownload} disabled={project ? !project.downloads_enabled : false}>
                 <Download className="h-4 w-4" />
                 Download
               </Button>

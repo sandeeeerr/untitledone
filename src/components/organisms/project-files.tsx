@@ -6,13 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2, FileAudio, Music } from 'lucide-react'
 import VersionAccordion from '@/components/molecules/version-accordion'
 import FileCard from '@/components/molecules/file-card'
-import { useProjectFiles } from '@/lib/api/queries'
+import { useProjectFiles, useProject } from '@/lib/api/queries'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import EmptyState from '@/components/atoms/empty-state'
 
 export default function ProjectFiles({ projectId, query, sortBy = 'newest' }: { projectId: string; query?: string; sortBy?: 'newest' | 'oldest' | 'name' }) {
 	const { data: files, isLoading, error } = useProjectFiles(projectId)
+  const { data: project } = useProject(projectId)
 	const t = useTranslations('files')
 	const [openKeys, setOpenKeys] = React.useState<Set<string>>(new Set())
   const router = useRouter()
@@ -162,6 +163,7 @@ export default function ProjectFiles({ projectId, query, sortBy = 'newest' }: { 
 									fileSizeLabel={formatFileSize(file.fileSize)}
 									dateLabel={formatDate(file.uploadedAt)}
 									icon={getFileIcon(file.filename)}
+									downloadDisabled={project ? !project.downloads_enabled : false}
 									onClick={() => router.push(`/projects/${projectId}/files/${file.id}`)}
 									onDownload={async () => {
 										try {
