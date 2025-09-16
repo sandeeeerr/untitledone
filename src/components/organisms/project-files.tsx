@@ -3,11 +3,12 @@
 import React from 'react'
 import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2, FileAudio, Music } from 'lucide-react'
+import { Loader2, FileAudio } from 'lucide-react'
+import { getFileIconForName } from '@/lib/ui/file-icons'
 import VersionAccordion from '@/components/molecules/version-accordion'
 import FileCard from '@/components/molecules/file-card'
 import { useProjectFiles, useProject } from '@/lib/api/queries'
-import Link from 'next/link'
+// import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import EmptyState from '@/components/atoms/empty-state'
 
@@ -41,22 +42,7 @@ export default function ProjectFiles({ projectId, query, sortBy = 'newest' }: { 
 				return hay.includes(normalizedQuery)
 			})
 
-	const getFileIcon = (filename: string) => {
-		const extension = filename.split('.').pop()?.toLowerCase()
-		switch (extension) {
-			case 'wav':
-			case 'mp3':
-			case 'flac':
-				return <FileAudio className="h-4 w-4 text-green-600" />
-			case 'mid':
-			case 'midi':
-				return <Music className="h-4 w-4 text-green-600" />
-			case 'als':
-			case 'flp':
-			default:
-				return <FileAudio className="h-4 w-4 text-blue-600" />
-		}
-	}
+	const getFileIcon = (filename: string) => getFileIconForName(filename, { className: 'h-4 w-4' })
 
 	const formatFileSize = (bytes: number) => {
 		if (bytes === 0) return '0 Bytes'
