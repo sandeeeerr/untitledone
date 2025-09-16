@@ -6,7 +6,7 @@ import LayoutSidebar from '@/components/organisms/layout-sidebar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { FileAudio, Music, Settings, Tags, Wrench, UserPlus, Clock, MessageSquare, Upload, Heart, Plus, ArrowUpDown, ArrowLeft } from 'lucide-react';
+import { FileAudio, Music, Settings, Tags, Wrench, UserPlus, Clock, MessageSquare, Upload, Plus, ArrowUpDown, ArrowLeft } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useCurrentUser } from '@/hooks/use-current-user';
@@ -32,6 +32,12 @@ import { formatDAWInfo, hasDAWInfo, formatPlugin, getPluginKey } from '@/lib/uti
 interface ProjectDetailClientProps {
   id: string;
   initialProject?: Project;
+}
+
+function truncateText(text: string, maxChars: number): string {
+  if (!text) return '';
+  if (text.length <= maxChars) return text;
+  return text.slice(0, Math.max(0, maxChars - 1)) + '…';
 }
 
 export default function ProjectDetailClient({ id, initialProject }: ProjectDetailClientProps) {
@@ -119,6 +125,8 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
     );
   }
 
+  const displayName = truncateText(project.name, 80);
+
   return (
     <LayoutSidebar
       title="Project"
@@ -139,23 +147,23 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
             <div className="grid">
               {/* Project meta below title */}
               <div className="flex flex-col gap-2 mb-2">
-                {/* Mobile: visibility tag above title */}
-                <div className="flex items-center sm:hidden">
+                {/* Mobile/Tablet: visibility tag above title */}
+                <div className="flex items-center lg:hidden">
                   <Badge className={!project.is_private ? 'bg-blue-600 hover:bg-blue-700 text-white' : ''} variant={project.is_private ? 'secondary' : 'default'}>
                     {project.is_private ? t('private') : t('public')}
                   </Badge>
                 </div>
-                {/* Title row with actions on the right */}
-                <div className="flex items-center justify-between gap-3 min-w-0">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <h2 className="text-2xl font-semibold leading-tight truncate">{project.name}</h2>
+                {/* Title row: stack actions below on mobile */}
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2 lg:gap-3 min-w-0">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <h2 className="text-2xl font-semibold leading-tight truncate overflow-hidden flex-1 max-w-[calc(100vw-2rem)] md:max-w-full" title={project.name}>{displayName}</h2>
                     {/* Desktop: visibility tag next to title */}
-                    <Badge className={`hidden sm:inline-flex ${!project.is_private ? 'bg-green-600 hover:bg-green-700 text-white' : ''}`} variant={project.is_private ? 'secondary' : 'default'}>
+                    <Badge className={`hidden lg:inline-flex ${!project.is_private ? 'bg-green-600 hover:bg-green-700 text-white' : ''}`} variant={project.is_private ? 'secondary' : 'default'}>
                       {project.is_private ? t('private') : t('public')}
                     </Badge>
                   </div>
                   {currentUser?.id && project?.owner_id === currentUser.id && (
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-2 shrink-0 w-full lg:w-auto lg:justify-end flex-wrap mt-2 lg:mt-0">
                       <Button size="sm" variant="outline" asChild>
                         <Link href={`/projects/${project.id}/edit`}>
                           <Settings className="h-4 w-4" />
@@ -179,10 +187,6 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                 <div className="flex items-center gap-2">
                   <Music className="h-4 w-4" />
                   <span>{project.genre || 'No genre'}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Heart className="h-4 w-4" />
-                  <span>{project.likes_count ?? 0} Likes</span>
                 </div>
               </div>
 

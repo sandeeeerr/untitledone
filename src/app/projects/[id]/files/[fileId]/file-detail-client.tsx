@@ -1,19 +1,21 @@
 "use client";
 
 import React from "react";
-import { useProject, useProjectFileDetail } from "@/lib/api/queries";
+import { useProject, useProjectFileDetail, useProjectActivity, useCommentsCount } from "@/lib/api/queries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import UserAvatar from "@/components/atoms/user-avatar";
 import EmptyState from "@/components/atoms/empty-state";
 import LoadingState from "@/components/atoms/loading-state";
-import { Download, FileIcon, Clock, User, HardDrive, Tag, Pencil, Trash2, Replace } from "lucide-react";
+import { Download, Clock, User, HardDrive, Tag, Trash2, Replace } from "lucide-react";
+import { getFileIconForName, getFileIconForMime } from "@/lib/ui/file-icons";
 import { formatDistanceToNow } from "date-fns";
 import { nl } from "date-fns/locale";
 import ThreadedComments from "@/components/molecules/threaded-comments";
-import WaveSurfer from 'wavesurfer.js';
 import { useProjectComments } from "@/lib/api/queries";
+import BasicWaveform from "@/components/molecules/basic-waveform";
+import type { BasicWaveformHandle } from "@/components/molecules/basic-waveform";
 
 interface FileDetailClientProps {
   projectId: string;
@@ -37,56 +39,37 @@ function getFileIcon(fileType: string) {
   return "📁";
 }
 
+function truncateText(text: string, maxChars: number): string {
+  if (!text) return "";
+  if (text.length <= maxChars) return text;
+  return text.slice(0, Math.max(0, maxChars - 1)) + "…";
+}
+
 export default function FileDetailClient({ projectId, fileId }: FileDetailClientProps) {
   const { data: project } = useProject(projectId);
   const { data: file, isLoading, error, refetch } = useProjectFileDetail(projectId, fileId);
+  const { data: activity } = useProjectActivity(projectId);
+  const { data: commentsCount = 0 } = useCommentsCount({ projectId, fileId }, { enabled: Boolean(fileId), staleTime: 60 * 1000 });
   const { data: comments = [], isLoading: commentsLoading } = useProjectComments({ projectId, fileId, limit: 200 }, { enabled: Boolean(fileId) });
-  const waveformRef = React.useRef<HTMLDivElement | null>(null);
-  const wavesurferRef = React.useRef<WaveSurfer | null>(null);
-  const [durationMs, setDurationMs] = React.useState<number | null>(null);
   const [currentMs, setCurrentMs] = React.useState<number>(0);
-
-  React.useEffect(() => {
-    const isAudio = file && (file.fileType?.toLowerCase().includes("audio") || /\.(wav|mp3|flac|aac|aiff|ogg)$/i.test(file.filename));
-    if (!file || !isAudio || !waveformRef.current) return;
-    let disposed = false;
-
-    (async () => {
-      // fetch a short-lived signed URL for playback
-      const res = await fetch(`/api/projects/${projectId}/files/${fileId}?action=download`, { method: 'POST' });
-      if (!res.ok) return;
-      const { url } = await res.json();
-      if (disposed) return;
-      const ws = WaveSurfer.create({ container: waveformRef.current!, waveColor: '#94a3b8', progressColor: '#3b82f6', cursorColor: '#0ea5e9', height: 64 });
-      wavesurferRef.current = ws;
-      ws.on('ready', () => {
-        const dur = ws.getDuration();
-        setDurationMs(Number.isFinite(dur) ? Math.floor(dur * 1000) : null);
-      });
-      ws.on('audioprocess', () => {
-        const t = ws.getCurrentTime();
-        setCurrentMs(Math.floor(t * 1000));
-      });
-      ws.load(url);
-    })();
-
-    return () => {
-      disposed = true;
-      if (wavesurferRef.current) {
-        try { wavesurferRef.current.destroy(); } catch {}
-        wavesurferRef.current = null;
-      }
-    };
-  }, [file, fileId, projectId]);
-
-  const seekToMs = (ms: number) => {
-    const ws = wavesurferRef.current;
-    if (!ws || !durationMs || durationMs <= 0) return;
-    const pos = Math.max(0, Math.min(ms / durationMs, 1));
-    ws.seekTo(pos);
-  };
+  const [analyzed, setAnalyzed] = React.useState<{ sampleRate?: number; channels?: number; durationMs?: number; bitrateKbps?: number } | null>(null);
+  const wfRef = React.useRef<BasicWaveformHandle | null>(null);
 
   const getTimestampMs = () => currentMs;
+
+  const seekToMs = (ms: number) => {
+    wfRef.current?.seekToMs(ms);
+  };
+
+  const displayFilename = React.useMemo(() => truncateText(file?.filename ?? "", 80), [file?.filename]);
+
+  const formatMs = (ms: number) => {
+    const total = Math.max(0, Math.floor(ms / 1000));
+    const mm = Math.floor(total / 60).toString().padStart(2, '0');
+    const ss = (total % 60).toString().padStart(2, '0');
+    return `${mm}:${ss}`;
+  };
+
   async function handleDownload() {
     try {
       const res = await fetch(`/api/projects/${projectId}/files/${fileId}?action=download`, { method: 'POST' });
@@ -119,6 +102,38 @@ export default function FileDetailClient({ projectId, fileId }: FileDetailClient
   }
 
   if (error) {
+    // Try to detect if the file was deleted by scanning activity for a deletion entry referencing this fileId
+    const deletion = React.useMemo(() => {
+      if (!activity) return null;
+      for (const v of activity) {
+        for (const mc of v.microChanges) {
+          if (mc.type === "update" && typeof mc.description === "string" && mc.description.includes("File deleted:") && mc.description.includes(`[${fileId}]`)) {
+            return { author: mc.author, when: mc.fullTimestamp };
+          }
+        }
+      }
+      return null;
+    }, [activity, fileId]);
+
+    if (deletion) {
+      return (
+        <Card>
+          <CardHeader>
+            <CardTitle>Bestand verwijderd</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm text-muted-foreground">
+            <p>
+              Dit bestand is verwijderd {formatDistanceToNow(new Date(deletion.when), { addSuffix: true, locale: nl })}
+              {deletion.author ? ` door ${deletion.author}` : ""}.
+            </p>
+            <div>
+              <Button size="sm" variant="outline" onClick={() => window.history.back()}>Terug</Button>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
     return (
       <EmptyState 
         title="Fout bij laden"
@@ -145,13 +160,13 @@ export default function FileDetailClient({ projectId, fileId }: FileDetailClient
       <div className="grid gap-6 md:grid-cols-3">
         {/* Main Info */}
         <div className="md:col-span-2 space-y-6">
-          {/* Title row (not in a card) */}
-          <div className="flex items-center justify-between gap-3 min-w-0">
-            <div className="flex items-center gap-2 min-w-0">
-              <FileIcon className="h-5 w-5 shrink-0" />
-              <h1 className="text-2xl font-semibold leading-tight truncate" title={file.filename}>{file.filename}</h1>
+          {/* Title row: stack on mobile, side-by-side on desktop */}
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-3 min-w-0">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              {getFileIconForName(file.filename, { className: "h-5 w-5 shrink-0" })}
+              <h1 className="text-2xl font-semibold leading-tight truncate overflow-hidden flex-1 max-w-[calc(100vw-2rem)] md:max-w-full" title={file.filename}>{displayFilename}</h1>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto sm:justify-end flex-wrap mt-2 sm:mt-0">
               <Button size="sm" variant="outline" onClick={handleDownload} disabled={project ? !project.downloads_enabled : false}>
                 <Download className="h-4 w-4" />
                 Download
@@ -177,55 +192,31 @@ export default function FileDetailClient({ projectId, fileId }: FileDetailClient
               <span className="font-medium text-foreground">{formatFileSize(file.fileSize)}</span>
             </div>
             <div className="flex items-center gap-2">
-              <Tag className="h-4 w-4" />
+              {getFileIconForMime(file.fileType, { className: "h-4 w-4" })}
               <span>Type:</span>
               <Badge variant="secondary">{file.fileType}</Badge>
             </div>
           </div>
 
-          {/* Metadata (not in a card) */}
-          {file.description && (
-            <div>
-              <div className="text-sm text-muted-foreground mb-1">Beschrijving</div>
-              <p className="text-sm leading-relaxed">{file.description}</p>
-            </div>
-          )}
-
-          
-
-          {file.version && (
-            <div className="space-y-1">
-              <div className="text-sm text-muted-foreground">Versie</div>
-              <div className="flex items-center gap-2">
-                <Badge>{file.version.name}</Badge>
-                {file.version.description && (
-                  <span className="text-sm text-muted-foreground">- {file.version.description}</span>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Waveform player for audio files */}
+          {/* Waveform */}
           {(() => {
             const isAudio = file.fileType?.toLowerCase().includes("audio") || /\.(wav|mp3|flac|aac|aiff|ogg)$/i.test(file.filename);
             if (!isAudio) return null;
-            const mm = Math.floor(currentMs / 60000).toString().padStart(2, '0');
-            const ss = Math.floor((currentMs % 60000) / 1000).toString().padStart(2, '0');
             return (
-              <div>
-                <div ref={waveformRef} className="w-full rounded-md bg-muted" />
-                <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
-                  <span>{mm}:{ss}</span>
-                  <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => wavesurferRef.current?.playPause()}>Play/Pause</Button>
-                </div>
-              </div>
+              <SimpleWaveWrapper
+                projectId={projectId}
+                fileId={fileId}
+                onTime={(ms) => setCurrentMs(ms)}
+                forwardRef={wfRef}
+                onAnalyzed={(meta) => setAnalyzed(meta)}
+              />
             );
           })()}
 
           {/* Comments Section */}
           <Card>
             <CardHeader>
-              <CardTitle>Reacties</CardTitle>
+              <CardTitle className="flex items-center gap-2">Reacties <Badge variant="secondary">{commentsCount}</Badge></CardTitle>
             </CardHeader>
             <CardContent>
               <ThreadedComments 
@@ -240,8 +231,7 @@ export default function FileDetailClient({ projectId, fileId }: FileDetailClient
           </Card>
         </div>
 
-        {/* Sidebar */
-        }
+        {/* Sidebar */}
         <div className="space-y-6">
           {/* Upload Info (top) */}
           <Card>
@@ -276,25 +266,24 @@ export default function FileDetailClient({ projectId, fileId }: FileDetailClient
                 })}
               </div>
 
-              {/* Torrent/network placeholder (disabled) */}
-              <div className="space-y-3 opacity-60 pointer-events-none select-none">
-                <div className="text-sm">
-                  <div className="text-muted-foreground">Torrent status</div>
-                  <div className="font-medium">Niet gedeeld (0 seeds, 0 peers)</div>
+              {file.description && (
+                <div>
+                  <div className="text-sm text-muted-foreground mb-1">Beschrijving</div>
+                  <p className="text-sm leading-relaxed break-words">{file.description}</p>
                 </div>
-                <div className="text-sm break-words">
-                  <div className="text-muted-foreground">Magnet link</div>
-                  <div className="font-mono text-xs">magnet:?xt=urn:btih:DEMOHASH123&dn={encodeURIComponent(file.filename)}</div>
+              )}
+
+              {file.version && (
+                <div>
+                  <div className="text-sm text-muted-foreground mb-1">Versie</div>
+                  <div className="flex items-center gap-2">
+                    <Badge>{file.version.name}</Badge>
+                    {file.version.description && (
+                      <span className="text-sm text-muted-foreground">- {file.version.description}</span>
+                    )}
+                  </div>
                 </div>
-                <div className="text-sm">
-                  <div className="text-muted-foreground">Netwerk</div>
-                  <div className="font-medium">UDP tracker inactief</div>
-                </div>
-                <div className="flex gap-2">
-                  <Button size="sm" disabled>Kopieer link</Button>
-                  <Button size="sm" variant="outline" disabled>Open in client</Button>
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
 
@@ -304,28 +293,58 @@ export default function FileDetailClient({ projectId, fileId }: FileDetailClient
               <CardTitle className="text-base">Bestandsmetadata</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Checksum</span>
-                <span className="font-mono">a1b2c3d4</span>
-              </div>
+              {analyzed?.durationMs && (
+                <div className="flex items-center justify-between"><span className="text-muted-foreground">Duur</span><span className="font-medium">{formatMs(analyzed.durationMs)}</span></div>
+              )}
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Sample rate</span>
-                <span className="font-medium">44.1 kHz</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Bit depth</span>
-                <span className="font-medium">24-bit</span>
+                <span className="font-medium">{analyzed?.sampleRate ? `${(analyzed.sampleRate/1000).toFixed(1)} kHz` : '—'}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Channels</span>
-                <span className="font-medium">Stereo</span>
+                <span className="font-medium">{analyzed?.channels ? (analyzed.channels === 1 ? 'Mono' : analyzed.channels === 2 ? 'Stereo' : `${analyzed.channels} ch`) : '—'}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Bitrate</span>
+                <span className="font-medium">{analyzed?.bitrateKbps ? `${analyzed.bitrateKbps} kbps` : '—'}</span>
               </div>
             </CardContent>
           </Card>
-
-          {/* Actions moved next to title */}
         </div>
       </div>
     </div>
   );
+}
+
+function SimpleWaveWrapper({ projectId, fileId, onTime, forwardRef, onAnalyzed }: { projectId: string; fileId: string; onTime?: (ms: number) => void; forwardRef?: React.Ref<BasicWaveformHandle | null>; onAnalyzed?: (meta: { sampleRate?: number; channels?: number; durationMs?: number; bitrateKbps?: number }) => void }) {
+  const [url, setUrl] = React.useState<string>("");
+  // Keep a stable reference to the callback to avoid re-running the effect on each render
+  const onAnalyzedRef = React.useRef<typeof onAnalyzed | undefined>(onAnalyzed);
+  React.useEffect(() => { onAnalyzedRef.current = onAnalyzed; }, [onAnalyzed]);
+  React.useEffect(() => {
+    let mounted = true;
+    (async () => {
+      const res = await fetch(`/api/projects/${projectId}/files/${fileId}?action=download`, { method: "POST" });
+      if (!res.ok) return;
+      const { url } = await res.json();
+      if (mounted) setUrl(url || "");
+
+      // Client-side audio metadata (Web Audio API)
+      try {
+        const response = await fetch(url);
+        const arrayBuf = await response.arrayBuffer();
+        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const audioBuf = await ctx.decodeAudioData(arrayBuf.slice(0));
+        const durationMs = Math.floor(audioBuf.duration * 1000);
+        const sampleRate = audioBuf.sampleRate;
+        const channels = audioBuf.numberOfChannels;
+        const bitrateKbps = durationMs > 0 ? Math.round(((response.headers.get('Content-Length') ? Number(response.headers.get('Content-Length')) : 0) * 8) / (durationMs / 1000) / 1000) : undefined;
+        onAnalyzedRef.current?.({ durationMs, sampleRate, channels, bitrateKbps });
+        ctx.close().catch(() => {});
+      } catch {}
+    })();
+    return () => { mounted = false };
+  }, [projectId, fileId]);
+  if (!url) return null;
+  return <BasicWaveform ref={forwardRef as any} url={url} height={96} onTime={onTime} />;
 }

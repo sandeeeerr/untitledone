@@ -19,23 +19,26 @@ export interface ThreadedCommentsProps {
   isLoading?: boolean;
   getTimestampMs?: () => number | null;
   onSeekToTimestamp?: (ms: number) => void;
+  highlightedCommentId?: string | null;
 }
 
-export default function ThreadedComments({ projectId, context, comments, isLoading, getTimestampMs, onSeekToTimestamp }: ThreadedCommentsProps) {
+export default function ThreadedComments({ projectId, context, comments, isLoading, getTimestampMs, onSeekToTimestamp, highlightedCommentId }: ThreadedCommentsProps) {
   const t = useTranslations("comments");
   const create = useCreateProjectComment();
   const update = useUpdateProjectComment();
   const del = useDeleteProjectComment(projectId);
   const [newComment, setNewComment] = React.useState("");
+  const [newError, setNewError] = React.useState<string | null>(null);
 
   const tree = React.useMemo<CommentTreeNode[]>(() => buildCommentTree(comments || []), [comments]);
 
   const handlePost = async () => {
     const text = newComment.trim();
-    if (!text) return;
+    if (!text) { setNewError(t("emptyComment", { defaultValue: "Comment cannot be empty" })); return; }
     const ts = getTimestampMs ? getTimestampMs() : null;
     await create.mutateAsync({ projectId, comment: text, ...(ts !== null ? { timestampMs: ts } : {}), ...context });
     setNewComment("");
+    setNewError(null);
   };
 
   const toggleResolved = async (c: ProjectComment) => {
@@ -53,7 +56,7 @@ export default function ThreadedComments({ projectId, context, comments, isLoadi
       ) : tree.length === 0 ? (
         <div className="text-sm text-muted-foreground">{t("noCommentsYet")}</div>
       ) : (
-        tree.map((node) => <Thread key={String(node.comment.id)} node={node} depth={0} onReply={handleReply} onToggleResolved={toggleResolved} projectId={projectId} />)
+        tree.map((node) => <Thread key={String(node.comment.id)} node={node} depth={0} onReply={handleReply} onToggleResolved={toggleResolved} projectId={projectId} onSeekToTimestamp={onSeekToTimestamp} highlightedCommentId={highlightedCommentId ?? null} />)
       )}
 
       <div className="flex gap-2">
@@ -64,15 +67,16 @@ export default function ThreadedComments({ projectId, context, comments, isLoadi
           className="text-sm min-h-[60px] resize-none bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
           rows={2}
         />
-        <Button size="sm" onClick={handlePost} disabled={!newComment.trim() || create.isPending} className="self-end">
+        <Button size="sm" onClick={handlePost} disabled={create.isPending} className="self-end">
           {create.isPending ? t("posting") : t("post")}
         </Button>
       </div>
+      {newError && <div className="text-xs text-red-600">{newError}</div>}
     </div>
   );
 }
 
-function Thread({ node, depth, onReply, onToggleResolved, projectId, onSeekToTimestamp }: { node: CommentTreeNode; depth: number; onReply: (parent: ProjectComment, text: string) => Promise<void>; onToggleResolved: (c: ProjectComment) => Promise<void>; projectId: string; onSeekToTimestamp?: (ms: number) => void }) {
+function Thread({ node, depth, onReply, onToggleResolved, projectId, onSeekToTimestamp, highlightedCommentId }: { node: CommentTreeNode; depth: number; onReply: (parent: ProjectComment, text: string) => Promise<void>; onToggleResolved: (c: ProjectComment) => Promise<void>; projectId: string; onSeekToTimestamp?: (ms: number) => void; highlightedCommentId: string | null }) {
   const t = useTranslations("comments");
   const update = useUpdateProjectComment();
   const del = useDeleteProjectComment(projectId);
@@ -83,9 +87,17 @@ function Thread({ node, depth, onReply, onToggleResolved, projectId, onSeekToTim
   const maxIndent = Math.min(depth, 6);
   const hasManyReplies = node.children.length > 3;
   const [showAllReplies, setShowAllReplies] = React.useState(!node.comment.resolved && !hasManyReplies);
+  const isHighlighted = highlightedCommentId && String(node.comment.id) === highlightedCommentId;
+
+  const formatMs = (ms: number) => {
+    const total = Math.max(0, Math.floor(ms / 1000));
+    const mm = Math.floor(total / 60).toString().padStart(2, '0');
+    const ss = (total % 60).toString().padStart(2, '0');
+    return `${mm}:${ss}`;
+  };
 
   return (
-    <div role="treeitem" aria-level={depth + 1} aria-selected="false" className="flex gap-3 text-sm p-2 border-l" style={{ paddingLeft: 12 + maxIndent * 6 }}>
+    <div role="treeitem" aria-level={depth + 1} aria-selected={isHighlighted ? 'true' : 'false'} className={`flex gap-3 text-sm rounded-md py-2 ${isHighlighted ? 'bg-muted/60' : ''}`} style={{ paddingLeft: 0 + maxIndent * 6 }}>
       <UserAvatar
         className="h-6 w-6 mt-0.5 shrink-0"
         name={node.comment.profiles?.display_name || node.comment.profiles?.username || "User"}
@@ -106,7 +118,7 @@ function Thread({ node, depth, onReply, onToggleResolved, projectId, onSeekToTim
               className="inline-flex"
               title={t("seekToTime", { defaultValue: "Seek to time" })}
             >
-              <Badge variant="secondary" className="text-[10px]">{Math.floor((node.comment.timestamp_ms as unknown as number) / 1000)}s</Badge>
+              <Badge variant="secondary" className="text-[10px]">{formatMs(Number(node.comment.timestamp_ms))}</Badge>
             </button>
           )}
           {node.comment.edited && <span className="text-[10px] text-muted-foreground">{t("edited")}</span>}
@@ -135,7 +147,9 @@ function Thread({ node, depth, onReply, onToggleResolved, projectId, onSeekToTim
           <p className="mt-1 break-words">{node.comment.comment}</p>
         )}
         <div className="mt-1 flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => setIsReplying((v) => !v)}><CornerUpRight className="h-3.5 w-3.5 mr-1" />{t("reply")}</Button>
+          <button type="button" onClick={() => setIsReplying((v) => !v)} className="text-xs text-muted-foreground hover:underline inline-flex items-center gap-1">
+            <CornerUpRight className="h-3 w-3" />{t("reply")}
+          </button>
         </div>
         {isReplying && (
           <div className="mt-2 flex gap-2">
@@ -154,7 +168,7 @@ function Thread({ node, depth, onReply, onToggleResolved, projectId, onSeekToTim
         {node.children.length > 0 && (
           <div role="group" className="mt-2 space-y-2">
             {(showAllReplies ? node.children : node.children.slice(0, 3)).map((child) => (
-              <Thread key={String(child.comment.id)} node={child} depth={depth + 1} onReply={onReply} onToggleResolved={onToggleResolved} projectId={projectId} onSeekToTimestamp={onSeekToTimestamp} />
+              <Thread key={String(child.comment.id)} node={child} depth={depth + 1} onReply={onReply} onToggleResolved={onToggleResolved} projectId={projectId} onSeekToTimestamp={onSeekToTimestamp} highlightedCommentId={highlightedCommentId} />
             ))}
             {node.children.length > 3 && (
               <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => setShowAllReplies((v) => !v)}>

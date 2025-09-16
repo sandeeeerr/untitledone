@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import UserAvatar from "@/components/atoms/user-avatar"
 import EmptyState from "@/components/atoms/empty-state"
-import { Plus, Loader2, Search, Filter, Heart, FileAudio, Users, Calendar, ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react"
+import { Plus, Loader2, Search, Filter, FileAudio, Users, Calendar, ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react"
 import { useTranslations } from "next-intl"
 import Link from "next/link"
 import { useProjects } from "@/lib/api/queries"
@@ -59,11 +59,7 @@ export default function ProjectsPage() {
           const bName = b.name.toLowerCase()
           return sortOrder === "asc" ? aName.localeCompare(bName, undefined, { numeric: true }) : bName.localeCompare(aName, undefined, { numeric: true })
         }
-        case "likes": {
-          const aLikes = a.likes_count ?? 0
-          const bLikes = b.likes_count ?? 0
-          return sortOrder === "asc" ? aLikes - bLikes : bLikes - aLikes
-        }
+        
         case "created_at": {
           const aDate = new Date(a.created_at).getTime()
           const bDate = new Date(b.created_at).getTime()
@@ -208,7 +204,6 @@ export default function ProjectsPage() {
                   <SelectItem value="updated_at">{t("sort.updated_at")}</SelectItem>
                   <SelectItem value="created_at">{t("sort.created_at")}</SelectItem>
                   <SelectItem value="name">{t("sort.name")}</SelectItem>
-                  <SelectItem value="likes">{t("sort.likes")}</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -326,10 +321,7 @@ export default function ProjectsPage() {
                           <span>{project.collaborators_count ?? 1}</span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Heart className="h-3 w-3" />
-                        <span>{project.likes_count ?? 0}</span>
-                      </div>
+                      {/* Likes removed */}
                     </div>
                     </CardContent>
                   </Card>

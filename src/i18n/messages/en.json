@@ -270,7 +270,8 @@
     "markUnresolved": "Mark unresolved",
     "addReply": "Add a reply...",
     "contextSpecific": "Comments are context-specific",
-    "openActivityOrFileToComment": "Open an activity change, version or file to view and add comments."
+    "openActivityOrFileToComment": "Open an activity change, version or file to view and add comments.",
+    "seekToTime": "Seek to time"
   },
   "versions": {
     "missingName": "Missing name",
