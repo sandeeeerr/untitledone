@@ -1,7 +1,7 @@
 import React from "react";
-import { Clock, MessageSquare, Plus, FileAudio, Music, File, Folder, Archive } from "lucide-react";
+import { Clock, MessageSquare, Plus, FileAudio, Music, File, Folder, Archive, Trash2 } from "lucide-react";
 
-export type ProjectActivityChangeType = "addition" | "feedback" | "update";
+export type ProjectActivityChangeType = "addition" | "feedback" | "update" | "deletion";
 
 /**
  * Get icon for activity change type
@@ -14,6 +14,8 @@ export function getChangeIcon(type: ProjectActivityChangeType): React.ReactEleme
       return <MessageSquare className="h-3 w-3 text-blue-600" />;
     case "update":
       return <Clock className="h-3 w-3 text-orange-600" />;
+    case "deletion":
+      return <Trash2 className="h-3 w-3 text-red-600" />;
     default:
       return <Clock className="h-3 w-3 text-muted-foreground" />;
   }
@@ -30,6 +32,8 @@ export function getChangePrefix(type: ProjectActivityChangeType): string {
       return "";
     case "update":
       return "~";
+    case "deletion":
+      return "-";
     default:
       return "";
   }

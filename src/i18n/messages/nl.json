@@ -231,7 +231,16 @@
     "noActivityFound": "Geen activiteit gevonden",
     "tryDifferentSearch": "Probeer een andere zoekterm.",
     "createFirstVersion": "Eerste versie maken",
-    "tryAgain": "Probeer opnieuw"
+    "tryAgain": "Probeer opnieuw",
+    "createFeedback": {
+      "title": "Nieuwe feedback",
+      "label": "Samenvatting",
+      "placeholder": "Beschrijf je feedback...",
+      "help": "Geef een korte samenvatting; detail kun je later toevoegen bij bestanden of in threads.",
+      "cancel": "Annuleren",
+      "save": "Opslaan",
+      "saving": "Opslaan..."
+    }
   },
   "files": {
     "noFilesFound": "Geen bestanden gevonden",

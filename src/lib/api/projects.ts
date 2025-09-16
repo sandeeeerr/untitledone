@@ -375,7 +375,7 @@ export async function getProjectVersions(projectId: string): Promise<ProjectVers
 // Project Activity
 export type ProjectActivityMicroChange = {
   id: string;
-  type: "addition" | "feedback" | "update";
+  type: "addition" | "feedback" | "update" | "deletion";
   description: string;
   author: string;
   authorId: string;
@@ -384,6 +384,8 @@ export type ProjectActivityMicroChange = {
   avatar?: string | null;
   filename?: string;
   fileId?: string | null;
+  fileReplaced?: boolean;
+  replacedByFileId?: string | null;
 };
 
 export type ProjectActivityVersion = {

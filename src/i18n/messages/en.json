@@ -234,7 +234,16 @@
     "noActivityFound": "No activity found",
     "tryDifferentSearch": "Try a different search term.",
     "createFirstVersion": "Create first version",
-    "tryAgain": "Try again"
+    "tryAgain": "Try again",
+    "createFeedback": {
+      "title": "New feedback",
+      "label": "Summary",
+      "placeholder": "Describe your feedback...",
+      "help": "Provide a short summary; detailed comments can go on files or threads.",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving..."
+    }
   },
   "files": {
     "noFilesFound": "No files found",
