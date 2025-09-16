@@ -19,7 +19,7 @@ import CreateVersionDialog from '@/components/molecules/create-version-dialog';
 import { useProjectMembers } from '@/lib/api/queries';
 import UserAvatar from '@/components/atoms/user-avatar';
 import ProjectActivity from '@/components/organisms/project-activity';
-import ProjectComments from '@/components/organisms/project-comments';
+// import ProjectComments from '@/components/organisms/project-comments';
 import ProjectFiles from '@/components/organisms/project-files';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import EmptyState from '@/components/atoms/empty-state';

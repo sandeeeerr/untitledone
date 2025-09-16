@@ -1,13 +1,14 @@
 import React from "react";
-import { File as FileGeneric, FileAudio, Music, Headphones, Video, Image as ImageIcon, FileText, Archive, FileCode, Sliders, Disc, LayoutGrid, MixerHorizontal, Terminal, Mic, Sun, CircuitBoard, Piano, Usb, Drum, Settings, Sparkles, FileType, Notebook, Code } from "lucide-react";
+import { File as FileGeneric, FileAudio, Music, Headphones, Video, Image as ImageIcon, FileText, Archive, FileCode, Sliders, Disc, LayoutGrid, Terminal, Mic, Sun, CircuitBoard, Piano, Usb, Drum, Settings, Sparkles, FileType, Notebook, Code } from "lucide-react";
 
 export type FileIconOptions = {
   className?: string;
 };
 
-function withSize(icon: React.ReactElement, opts?: FileIconOptions): React.ReactElement {
+function withSize<T extends { className?: string }>(icon: React.ReactElement<T>, opts?: FileIconOptions): React.ReactElement<T> {
   const sizeClass = opts?.className || "h-4 w-4";
-  return React.cloneElement(icon, { className: `${sizeClass} ${icon.props.className ?? ""}`.trim() });
+  const existing = (icon.props as unknown as { className?: string })?.className ?? "";
+  return React.cloneElement(icon, { className: `${sizeClass} ${existing}`.trim() } as Partial<T>);
 }
 
 export function getFileIconForExtension(ext?: string, opts?: FileIconOptions, filenameHint?: string): React.ReactElement {
@@ -72,7 +73,7 @@ export function getFileIconForExtension(ext?: string, opts?: FileIconOptions, fi
     case "cpr":
       return withSize(<FileAudio className="text-indigo-600" />, opts);
     case "ptx":
-      return withSize(<MixerHorizontal className="text-pink-600" />, opts);
+      return withSize(<Sliders className="text-pink-600" />, opts);
     case "rpp":
       return withSize(<Terminal className="text-gray-700" />, opts);
     case "song":

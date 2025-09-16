@@ -26,7 +26,7 @@ export default function ThreadedComments({ projectId, context, comments, isLoadi
   const t = useTranslations("comments");
   const create = useCreateProjectComment();
   const update = useUpdateProjectComment();
-  const del = useDeleteProjectComment(projectId);
+  useDeleteProjectComment(projectId); // ensure hook remains mounted; delete is used per-thread
   const [newComment, setNewComment] = React.useState("");
   const [newError, setNewError] = React.useState<string | null>(null);
 

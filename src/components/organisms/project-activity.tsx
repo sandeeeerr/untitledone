@@ -14,7 +14,7 @@ import CreateFeedbackDialog from "@/components/molecules/create-feedback-dialog"
 import EditVersionDialog from "@/components/molecules/edit-version-dialog";
 
 import ThreadedComments from "@/components/molecules/threaded-comments";
-import { useProjectComments, useCommentsCount, useCreateFeedbackChange, useUpdateFeedbackChange, useDeleteFeedbackChange } from "@/lib/api/queries";
+import { useProjectComments, useCommentsCount, useUpdateFeedbackChange, useDeleteFeedbackChange } from "@/lib/api/queries";
 import Link from "next/link";
 import { 
   getChangeIcon, 

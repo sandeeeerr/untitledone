@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import UserAvatar from "@/components/atoms/user-avatar";
 import EmptyState from "@/components/atoms/empty-state";
 import LoadingState from "@/components/atoms/loading-state";
-import { Download, Clock, User, HardDrive, Tag, Trash2, Replace } from "lucide-react";
+import { Download, Clock, User, HardDrive, Trash2, Replace } from "lucide-react";
 import { getFileIconForName, getFileIconForMime } from "@/lib/ui/file-icons";
 import { formatDistanceToNow } from "date-fns";
 import { nl } from "date-fns/locale";
@@ -30,14 +30,7 @@ function formatFileSize(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
 }
 
-function getFileIcon(fileType: string) {
-  const type = fileType.toLowerCase();
-  if (type.includes("audio")) return "🎵";
-  if (type.includes("video")) return "🎬";
-  if (type.includes("image")) return "🖼️";
-  if (type.includes("text") || type.includes("document")) return "📄";
-  return "📁";
-}
+// (legacy helper removed)
 
 function truncateText(text: string, maxChars: number): string {
   if (!text) return "";
@@ -97,24 +90,24 @@ export default function FileDetailClient({ projectId, fileId }: FileDetailClient
     }
   }
 
+  const deletion = React.useMemo(() => {
+    if (!error) return null;
+    if (!activity) return null;
+    for (const v of activity) {
+      for (const mc of v.microChanges) {
+        if (mc.type === "update" && typeof mc.description === "string" && mc.description.includes("File deleted:") && mc.description.includes(`[${fileId}]`)) {
+          return { author: mc.author, when: mc.fullTimestamp };
+        }
+      }
+    }
+    return null;
+  }, [error, activity, fileId]);
+
   if (isLoading) {
     return <LoadingState />;
   }
 
   if (error) {
-    // Try to detect if the file was deleted by scanning activity for a deletion entry referencing this fileId
-    const deletion = React.useMemo(() => {
-      if (!activity) return null;
-      for (const v of activity) {
-        for (const mc of v.microChanges) {
-          if (mc.type === "update" && typeof mc.description === "string" && mc.description.includes("File deleted:") && mc.description.includes(`[${fileId}]`)) {
-            return { author: mc.author, when: mc.fullTimestamp };
-          }
-        }
-      }
-      return null;
-    }, [activity, fileId]);
-
     if (deletion) {
       return (
         <Card>
@@ -133,7 +126,6 @@ export default function FileDetailClient({ projectId, fileId }: FileDetailClient
         </Card>
       );
     }
-
     return (
       <EmptyState 
         title="Fout bij laden"

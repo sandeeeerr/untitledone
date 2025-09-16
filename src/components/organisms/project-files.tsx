@@ -8,7 +8,7 @@ import { getFileIconForName } from '@/lib/ui/file-icons'
 import VersionAccordion from '@/components/molecules/version-accordion'
 import FileCard from '@/components/molecules/file-card'
 import { useProjectFiles, useProject } from '@/lib/api/queries'
-import Link from 'next/link'
+// import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import EmptyState from '@/components/atoms/empty-state'
 
