@@ -10,10 +10,11 @@ export type FileCardProps = {
 	icon?: React.ReactNode
 	onPreview?: () => void
 	onDownload?: () => void
+	downloadDisabled?: boolean
 	onClick?: () => void
 }
 
-export default function FileCard({ filename, description, fileSizeLabel, dateLabel, icon, onPreview, onDownload, onClick }: FileCardProps) {
+export default function FileCard({ filename, description, fileSizeLabel, dateLabel, icon, onPreview, onDownload, onClick, downloadDisabled }: FileCardProps) {
 	return (
 		<div
 			onClick={onClick}
@@ -37,7 +38,7 @@ export default function FileCard({ filename, description, fileSizeLabel, dateLab
 				<Button variant="ghost" size="sm" className="h-8 px-2" onClick={(e) => { e.stopPropagation(); onPreview?.() }}>
 					<FileAudio className="h-4 w-4" />
 				</Button>
-				<Button variant="ghost" size="sm" className="h-8 px-2" onClick={(e) => { e.stopPropagation(); onDownload?.() }}>
+				<Button variant="ghost" size="sm" className="h-8 px-2" disabled={downloadDisabled} onClick={(e) => { e.stopPropagation(); if (!downloadDisabled) onDownload?.() }}>
 					<Download className="h-4 w-4" />
 				</Button>
 			</div>
