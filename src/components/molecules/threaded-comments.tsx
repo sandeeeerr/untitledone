@@ -17,9 +17,11 @@ export interface ThreadedCommentsProps {
   context: { activityChangeId?: string; versionId?: string; fileId?: string };
   comments: ProjectComment[];
   isLoading?: boolean;
+  getTimestampMs?: () => number | null;
+  onSeekToTimestamp?: (ms: number) => void;
 }
 
-export default function ThreadedComments({ projectId, context, comments, isLoading }: ThreadedCommentsProps) {
+export default function ThreadedComments({ projectId, context, comments, isLoading, getTimestampMs, onSeekToTimestamp }: ThreadedCommentsProps) {
   const t = useTranslations("comments");
   const create = useCreateProjectComment();
   const update = useUpdateProjectComment();
@@ -31,7 +33,8 @@ export default function ThreadedComments({ projectId, context, comments, isLoadi
   const handlePost = async () => {
     const text = newComment.trim();
     if (!text) return;
-    await create.mutateAsync({ projectId, comment: text, ...context });
+    const ts = getTimestampMs ? getTimestampMs() : null;
+    await create.mutateAsync({ projectId, comment: text, ...(ts !== null ? { timestampMs: ts } : {}), ...context });
     setNewComment("");
   };
 
@@ -69,7 +72,7 @@ export default function ThreadedComments({ projectId, context, comments, isLoadi
   );
 }
 
-function Thread({ node, depth, onReply, onToggleResolved, projectId }: { node: CommentTreeNode; depth: number; onReply: (parent: ProjectComment, text: string) => Promise<void>; onToggleResolved: (c: ProjectComment) => Promise<void>; projectId: string }) {
+function Thread({ node, depth, onReply, onToggleResolved, projectId, onSeekToTimestamp }: { node: CommentTreeNode; depth: number; onReply: (parent: ProjectComment, text: string) => Promise<void>; onToggleResolved: (c: ProjectComment) => Promise<void>; projectId: string; onSeekToTimestamp?: (ms: number) => void }) {
   const t = useTranslations("comments");
   const update = useUpdateProjectComment();
   const del = useDeleteProjectComment(projectId);
@@ -97,7 +100,14 @@ function Thread({ node, depth, onReply, onToggleResolved, projectId }: { node: C
           </span>
           <span className="text-xs text-muted-foreground">{new Date(node.comment.created_at).toLocaleString()}</span>
           {node.comment.timestamp_ms !== null && (
-            <Badge variant="secondary" className="text-[10px]">{Math.floor((node.comment.timestamp_ms as unknown as number) / 1000)}s</Badge>
+            <button
+              type="button"
+              onClick={() => { if (onSeekToTimestamp) onSeekToTimestamp(Number(node.comment.timestamp_ms)); }}
+              className="inline-flex"
+              title={t("seekToTime", { defaultValue: "Seek to time" })}
+            >
+              <Badge variant="secondary" className="text-[10px]">{Math.floor((node.comment.timestamp_ms as unknown as number) / 1000)}s</Badge>
+            </button>
           )}
           {node.comment.edited && <span className="text-[10px] text-muted-foreground">{t("edited")}</span>}
           <div className="ml-auto">
@@ -144,7 +154,7 @@ function Thread({ node, depth, onReply, onToggleResolved, projectId }: { node: C
         {node.children.length > 0 && (
           <div role="group" className="mt-2 space-y-2">
             {(showAllReplies ? node.children : node.children.slice(0, 3)).map((child) => (
-              <Thread key={String(child.comment.id)} node={child} depth={depth + 1} onReply={onReply} onToggleResolved={onToggleResolved} projectId={projectId} />
+              <Thread key={String(child.comment.id)} node={child} depth={depth + 1} onReply={onReply} onToggleResolved={onToggleResolved} projectId={projectId} onSeekToTimestamp={onSeekToTimestamp} />
             ))}
             {node.children.length > 3 && (
               <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => setShowAllReplies((v) => !v)}>

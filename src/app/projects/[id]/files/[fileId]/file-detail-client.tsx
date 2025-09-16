@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { useProject, useProjectFileDetail } from "@/lib/api/queries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import { Download, FileIcon, Clock, User, HardDrive, Tag, Pencil, Trash2, Replac
 import { formatDistanceToNow } from "date-fns";
 import { nl } from "date-fns/locale";
 import ThreadedComments from "@/components/molecules/threaded-comments";
+import WaveSurfer from 'wavesurfer.js';
 import { useProjectComments } from "@/lib/api/queries";
 
 interface FileDetailClientProps {
@@ -39,6 +41,52 @@ export default function FileDetailClient({ projectId, fileId }: FileDetailClient
   const { data: project } = useProject(projectId);
   const { data: file, isLoading, error, refetch } = useProjectFileDetail(projectId, fileId);
   const { data: comments = [], isLoading: commentsLoading } = useProjectComments({ projectId, fileId, limit: 200 }, { enabled: Boolean(fileId) });
+  const waveformRef = React.useRef<HTMLDivElement | null>(null);
+  const wavesurferRef = React.useRef<WaveSurfer | null>(null);
+  const [durationMs, setDurationMs] = React.useState<number | null>(null);
+  const [currentMs, setCurrentMs] = React.useState<number>(0);
+
+  React.useEffect(() => {
+    const isAudio = file && (file.fileType?.toLowerCase().includes("audio") || /\.(wav|mp3|flac|aac|aiff|ogg)$/i.test(file.filename));
+    if (!file || !isAudio || !waveformRef.current) return;
+    let disposed = false;
+
+    (async () => {
+      // fetch a short-lived signed URL for playback
+      const res = await fetch(`/api/projects/${projectId}/files/${fileId}?action=download`, { method: 'POST' });
+      if (!res.ok) return;
+      const { url } = await res.json();
+      if (disposed) return;
+      const ws = WaveSurfer.create({ container: waveformRef.current!, waveColor: '#94a3b8', progressColor: '#3b82f6', cursorColor: '#0ea5e9', height: 64 });
+      wavesurferRef.current = ws;
+      ws.on('ready', () => {
+        const dur = ws.getDuration();
+        setDurationMs(Number.isFinite(dur) ? Math.floor(dur * 1000) : null);
+      });
+      ws.on('audioprocess', () => {
+        const t = ws.getCurrentTime();
+        setCurrentMs(Math.floor(t * 1000));
+      });
+      ws.load(url);
+    })();
+
+    return () => {
+      disposed = true;
+      if (wavesurferRef.current) {
+        try { wavesurferRef.current.destroy(); } catch {}
+        wavesurferRef.current = null;
+      }
+    };
+  }, [file, fileId, projectId]);
+
+  const seekToMs = (ms: number) => {
+    const ws = wavesurferRef.current;
+    if (!ws || !durationMs || durationMs <= 0) return;
+    const pos = Math.max(0, Math.min(ms / durationMs, 1));
+    ws.seekTo(pos);
+  };
+
+  const getTimestampMs = () => currentMs;
   async function handleDownload() {
     try {
       const res = await fetch(`/api/projects/${projectId}/files/${fileId}?action=download`, { method: 'POST' });
@@ -157,25 +205,19 @@ export default function FileDetailClient({ projectId, fileId }: FileDetailClient
             </div>
           )}
 
-          {/* Waveform placeholder for audio files (not in a card) */}
+          {/* Waveform player for audio files */}
           {(() => {
             const isAudio = file.fileType?.toLowerCase().includes("audio") || /\.(wav|mp3|flac|aac|aiff|ogg)$/i.test(file.filename);
             if (!isAudio) return null;
+            const mm = Math.floor(currentMs / 60000).toString().padStart(2, '0');
+            const ss = Math.floor((currentMs % 60000) / 1000).toString().padStart(2, '0');
             return (
-              <div aria-label="Waveform placeholder">
-                <div className="h-24 sm:h-28 md:h-32 w-full rounded-md bg-muted overflow-hidden relative">
-                  <div className="absolute inset-0 flex items-end gap-1 px-2 animate-pulse">
-                    {Array.from({ length: 64 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="w-0.5 bg-foreground/40"
-                        style={{ height: `${30 + (Math.sin(i / 2) * 20 + (i % 7) * 3)}%` }}
-                      />
-                    ))}
-                  </div>
-                  <div className="absolute inset-x-0 bottom-0 h-6 bg-gradient-to-t from-background/70 to-transparent" />
+              <div>
+                <div ref={waveformRef} className="w-full rounded-md bg-muted" />
+                <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
+                  <span>{mm}:{ss}</span>
+                  <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => wavesurferRef.current?.playPause()}>Play/Pause</Button>
                 </div>
-                <p className="mt-2 text-xs text-muted-foreground">Voorbeeldweergave — functie in ontwikkeling</p>
               </div>
             );
           })()}
@@ -191,6 +233,8 @@ export default function FileDetailClient({ projectId, fileId }: FileDetailClient
                 context={{ fileId }}
                 comments={comments}
                 isLoading={commentsLoading}
+                getTimestampMs={getTimestampMs}
+                onSeekToTimestamp={seekToMs}
               />
             </CardContent>
           </Card>
