@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { SupabaseClient } from "@supabase/supabase-js";
 import createServerClient from "@/lib/supabase/server";
-import { getSignedDownloadUrl, replaceObject, removeObject } from "@/lib/supabase/storage";
+import { getSignedDownloadUrl, uploadProjectObject, removeObject } from "@/lib/supabase/storage";
 
 export const runtime = "nodejs";
 
@@ -108,6 +108,7 @@ export async function GET(
       .single();
 
     // Enrich file data
+    const isDeleted = Boolean((file as any)?.metadata?.deleted_at);
     const enrichedFile = {
       id: file.id,
       filename: file.filename,
@@ -122,6 +123,9 @@ export async function GET(
         avatar: uploaderProfile?.avatar_url || null,
       },
       description: file.metadata?.description || null,
+      supersededByFileId: (file.metadata && typeof file.metadata === 'object' ? (file.metadata as any).superseded_by ?? null : null),
+      supersedesFileId: (file.metadata && typeof file.metadata === 'object' ? (file.metadata as any).supersedes ?? null : null),
+      deletedAt: isDeleted ? (file as any).metadata.deleted_at : null,
       version: versionMeta ? {
         id: versionMeta.id,
         name: versionMeta.version_name,
@@ -133,6 +137,10 @@ export async function GET(
       },
     };
 
+    // If deleted, return 404 (hard-deleted rows won't reach here; this is just a guard)
+    if (isDeleted) {
+      return NextResponse.json({ error: 'File not found' }, { status: 404 });
+    }
     return NextResponse.json(enrichedFile, { status: 200 });
 
   } catch (error) {
@@ -184,27 +192,174 @@ export async function POST(
 
     const { data: file } = await (supabase as SupabaseClient)
       .from("project_files")
-      .select("id, file_path, filename, uploaded_by")
+      .select("id, file_path, filename, uploaded_by, metadata")
       .eq("id", validFileId)
       .eq("project_id", projectId)
       .single();
     if (!file) return NextResponse.json({ error: "File not found" }, { status: 404 });
 
     if (action === "download") {
+      // Block download if file is soft-deleted
+      const isDeleted = Boolean((file as any)?.metadata?.deleted_at);
+      if (isDeleted) return NextResponse.json({ error: "File deleted" }, { status: 410 });
       if (!project.downloads_enabled) return NextResponse.json({ error: "Downloads disabled" }, { status: 403 });
-      const signed = await getSignedDownloadUrl(file.file_path, 60 * 5);
-      return NextResponse.json({ url: signed }, { status: 200 });
+      try {
+        const signed = await getSignedDownloadUrl(file.file_path, 60 * 5);
+        return NextResponse.json({ url: signed }, { status: 200 });
+      } catch (e) {
+        // Storage object missing or unauthorized
+        return NextResponse.json({ error: "File not found" }, { status: 404 });
+      }
     }
 
     if (action === "replace") {
       if (!(project.owner_id === user.id || file.uploaded_by === user.id)) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       }
+
+      // Parse multipart form-data
       const form = await req.formData().catch(() => null);
       const newFile = form?.get("file");
+      const description = (form?.get("description") as string | null) || undefined;
       if (!(newFile instanceof File)) return NextResponse.json({ error: "Missing file" }, { status: 400 });
-      await replaceObject(file.file_path, newFile);
-      return NextResponse.json({ ok: true }, { status: 200 });
+
+      // Validate MIME and size (allow audio + common DAW/project/preset/archive/doc/image/video)
+      const allowMimeOrExt: RegExp[] = [
+        /^audio\//i,
+        /^image\//i,
+        /^video\//i,
+        /^application\/pdf$/i,
+        /\.(wav|mp3|flac|aac|aiff|ogg|m4a|opus|mid|midi|syx|als|flp|logicx|band|cpr|ptx|rpp|song|bwproject|reason|nki|adg|fst|fxp|fxb|nmsv|h2p|zip|rar|7z|tar|gz|txt|md|doc|docx|pdf|png|jpg|jpeg|gif|webp|svg|mp4|mov|mkv|json|xml)$/i,
+      ];
+      const name = newFile.name || file.filename || "file";
+      const type = newFile.type || file.file_type || "application/octet-stream";
+      const size = Number(newFile.size || 0);
+      const maxBytes = 200 * 1024 * 1024; // 200MB
+      const allowed = allowMimeOrExt.some((re) => re.test(type) || re.test(name));
+      if (!allowed) {
+        return NextResponse.json({ error: "Unsupported file type" }, { status: 415 });
+      }
+      if (size <= 0 || size > maxBytes) {
+        return NextResponse.json({ error: "File too large" }, { status: 413 });
+      }
+
+      // Upload new object under a fresh key
+      const newKey = await uploadProjectObject({ projectId, file: newFile });
+
+      // Insert new file record
+      const { data: newFileRow, error: insertNewErr } = await (supabase as SupabaseClient)
+        .from("project_files")
+        .insert({
+          project_id: projectId,
+          filename: name,
+          file_path: newKey,
+          file_size: size,
+          file_type: type,
+          uploaded_by: user.id,
+          metadata: {
+            ...(description ? { description } : {}),
+            supersedes: file.id,
+            replaced_at: new Date().toISOString(),
+          },
+        })
+        .select("id")
+        .single();
+      if (insertNewErr || !newFileRow) {
+        return NextResponse.json({ error: "Failed to create new file record" }, { status: 500 });
+      }
+
+      // Determine a version to link to (prefer the one the old file was linked to; else active; else none)
+      let linkVersionId: string | null = null;
+      try {
+        const { data: vf } = await (supabase as SupabaseClient)
+          .from("version_files")
+          .select("version_id")
+          .eq("file_id", validFileId)
+          .maybeSingle();
+        if (vf?.version_id) {
+          linkVersionId = vf.version_id as string;
+        } else {
+          const { data: activeVersion } = await (supabase as SupabaseClient)
+            .from("project_versions")
+            .select("id")
+            .eq("project_id", projectId)
+            .eq("is_active", true)
+            .maybeSingle();
+          linkVersionId = activeVersion?.id ?? null;
+        }
+      } catch {}
+
+      if (linkVersionId) {
+        // Link the new file to the version
+        {
+          const { error: linkErr } = await (supabase as SupabaseClient)
+            .from("version_files")
+            .insert({ version_id: linkVersionId, file_id: newFileRow.id });
+          // ignore linkErr (best-effort)
+        }
+
+        // Optional: unlink the old file from that version so the list shows the new one
+        {
+          const { error: unlinkErr } = await (supabase as SupabaseClient)
+            .from("version_files")
+            .delete()
+            .eq("version_id", linkVersionId)
+            .eq("file_id", validFileId);
+          // ignore unlinkErr
+        }
+
+        // Log activity change
+        {
+          const { error: actErr } = await (supabase as SupabaseClient)
+            .from("activity_changes")
+            .insert({
+              version_id: linkVersionId,
+              type: "update",
+              description: `Replaced file: ${file.filename} → ${name}`,
+              author_id: user.id,
+              file_id: newFileRow.id,
+            });
+          // ignore actErr
+        }
+      }
+
+      // Update old file metadata to point to the new one
+      try {
+        const mergedMeta = { ...(file.metadata || {}), superseded_by: newFileRow.id } as Record<string, unknown>;
+        await (supabase as SupabaseClient)
+          .from("project_files")
+          .update({ metadata: mergedMeta })
+          .eq("id", validFileId);
+      } catch {}
+
+      // Copy unresolved top-level comments from old file to new file (best-effort, capped)
+      try {
+        const { data: oldComments } = await (supabase as SupabaseClient)
+          .from("project_comments")
+          .select("user_id, comment, timestamp_ms")
+          .eq("project_id", projectId)
+          .eq("file_id", validFileId)
+          .is("parent_id", null)
+          .eq("resolved", false)
+          .order("created_at", { ascending: false })
+          .limit(50);
+        if ((oldComments || []).length > 0) {
+          const payload = (oldComments || []).map((c: any) => ({
+            project_id: projectId,
+            user_id: c.user_id,
+            comment: c.comment,
+            parent_id: null,
+            activity_change_id: null,
+            version_id: null,
+            file_id: newFileRow.id,
+            timestamp_ms: c.timestamp_ms ?? null,
+          }));
+          const { error: copyErr } = await (supabase as SupabaseClient).from("project_comments").insert(payload);
+          // ignore copyErr
+        }
+      } catch {}
+
+      return NextResponse.json({ newFileId: newFileRow.id }, { status: 200 });
     }
 
     if (action === "delete") {
@@ -234,26 +389,61 @@ export async function POST(
         }
       } catch {}
 
-      // Best-effort: log an activity change about the deletion
+      // Remove file-linked activity changes and comments; then log a single deletion entry
       try {
+        // Delete comments linked to this file
+        await (supabase as SupabaseClient)
+          .from("project_comments")
+          .delete()
+          .eq("project_id", projectId)
+          .eq("file_id", validFileId);
+
+        // Delete activity changes linked to this file
+        await (supabase as SupabaseClient)
+          .from("activity_changes")
+          .delete()
+          .eq("file_id", validFileId);
+
+        // Insert one consolidated deletion activity (without file_id)
         if (versionId) {
           await (supabase as SupabaseClient)
             .from("activity_changes")
             .insert({
               version_id: versionId,
-              type: "update",
-              // Include the fileId in the description so clients can attribute later, even if the FK can't be kept
-              description: `File deleted: ${file.filename} [${validFileId}]`,
+              type: "deletion",
+              description: `Deleted file: ${file.filename}`,
               author_id: user.id,
               file_id: null,
             });
         }
       } catch (e) {
-        console.error("Failed to log deletion activity:", e);
+        console.error("Failed to update activity/comments on deletion:", e);
       }
 
       await removeObject(file.file_path).catch(() => {});
-      await (supabase as SupabaseClient).from("project_files").delete().eq("id", validFileId).eq("project_id", projectId);
+      // Unlink from all versions
+      {
+        const { error: unlinkErr } = await (supabase as SupabaseClient)
+          .from("version_files")
+          .delete()
+          .eq("file_id", validFileId);
+        if (unlinkErr) {
+          console.error("Failed to unlink version_files:", unlinkErr);
+          return NextResponse.json({ error: "Failed to unlink from versions" }, { status: 500 });
+        }
+      }
+      // Hard delete the file row to remove it from all listings
+      {
+        const { error: delErr } = await (supabase as SupabaseClient)
+          .from("project_files")
+          .delete()
+          .eq("id", validFileId)
+          .eq("project_id", projectId);
+        if (delErr) {
+          console.error("Failed to hard delete project_files row:", delErr);
+          return NextResponse.json({ error: "Failed to delete file" }, { status: 500 });
+        }
+      }
       return NextResponse.json({ ok: true }, { status: 200 });
     }
 

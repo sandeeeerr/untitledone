@@ -251,7 +251,7 @@ export default function ProjectsPage() {
               {paginatedProjects.map((project) => (
                 <Link key={project.id} href={`/projects/${project.id}`} className="group">
                   <Card className="transition-all duration-200 hover:shadow-md hover:shadow-primary/5 hover:border-primary/20 cursor-pointer h-full">
-                    <CardHeader className="!pb-2">
+                    <CardHeader>
                       <div className="flex items-start justify-between gap-3 min-w-0">
                         <CardTitle className="text-lg font-semibold truncate group-hover:text-primary transition-colors">
                           {project.name}
@@ -262,7 +262,7 @@ export default function ProjectsPage() {
                       </div>
                     </CardHeader>
 
-                    <CardContent className="space-y-4 p-4 md:p-6">
+                    <CardContent className="space-y-4">
                     {/* Creator info */}
                     <div className="flex items-center gap-3 min-w-0">
                       <UserAvatar

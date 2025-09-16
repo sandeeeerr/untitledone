@@ -189,7 +189,16 @@ export async function GET(
       (profiles || []).map(p => [p.id, { name: p.display_name || p.username || "Unknown", avatar: p.avatar_url }])
     );
 
-    const enrichedFiles = (files || []).map(file => {
+    const enrichedFiles = (files || [])
+      .filter((f) => {
+        try {
+          const meta = (f as any)?.metadata;
+          return !(meta && typeof meta === 'object' && (meta as any).deleted_at);
+        } catch {
+          return true;
+        }
+      })
+      .map(file => {
       const vid = versionIdByFileId.get(file.id);
       return {
         id: file.id,

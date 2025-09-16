@@ -149,18 +149,20 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
               <div className="flex flex-col gap-2 mb-2">
                 {/* Mobile/Tablet: visibility tag above title */}
                 <div className="flex items-center lg:hidden">
-                  <Badge className={!project.is_private ? 'bg-blue-600 hover:bg-blue-700 text-white' : ''} variant={project.is_private ? 'secondary' : 'default'}>
+                  <Badge className={!project.is_private ? 'bg-green-600 hover:bg-green-700 text-white' : ''} variant={project.is_private ? 'secondary' : 'default'}>
                     {project.is_private ? t('private') : t('public')}
                   </Badge>
                 </div>
                 {/* Title row: stack actions below on mobile */}
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2 lg:gap-3 min-w-0">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <h2 className="text-2xl font-semibold leading-tight truncate overflow-hidden flex-1 max-w-[calc(100vw-2rem)] md:max-w-full" title={project.name}>{displayName}</h2>
-                    {/* Desktop: visibility tag next to title */}
-                    <Badge className={`hidden lg:inline-flex ${!project.is_private ? 'bg-green-600 hover:bg-green-700 text-white' : ''}`} variant={project.is_private ? 'secondary' : 'default'}>
-                      {project.is_private ? t('private') : t('public')}
-                    </Badge>
+                    <div className="flex items-center gap-2 min-w-0 max-w-full">
+                      <h2 className="text-2xl font-semibold leading-tight truncate overflow-hidden max-w-full" title={project.name}>{displayName}</h2>
+                      {/* Desktop: visibility tag next to title */}
+                      <Badge className={`hidden lg:inline-flex ${!project.is_private ? 'bg-green-600 hover:bg-green-700 text-white' : ''}`} variant={project.is_private ? 'secondary' : 'default'}>
+                        {project.is_private ? t('private') : t('public')}
+                      </Badge>
+                    </div>
                   </div>
                   {currentUser?.id && project?.owner_id === currentUser.id && (
                     <div className="flex items-center gap-2 shrink-0 w-full lg:w-auto lg:justify-end flex-wrap mt-2 lg:mt-0">

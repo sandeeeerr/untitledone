@@ -201,6 +201,27 @@
       }
     }
   },
+  "activity": {
+    "title": "Activité",
+    "loadingActivity": "Chargement de l'activité...",
+    "failedToLoad": "Échec du chargement de l'activité",
+    "problemLoadingData": "Un problème est survenu lors du chargement des données d'activité.",
+    "noActivityYet": "Aucune activité pour le moment",
+    "uploadsAndComments": "Les envois et commentaires apparaîtront ici.",
+    "noActivityFound": "Aucune activité trouvée",
+    "tryDifferentSearch": "Essayez un autre terme de recherche.",
+    "createFirstVersion": "Créer la première version",
+    "tryAgain": "Réessayer",
+    "createFeedback": {
+      "title": "Nouveau retour",
+      "label": "Résumé",
+      "placeholder": "Décrivez votre retour...",
+      "help": "Fournissez un court résumé ; vous pourrez détailler ensuite sur les fichiers ou dans les fils.",
+      "cancel": "Annuler",
+      "save": "Enregistrer",
+      "saving": "Enregistrement..."
+    }
+  },
   "landing": {
     "nav": {
       "login": "Se connecter",

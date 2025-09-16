@@ -105,7 +105,10 @@ export async function GET(
     }
 
     // Get file details
-    const fileIds = Array.from(new Set(versionFiles?.map(vf => vf.file_id).filter(Boolean) || []));
+    // Include files referenced by version_files AND files referenced directly by activity_changes (e.g., old files after replacement)
+    const vfFileIds = (versionFiles || []).map(vf => vf.file_id).filter(Boolean) as string[];
+    const acFileIds = (activityChanges || []).map(ac => ac.file_id).filter(Boolean) as string[];
+    const fileIds = Array.from(new Set([...(vfFileIds || []), ...(acFileIds || [])]));
     const { data: files, error: filesError } = await (supabase as SupabaseClient)
       .from("project_files")
       .select(`
@@ -172,19 +175,26 @@ export async function GET(
       // Create microChanges from activity changes
       const microChanges = versionActivityChanges.map(ac => {
         const file = ac.file_id ? fileMap.get(ac.file_id) : null;
+        const replacedBy = file?.metadata && typeof file.metadata === 'object' ? (file.metadata as any).superseded_by ?? null : null;
         const author = profileMap.get(ac.author_id) || { name: "Unknown", avatar: null };
         
+        // Detect deletion entries and extract filename from description pattern "Deleted file: <name>"
+        const deletionMatch = /^Deleted file:\s*(.+)$/i.exec(ac.description || "");
+        const isDeletion = ac.type === 'deletion' || Boolean(deletionMatch);
+        const deletionFilename = deletionMatch?.[1]?.trim();
         return {
           id: ac.id,
-          type: ac.type as "addition" | "feedback" | "update",
-          description: ac.description,
+          type: (isDeletion ? 'deletion' : ac.type) as "addition" | "feedback" | "update" | "deletion",
+          description: isDeletion ? 'Deleted file:' : ac.description,
           author: author.name,
           authorId: ac.author_id,
           time: formatTime(ac.created_at),
           fullTimestamp: ac.created_at, // Add full timestamp for proper sorting
           avatar: author.avatar,
-          filename: file?.filename,
+          filename: isDeletion ? (deletionFilename || file?.filename) : file?.filename,
           fileId: ac.file_id ?? null,
+          fileReplaced: Boolean(replacedBy),
+          replacedByFileId: replacedBy,
         };
       });
 
@@ -213,6 +223,7 @@ export async function GET(
         const file = fileMap.get(vf.file_id);
         if (file && !microChanges.some(mc => mc.filename === file.filename)) {
           const author = profileMap.get(file.uploaded_by) || { name: "Unknown", avatar: null };
+          const replacedBy = file?.metadata && typeof file.metadata === 'object' ? (file.metadata as any).superseded_by ?? null : null;
           microChanges.push({
             id: `file-${vf.id}`,
             type: "addition" as const,
@@ -224,6 +235,8 @@ export async function GET(
             avatar: author.avatar,
             filename: file.filename,
             fileId: file.id,
+            fileReplaced: Boolean(replacedBy),
+            replacedByFileId: replacedBy,
           });
         }
       }
