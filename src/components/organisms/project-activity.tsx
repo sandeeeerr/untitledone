@@ -14,12 +14,11 @@ import CreateFeedbackDialog from "@/components/molecules/create-feedback-dialog"
 import EditVersionDialog from "@/components/molecules/edit-version-dialog";
 
 import ThreadedComments from "@/components/molecules/threaded-comments";
-import { useProjectComments, useCommentsCount, useCreateFeedbackChange, useUpdateFeedbackChange, useDeleteFeedbackChange } from "@/lib/api/queries";
+import { useProjectComments, useCommentsCount, useUpdateFeedbackChange, useDeleteFeedbackChange } from "@/lib/api/queries";
 import Link from "next/link";
 import { 
   getChangeIcon, 
   getChangePrefix, 
-  getFileIcon, 
   getGroupLabel, 
   formatTimeAgo, 
   truncateText, 
@@ -27,6 +26,7 @@ import {
   compareVersions,
   ProjectActivityChangeType
 } from "@/lib/ui/activity";
+import { getFileIconForName } from "@/lib/ui/file-icons";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { useCurrentUser } from "@/hooks/use-current-user";
@@ -440,7 +440,7 @@ export default function ProjectActivity({ projectId, query, sortBy = 'newest', o
 
                               {change.filename && (
                                 <div className="flex items-center gap-2 mt-1 p-2 bg-white/80 dark:bg-gray-800/80 rounded border border-muted overflow-hidden max-w-full">
-                                  {getFileIcon(change.filename)}
+                                  {getFileIconForName(change.filename, { className: "h-3.5 w-3.5" })}
                                   <span className="text-xs font-mono text-muted-foreground break-words">
                                     {change.filename}
                                   </span>

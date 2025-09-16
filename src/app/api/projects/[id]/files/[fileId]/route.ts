@@ -211,6 +211,47 @@ export async function POST(
       if (!(project.owner_id === user.id || file.uploaded_by === user.id)) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       }
+      // Try to resolve a version to attach the deletion activity to
+      let versionId: string | null = null;
+      try {
+        const { data: vf } = await (supabase as SupabaseClient)
+          .from("version_files")
+          .select("version_id")
+          .eq("file_id", validFileId)
+          .maybeSingle();
+        if (vf?.version_id) {
+          versionId = vf.version_id as string;
+        } else {
+          const { data: pv } = await (supabase as SupabaseClient)
+            .from("project_versions")
+            .select("id, is_active, created_at")
+            .eq("project_id", projectId)
+            .order("is_active", { ascending: false })
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          versionId = pv?.id ?? null;
+        }
+      } catch {}
+
+      // Best-effort: log an activity change about the deletion
+      try {
+        if (versionId) {
+          await (supabase as SupabaseClient)
+            .from("activity_changes")
+            .insert({
+              version_id: versionId,
+              type: "update",
+              // Include the fileId in the description so clients can attribute later, even if the FK can't be kept
+              description: `File deleted: ${file.filename} [${validFileId}]`,
+              author_id: user.id,
+              file_id: null,
+            });
+        }
+      } catch (e) {
+        console.error("Failed to log deletion activity:", e);
+      }
+
       await removeObject(file.file_path).catch(() => {});
       await (supabase as SupabaseClient).from("project_files").delete().eq("id", validFileId).eq("project_id", projectId);
       return NextResponse.json({ ok: true }, { status: 200 });

@@ -6,7 +6,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Upload, X, FileAudio, Music, Download } from 'lucide-react'
+import { Upload, X } from 'lucide-react'
+import { getFileIconForName } from '@/lib/ui/file-icons'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 import { useUploadProjectFile, useProjectVersions } from '@/lib/api/queries'
@@ -50,22 +51,7 @@ export default function UploadDialog({ projectId, trigger }: UploadDialogProps) 
 		setFiles(prev => prev.map(f => f.id === id ? { ...f, ...updates } : f))
 	}
 
-	const getFileIcon = (filename: string) => {
-		const extension = filename.split('.').pop()?.toLowerCase()
-		switch (extension) {
-			case 'wav':
-			case 'mp3':
-			case 'flac':
-				return <FileAudio className="h-4 w-4 text-green-600" />
-			case 'mid':
-			case 'midi':
-				return <Music className="h-4 w-4 text-green-600" />
-			case 'als':
-			case 'flp':
-			default:
-				return <Download className="h-4 w-4 text-green-600" />
-		}
-	}
+	const getFileIcon = (filename: string) => getFileIconForName(filename, { className: 'h-4 w-4' })
 
 	const formatFileSize = (bytes: number) => {
 		if (bytes === 0) return '0 Bytes'
@@ -147,9 +133,9 @@ export default function UploadDialog({ projectId, trigger }: UploadDialogProps) 
 							Drop files here or click to browse
 						</p>
 						<p className="text-xs text-muted-foreground">
-							Supports: WAV, MP3, FLAC, MIDI, project files
+							Supports: Audio, DAW projects, MIDI/SysEx, presets, archives, docs, images, video
 						</p>
-						<input id="file-input" type="file" multiple accept=".wav,.mp3,.flac,.aiff,.mid,.midi,.als,.flp,.logic,.ptx,.rpp" className="hidden" onChange={(e) => { const files = Array.from(e.target.files || []); onDrop(files) }} />
+						<input id="file-input" type="file" multiple accept=".wav,.aiff,.flac,.mp3,.aac,.ogg,.m4a,.opus,.mid,.midi,.syx,.als,.flp,.logicx,.band,.cpr,.ptx,.rpp,.song,.bwproject,.reason,.zip,.rar,.7z,.tar,.gz,.nki,.adg,.fst,.fxp,.fxb,.nmsv,.h2p,.txt,.md,.doc,.docx,.pdf,.png,.jpg,.jpeg,.gif,.webp,.svg,.mp4,.mov,.mkv,.json,.xml" className="hidden" onChange={(e) => { const files = Array.from(e.target.files || []); onDrop(files) }} />
 					</div>
 
 					{/* File List */}
