@@ -5,6 +5,13 @@
     "openSettings": "Instellingen openen",
     "add": "Toevoegen"
   },
+  "sidebar": {
+    "bugs": {
+      "title": "Bug gevonden?",
+      "description": "UntitledOne is in beta. Meld problemen zodat we ze snel kunnen oplossen.",
+      "report": "Meld een bug"
+    }
+  },
   "home": {
     "welcome": "Welkom terug, {email}",
     "description": "Lorem ipsum dolor, sit amet consectetur adipisicing elit. Dignissimos atque nisi necessitatibus neque voluptates libero aperiam nam repellat quam, ab perferendis cum animi repellendus ratione eius dolores et iure rerum!"
@@ -24,7 +31,11 @@
     "files": "Bestanden",
     "activity": "Activiteit",
     "tasks": "Taken",
-    "recent": "Recent"
+    "recent": "Recent",
+    "collaboration": "Samenwerking",
+    "notifications": "Notificaties",
+    "invitations": "Uitnodigingen",
+    "mentions": "Vermeldingen"
   },
   "breadcrumbs": {
     "dashboard": "Dashboard",
@@ -111,6 +122,9 @@
   },
   "projects": {
     "title": "Mijn projecten",
+    "showMore": "Toon meer",
+    "showLess": "Toon minder",
+    "noGenre": "Geen genre",
     "new": {
       "title": "Nieuw Project",
       "fields": {
@@ -219,6 +233,55 @@
         "description": "Project laden mislukt",
         "forbidden": "Je hebt geen rechten om dit project te bewerken."
       }
+    },
+    "quick": {
+      "uploadFiles": "Bestanden uploaden",
+      "newVersion": "Nieuwe versie",
+      "invite": "Uitnodigen"
+    },
+    "actions": {
+      "edit": "Bewerken",
+      "invite": "Uitnodigen",
+      "download": "Downloaden",
+      "replace": "Vervangen",
+      "delete": "Verwijderen",
+      "back": "Terug",
+      "tryAgain": "Opnieuw proberen",
+      "backToProjects": "Terug naar projecten"
+    },
+    "details": {
+      "title": "Details",
+      "description": "Beschrijving",
+      "tags": "Tags",
+      "daw": "DAW",
+      "plugins": "Plugins",
+      "team": "Team"
+    },
+    "activity": {
+      "title": "Activiteit",
+      "noActivity": "Nog geen activiteit",
+      "noActivityDescription": "Uploads en opmerkingen verschijnen hier.",
+      "createFirst": "Eerste versie aanmaken"
+    },
+    "files": {
+      "title": "Bestanden"
+    },
+    "common": {
+      "lastUpdate": "Laatste update",
+      "searchActivity": "Zoek activiteit...",
+      "searchFiles": "Zoek bestanden...",
+      "searchComments": "Zoek opmerkingen...",
+      "newestFirst": "Nieuwste eerst",
+      "oldestFirst": "Oudste eerst",
+      "nameAZ": "Naam A-Z",
+      "newVersion": "Nieuwe versie",
+      "uploadFiles": "Bestanden uploaden",
+      "addComment": "Opmerking toevoegen",
+      "sortActivity": "Sorteer activiteit",
+      "sortFiles": "Sorteer bestanden",
+      "sortComments": "Sorteer opmerkingen",
+      "teamMember": "Teamlid",
+      "projectOwner": "Projecteigenaar"
     }
   },
   "activity": {
@@ -228,6 +291,7 @@
     "problemLoadingData": "Er was een probleem bij het laden van de activiteitsgegevens.",
     "noActivityYet": "Nog geen activiteit",
     "uploadsAndComments": "Uploads en opmerkingen verschijnen hier.",
+    "viewFile": "Bestand bekijken",
     "noActivityFound": "Geen activiteit gevonden",
     "tryDifferentSearch": "Probeer een andere zoekterm.",
     "createFirstVersion": "Eerste versie maken",
@@ -243,10 +307,32 @@
     }
   },
   "files": {
+    "title": "Bestanden",
     "noFilesFound": "Geen bestanden gevonden",
     "noFilesYet": "Nog geen bestanden",
     "tryDifferentSearchTerm": "Probeer een andere zoekterm",
-    "uploadFilesToStart": "Upload bestanden om te beginnen."
+    "uploadFilesToStart": "Upload bestanden om te beginnen.",
+    "fileDeleted": "Bestand verwijderd",
+    "fileDeletedDescription": "Dit bestand is {time} geleden verwijderd{author}.",
+    "fileNotFound": "Bestand niet gevonden",
+    "fileNotFoundDescription": "Het gevraagde bestand bestaat niet of je hebt geen toegang.",
+    "loadError": "Fout bij laden",
+    "loadErrorDescription": "Er is een probleem opgetreden bij het laden van het bestand.",
+    "superseded": "Dit bestand is vervangen. Bekijk de nieuwste versie:",
+    "openNewFile": "Open nieuwe file",
+    "uploadInfo": "Upload informatie",
+    "uploaded": "Geüpload",
+    "fileMetadata": "Bestandsmetadata",
+    "duration": "Duur",
+    "sampleRate": "Sample rate",
+    "channels": "Channels",
+    "bitrate": "Bitrate",
+    "size": "Grootte",
+    "type": "Type",
+    "description": "Beschrijving",
+    "version": "Versie",
+    "mono": "Mono",
+    "stereo": "Stereo"
   },
   "comments": {
     "title": "Opmerkingen",
@@ -317,7 +403,25 @@
     "saving": "Opslaan...",
     "saveChanges": "Wijzigingen opslaan",
     "sidebar": "Zijbalk",
-    "toggleSidebar": "Zijbalk omschakelen"
+    "toggleSidebar": "Zijbalk omschakelen",
+    "lastUpdate": "Laatste update",
+    "searchActivity": "Zoek activiteit...",
+    "searchFiles": "Zoek bestanden...",
+    "searchComments": "Zoek opmerkingen...",
+    "newestFirst": "Nieuwste eerst",
+    "oldestFirst": "Oudste eerst",
+    "nameAZ": "Naam A-Z",
+    "addComment": "Opmerking toevoegen",
+    "uploadFiles": "Bestanden uploaden",
+    "newVersion": "Nieuwe versie",
+    "createNewVersion": "Nieuwe versie aanmaken",
+    "sortActivity": "Sorteer activiteit",
+    "sortFiles": "Sorteer bestanden",
+    "sortComments": "Sorteer opmerkingen",
+    "teamMember": "Teamlid",
+    "projectOwner": "Projecteigenaar",
+    "deleteFileConfirm": "Dit bestand verwijderen?",
+    "comingSoon": "Binnenkort beschikbaar"
   },
   "dashboard": {
     "title": "Dashboard",

@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import UserAvatar from "@/components/atoms/user-avatar"
 import EmptyState from "@/components/atoms/empty-state"
 import { Plus, Loader2, Search, Filter, FileAudio, Users, Calendar, ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react"
+import PageLoading from "@/components/atoms/page-loading"
+import { ProjectCardSkeletonGrid } from "@/components/atoms/skeletons"
 import { useTranslations } from "next-intl"
 import Link from "next/link"
 import { useProjects } from "@/lib/api/queries"
@@ -103,22 +105,10 @@ export default function ProjectsPage() {
 
   if (isLoading) {
     return (
-      <LayoutSidebar
-        title={t("title")}
-        titleActions={
-          <Button size="sm" asChild>
-            <Link href="/projects/new">
-              <Plus className="mr-2 h-4 w-4" />
-              {t("new.title")}
-            </Link>
-          </Button>
-        }
-      >
+      <LayoutSidebar title={t("title")}>
         <div className="container">
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin" />
-            <span className="ml-2">{t("loading")}</span>
-          </div>
+          <div className="mb-6 h-8 w-48" />
+          <ProjectCardSkeletonGrid count={6} />
         </div>
       </LayoutSidebar>
     )
@@ -256,7 +246,7 @@ export default function ProjectsPage() {
                         <CardTitle className="text-lg font-semibold truncate group-hover:text-primary transition-colors">
                           {project.name}
                         </CardTitle>
-                        <Badge variant={project.is_private ? "secondary" : "default"} className="shrink-0">
+                        <Badge variant={project.is_private ? "secondary" : "default"} className={project.is_private ? "shrink-0" : "shrink-0 bg-green-500 hover:bg-green-600"}>
                           {project.is_private ? t("private") : t("public")}
                         </Badge>
                       </div>
