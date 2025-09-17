@@ -10,7 +10,12 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ proj
   } = await supabase.auth.getUser()
   if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { error } = await supabase.from('project_pins').delete().eq('user_id', user.id).eq('project_id', projectId)
+  // Temporary until types include `project_pins`
+  const { error } = await (supabase as any)
+    .from('project_pins')
+    .delete()
+    .eq('user_id', user.id)
+    .eq('project_id', projectId)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })
 }
