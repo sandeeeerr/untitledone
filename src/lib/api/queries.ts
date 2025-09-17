@@ -10,7 +10,8 @@ import {
 } from "./todos";
 import { useToast } from "@/hooks/use-toast";
 import { getCurrentProfile, updateCurrentProfile, type Profile, type ProfileUpdate, deleteCurrentProfile } from "./profiles";
-import { getProjects, getProject, type Project, uploadProjectFile, getProjectFiles, getProjectFileDetail, type ProjectFile, type ProjectFileDetail, type UploadFileInput, createProjectVersion, getProjectVersions, type ProjectVersion, type CreateVersionInput, getProjectActivity, type ProjectActivityVersion, createFeedbackChange, updateFeedbackChange, deleteFeedbackChange } from "./projects";
+import { getProjects, getProject, type Project, uploadProjectFile, getProjectFiles, getProjectFileDetail, type ProjectFile, type ProjectFileDetail, type UploadFileInput, createProjectVersion, getProjectVersions, type ProjectVersion, type CreateVersionInput, getProjectActivity, type ProjectActivityVersion, createFeedbackChange, updateFeedbackChange, deleteFeedbackChange, getProjectsLastActivity } from "./projects";
+import { listPins, pinProject, unpinProject, type ProjectPin } from "./pins";
 import { createProjectInvitation, listProjectInvitations, type ProjectInvitation, type ProjectInvitationInsert, acceptInvitation, listProjectMembers, type ProjectMember } from "./projects";
 
 // Utility function to safely extract error message
@@ -153,6 +154,40 @@ export function useRecentProjects(limit: number = 4) {
                 .slice(0, limit);
         },
     });
+}
+
+// Pins
+export function usePinnedProjects() {
+    return useQuery<ProjectPin[]>({
+        queryKey: ["projects", "pinned"],
+        queryFn: () => listPins(),
+        staleTime: 60 * 1000,
+    });
+}
+
+export function usePinProject() {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (projectId: string) => pinProject(projectId),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ["projects", "pinned"] }),
+    })
+}
+
+export function useUnpinProject() {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (projectId: string) => unpinProject(projectId),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ["projects", "pinned"] }),
+    })
+}
+
+export function useProjectsLastActivity(ids: string[], options?: { enabled?: boolean; staleTime?: number }) {
+    return useQuery<Record<string, string>>({
+        queryKey: ["projects", "last-activity", { ids }],
+        queryFn: () => getProjectsLastActivity(ids),
+        enabled: (options?.enabled ?? ids.length > 0),
+        staleTime: options?.staleTime ?? 60 * 1000,
+    })
 }
 
 // Project Members & Invitations

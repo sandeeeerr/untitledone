@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import UserAvatar from "@/components/atoms/user-avatar";
 import EmptyState from "@/components/atoms/empty-state";
 import LoadingState from "@/components/atoms/loading-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Download, Clock, User, HardDrive, Trash2, Replace } from "lucide-react";
 import { getFileIconForName, getFileIconForMime } from "@/lib/ui/file-icons";
 import { formatDistanceToNow } from "date-fns";
@@ -17,6 +18,7 @@ import { useProjectComments } from "@/lib/api/queries";
 import BasicWaveform from "@/components/molecules/basic-waveform";
 import type { BasicWaveformHandle } from "@/components/molecules/basic-waveform";
 import ReplaceFileDialog from "@/components/molecules/replace-file-dialog";
+import { useTranslations } from "next-intl";
 
 // Type for file with superseded info
 interface FileWithSupersededInfo {
@@ -53,6 +55,7 @@ function truncateText(text: string, maxChars: number): string {
 }
 
 export default function FileDetailClient({ projectId, fileId }: FileDetailClientProps) {
+  const t = useTranslations();
   const { data: project } = useProject(projectId);
   const { data: file, isLoading, error, refetch } = useProjectFileDetail(projectId, fileId);
   const { data: activity } = useProjectActivity(projectId);
@@ -101,7 +104,7 @@ export default function FileDetailClient({ projectId, fileId }: FileDetailClient
   }
 
   async function handleDelete() {
-    if (!confirm('Delete this file?')) return;
+    if (!confirm(t("common.deleteFileConfirm"))) return;
     const res = await fetch(`/api/projects/${projectId}/files/${fileId}?action=delete`, { method: 'POST' });
     if (res.ok) {
       window.history.back();
@@ -122,7 +125,56 @@ export default function FileDetailClient({ projectId, fileId }: FileDetailClient
   }, [error, activity, fileId]);
 
   if (isLoading) {
-    return <LoadingState />;
+    return (
+      <div className="space-y-6">
+        <div className="grid gap-6 md:grid-cols-3">
+          <div className="md:col-span-2 space-y-6">
+            <Skeleton className="h-7 w-3/4" />
+            <Skeleton className="h-48 w-full" />
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-5 w-40" />
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-2/3" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-5 w-32" />
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-10 w-10 rounded-full" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-3 w-20" />
+                  </div>
+                </div>
+                <Skeleton className="h-3 w-28" />
+                <Skeleton className="h-16 w-full" />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-5 w-40" />
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-24" />
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
@@ -130,15 +182,14 @@ export default function FileDetailClient({ projectId, fileId }: FileDetailClient
       return (
         <Card>
           <CardHeader>
-            <CardTitle>Bestand verwijderd</CardTitle>
+            <CardTitle>{t("files.fileDeleted")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm text-muted-foreground">
             <p>
-              Dit bestand is verwijderd {formatDistanceToNow(new Date(deletion.when), { addSuffix: true, locale: nl })}
-              {deletion.author ? ` door ${deletion.author}` : ""}.
+              {t("files.fileDeletedDescription", { time: formatDistanceToNow(new Date(deletion.when), { addSuffix: true, locale: nl }), author: deletion.author ? ` door ${deletion.author}` : "" })}
             </p>
             <div>
-              <Button size="sm" variant="outline" onClick={() => window.history.back()}>Terug</Button>
+              <Button size="sm" variant="outline" onClick={() => window.history.back()}>{t("projects.actions.back")}</Button>
             </div>
           </CardContent>
         </Card>
@@ -146,10 +197,10 @@ export default function FileDetailClient({ projectId, fileId }: FileDetailClient
     }
     return (
       <EmptyState 
-        title="Fout bij laden"
-        description="Er is een probleem opgetreden bij het laden van het bestand."
+        title={t("files.loadError")}
+        description={t("files.loadErrorDescription")}
       >
-        <Button onClick={() => refetch()}>Opnieuw proberen</Button>
+        <Button onClick={() => refetch()}>{t("projects.actions.tryAgain")}</Button>
       </EmptyState>
     );
   }
@@ -157,10 +208,10 @@ export default function FileDetailClient({ projectId, fileId }: FileDetailClient
   if (!file) {
     return (
       <EmptyState 
-        title="Bestand niet gevonden"
-        description="Het gevraagde bestand bestaat niet of je hebt geen toegang."
+        title={t("files.fileNotFound")}
+        description={t("files.fileNotFoundDescription")}
       >
-        <Button onClick={() => window.history.back()}>Terug</Button>
+        <Button onClick={() => window.history.back()}>{t("projects.actions.back")}</Button>
       </EmptyState>
     );
   }
@@ -179,7 +230,7 @@ export default function FileDetailClient({ projectId, fileId }: FileDetailClient
             <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto sm:justify-end flex-wrap mt-2 sm:mt-0">
               <Button size="sm" variant="outline" onClick={handleDownload} disabled={project ? !project.downloads_enabled : false}>
                 <Download className="h-4 w-4" />
-                Download
+                {t("projects.actions.download")}
               </Button>
               <ReplaceFileDialog 
                 projectId={projectId} 
@@ -188,38 +239,38 @@ export default function FileDetailClient({ projectId, fileId }: FileDetailClient
                 trigger={
                   <Button size="sm" variant="outline" className="gap-2">
                     <Replace className="h-4 w-4" />
-                    Replace
+                    {t("projects.actions.replace")}
                   </Button>
                 }
               />
               <Button size="sm" variant="destructive" onClick={handleDelete}>
                 <Trash2 className="h-4 w-4" />
-                Delete
+                {t("projects.actions.delete")}
               </Button>
+            </div>
+          </div>
+          
+          {/* Compact meta under title */}
+          <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground !mt-1">
+            <div className="flex items-center gap-2">
+              <HardDrive className="h-4 w-4" />
+                <span>{t("files.size")}:</span>
+              <span className="font-medium text-foreground">{formatFileSize(file.fileSize)}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              {getFileIconForMime(file.fileType, { className: "h-4 w-4" })}
+                <span>{t("files.type")}:</span>
+              <Badge variant="secondary">{file.fileType}</Badge>
             </div>
           </div>
 
           {/* Superseded banner */}
           {file && (file as FileWithSupersededInfo).supersededByFileId ? (
             <div className="rounded-md border bg-muted/40 p-3 text-sm">
-              Dit bestand is vervangen. Bekijk de nieuwste versie:
-              <Button variant="link" className="px-2" onClick={() => navigateToNewFile((file as FileWithSupersededInfo).supersededByFileId!)}>Open nieuwe file</Button>
+              {t("files.superseded")}
+              <Button variant="link" className="px-2" onClick={() => navigateToNewFile((file as FileWithSupersededInfo).supersededByFileId!)}>{t("files.openNewFile")}</Button>
             </div>
           ) : null}
-
-          {/* Compact meta under title (like project page) */}
-          <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mt-2">
-            <div className="flex items-center gap-2">
-              <HardDrive className="h-4 w-4" />
-              <span>Grootte:</span>
-              <span className="font-medium text-foreground">{formatFileSize(file.fileSize)}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              {getFileIconForMime(file.fileType, { className: "h-4 w-4" })}
-              <span>Type:</span>
-              <Badge variant="secondary">{file.fileType}</Badge>
-            </div>
-          </div>
 
           {/* Waveform */}
           {(() => {
@@ -238,7 +289,7 @@ export default function FileDetailClient({ projectId, fileId }: FileDetailClient
           {/* Comments Section */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">Reacties <Badge variant="secondary">{commentsCount}</Badge></CardTitle>
+              <CardTitle className="flex items-center gap-2">{t("comments.title")} <Badge variant="secondary">{commentsCount}</Badge></CardTitle>
             </CardHeader>
             <CardContent>
               <ThreadedComments 
@@ -260,7 +311,7 @@ export default function FileDetailClient({ projectId, fileId }: FileDetailClient
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <User className="h-5 w-5" />
-                Upload informatie
+                {t("files.uploadInfo")}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -282,7 +333,7 @@ export default function FileDetailClient({ projectId, fileId }: FileDetailClient
               
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Clock className="h-4 w-4" />
-                Geüpload {formatDistanceToNow(new Date(file.uploadedAt), { 
+                {t("files.uploaded")} {formatDistanceToNow(new Date(file.uploadedAt), { 
                   addSuffix: true, 
                   locale: nl 
                 })}
@@ -290,14 +341,14 @@ export default function FileDetailClient({ projectId, fileId }: FileDetailClient
 
               {file.description && (
                 <div>
-                  <div className="text-sm text-muted-foreground mb-1">Beschrijving</div>
+                  <div className="text-sm text-muted-foreground mb-1">{t("files.description")}</div>
                   <p className="text-sm leading-relaxed break-words">{file.description}</p>
                 </div>
               )}
 
               {file.version && (
                 <div>
-                  <div className="text-sm text-muted-foreground mb-1">Versie</div>
+                  <div className="text-sm text-muted-foreground mb-1">{t("files.version")}</div>
                   <div className="flex items-center gap-2">
                     <Badge>{file.version.name}</Badge>
                     {file.version.description && (
@@ -312,22 +363,22 @@ export default function FileDetailClient({ projectId, fileId }: FileDetailClient
           {/* Bestandsmetadata (checksum, sample rate, etc.) */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Bestandsmetadata</CardTitle>
+              <CardTitle className="text-base">{t("files.fileMetadata")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               {analyzed?.durationMs && (
-                <div className="flex items-center justify-between"><span className="text-muted-foreground">Duur</span><span className="font-medium">{formatMs(analyzed.durationMs)}</span></div>
+                <div className="flex items-center justify-between"><span className="text-muted-foreground">{t("files.duration")}</span><span className="font-medium">{formatMs(analyzed.durationMs)}</span></div>
               )}
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Sample rate</span>
+                <span className="text-muted-foreground">{t("files.sampleRate")}</span>
                 <span className="font-medium">{analyzed?.sampleRate ? `${(analyzed.sampleRate/1000).toFixed(1)} kHz` : '—'}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Channels</span>
-                <span className="font-medium">{analyzed?.channels ? (analyzed.channels === 1 ? 'Mono' : analyzed.channels === 2 ? 'Stereo' : `${analyzed.channels} ch`) : '—'}</span>
+                <span className="text-muted-foreground">{t("files.channels")}</span>
+                <span className="font-medium">{analyzed?.channels ? (analyzed.channels === 1 ? t("files.mono") : analyzed.channels === 2 ? t("files.stereo") : `${analyzed.channels} ch`) : '—'}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Bitrate</span>
+                <span className="text-muted-foreground">{t("files.bitrate")}</span>
                 <span className="font-medium">{analyzed?.bitrateKbps ? `${analyzed.bitrateKbps} kbps` : '—'}</span>
               </div>
             </CardContent>

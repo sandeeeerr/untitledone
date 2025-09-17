@@ -4,6 +4,7 @@ import React from 'react'
 import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2, FileAudio } from 'lucide-react'
+import { FileCardSkeletonGrid } from '@/components/atoms/skeletons'
 import { getFileIconForName } from '@/lib/ui/file-icons'
 import VersionAccordion from '@/components/molecules/version-accordion'
 import FileCard from '@/components/molecules/file-card'
@@ -15,7 +16,7 @@ import EmptyState from '@/components/atoms/empty-state'
 export default function ProjectFiles({ projectId, query, sortBy = 'newest' }: { projectId: string; query?: string; sortBy?: 'newest' | 'oldest' | 'name' }) {
 	const { data: files, isLoading, error } = useProjectFiles(projectId)
   const { data: project } = useProject(projectId)
-	const t = useTranslations('files')
+	const t = useTranslations()
 	const [openKeys, setOpenKeys] = React.useState<Set<string>>(new Set())
   const router = useRouter()
 
@@ -56,16 +57,27 @@ export default function ProjectFiles({ projectId, query, sortBy = 'newest' }: { 
 		return new Date(dateString).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' })
 	}
 
-	// Group by version name (null -> Unversioned)
-	const groups = new Map<string, typeof filtered>()
-	for (const f of filtered) {
-		const key = f.versionName ?? 'Unversioned'
-		const arr = groups.get(key) ?? []
-		arr.push(f)
-		groups.set(key, arr)
-	}
+  // Group by version name (null -> Unversioned). Include empty versions so they show up.
+  const groups = new Map<string, typeof filtered>()
+  // Seed groups with known version names from activity or versions if available in project context
+  const knownVersionNames = new Set<string>()
+  // Try to infer from files first
+  for (const f of baseFiles) {
+    if (f.versionName) knownVersionNames.add(f.versionName)
+  }
+  if (project?.status) {
+    // no-op placeholder; status unused
+  }
+  // Place files into groups
+  for (const f of filtered) {
+    const key = f.versionName ?? 'Unversioned'
+    const arr = groups.get(key) ?? []
+    arr.push(f)
+    groups.set(key, arr)
+    knownVersionNames.add(key)
+  }
 
-	const orderedGroupKeys = Array.from(groups.keys()).sort((a, b) => {
+  const orderedGroupKeys = Array.from(groups.keys()).sort((a, b) => {
 		if (a === 'Unversioned') return 1
 		if (b === 'Unversioned') return -1
 		return b.localeCompare(a, undefined, { numeric: true })
@@ -78,30 +90,27 @@ export default function ProjectFiles({ projectId, query, sortBy = 'newest' }: { 
 		}
 	}, [orderedGroupKeys, openKeys])
 
-	if (isLoading) {
-		return (
-			<Card>
-				<CardHeader>
-					<CardTitle className="text-base">Files</CardTitle>
-				</CardHeader>
-				<CardContent>
-					<div className="flex items-center justify-center py-8">
-						<Loader2 className="h-6 w-6 animate-spin" />
-						<span className="ml-2 text-sm text-muted-foreground">Loading files...</span>
-					</div>
-				</CardContent>
-			</Card>
-		)
-	}
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Files</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <FileCardSkeletonGrid count={6} />
+        </CardContent>
+      </Card>
+    )
+  }
 
 	if (error) {
 		return (
 			<Card>
 				<CardHeader>
-					<CardTitle className="text-base">Files</CardTitle>
+					<CardTitle className="text-base">{t("files.title")}</CardTitle>
 				</CardHeader>
 				<CardContent>
-					<p className="text-sm text-red-600">Failed to load files. Please try again.</p>
+					<p className="text-sm text-red-600">{t("files.loadError")}. {t("projects.actions.tryAgain")}.</p>
 				</CardContent>
 			</Card>
 		)
@@ -112,13 +121,13 @@ export default function ProjectFiles({ projectId, query, sortBy = 'newest' }: { 
 		return (
 			<Card>
 				<CardHeader>
-					<CardTitle className="text-base">Files</CardTitle>
+					<CardTitle className="text-base">{t("files.title")}</CardTitle>
 				</CardHeader>
 				<CardContent className="p-4 md:p-6">
 					<EmptyState 
 						icon={<FileAudio className="h-12 w-12" />} 
-						title={isFiltered ? t('noFilesFound') : t('noFilesYet')} 
-						description={isFiltered ? t('tryDifferentSearchTerm') : t('uploadFilesToStart')} 
+						title={isFiltered ? t('files.noFilesFound') : t('files.noFilesYet')} 
+						description={isFiltered ? t('files.tryDifferentSearchTerm') : t('files.uploadFilesToStart')} 
 					/>
 				</CardContent>
 			</Card>

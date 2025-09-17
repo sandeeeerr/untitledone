@@ -24,6 +24,7 @@ import ProjectFiles from '@/components/organisms/project-files';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import EmptyState from '@/components/atoms/empty-state';
 import LoadingState from '@/components/atoms/loading-state';
+import PageLoading from '@/components/atoms/page-loading';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatTimeAgo } from '@/lib/utils/date';
@@ -92,13 +93,7 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
   }, [activity, project?.updated_at]);
 
   if (isLoading) {
-    return (
-      <LayoutSidebar title="Loading...">
-        <div className="container">
-          <LoadingState message="Loading project..." />
-        </div>
-      </LayoutSidebar>
-    );
+    return <PageLoading title="Loading..." message="Loading project..." />
   }
 
   if (error || !project) {
@@ -113,10 +108,10 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
           >
             <div className="flex gap-2 justify-center">
               <Button onClick={handleRetry}>
-                Try again
+                {t("actions.tryAgain")}
               </Button>
               <Button variant="outline" onClick={handleBack}>
-                Terug naar projecten
+                {t("actions.backToProjects")}
               </Button>
             </div>
           </EmptyState>
@@ -146,7 +141,7 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
           <div className="xl:col-span-2">
             <div className="grid">
               {/* Project meta below title */}
-              <div className="flex flex-col gap-2 mb-2">
+              <div className="flex flex-col gap-2">
                 {/* Mobile/Tablet: visibility tag above title */}
                 <div className="flex items-center lg:hidden">
                   <Badge className={!project.is_private ? 'bg-green-600 hover:bg-green-700 text-white' : ''} variant={project.is_private ? 'secondary' : 'default'}>
@@ -169,7 +164,7 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                       <Button size="sm" variant="outline" asChild>
                         <Link href={`/projects/${project.id}/edit`}>
                           <Settings className="h-4 w-4" />
-                          Edit
+                          {t("actions.edit")}
                         </Link>
                       </Button>
                       <InviteDialog 
@@ -177,7 +172,7 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                         trigger={
                           <Button variant="outline" size="sm">
                             <UserPlus className="h-4 w-4" />
-                            Invite
+                            {t("actions.invite")}
                           </Button>
                         } 
                       />
@@ -185,10 +180,10 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                   )}
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mt-2">
+              <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mt-1">
                 <div className="flex items-center gap-2">
                   <Music className="h-4 w-4" />
-                  <span>{project.genre || 'No genre'}</span>
+                  <span>{project.genre || t("noGenre")}</span>
                 </div>
               </div>
 
@@ -196,13 +191,13 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
               <div className="xl:hidden">
                 <Card className="mt-2">
                   <CardHeader className="p-4 md:p-6">
-                    <CardTitle className="text-base">Details</CardTitle>
+                    <CardTitle className="text-base">{t("details.title")}</CardTitle>
                   </CardHeader>
                   <CardContent className="p-4 md:p-6 space-y-6">
                     {/* Project Description */}
                     {project.description && (
                       <div>
-                        <div className="text-sm text-muted-foreground mb-2">Description</div>
+                        <div className="text-sm text-muted-foreground mb-2">{t("details.description")}</div>
                         <p className="text-sm leading-relaxed">{project.description}</p>
                       </div>
                     )}
@@ -211,7 +206,7 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                       <div>
                         <div className="flex items-center gap-2 mb-2 text-sm font-medium">
                           <Tags className="h-4 w-4" />
-                          <span>Tags</span>
+                          <span>{t("details.tags")}</span>
                         </div>
                         <div className="flex flex-wrap gap-2">
                           {project.tags?.map((tag) => (
@@ -223,7 +218,7 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
 
                     {hasDAWInfo(project.daw_info) && (
                       <div>
-                        <div className="text-sm text-muted-foreground">DAW</div>
+                        <div className="text-sm text-muted-foreground">{t("details.daw")}</div>
                         <div className="font-medium">
                           {formatDAWInfo(project.daw_info)}
                         </div>
@@ -234,7 +229,7 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                       <div>
                         <div className="flex items-center gap-2 mb-2 text-sm font-medium">
                           <Wrench className="h-4 w-4" />
-                          <span>Plugins</span>
+                          <span>{t("details.plugins")}</span>
                         </div>
                         <div className="flex flex-wrap gap-2">
                           {project.plugins_used?.map((plugin, idx) => (
@@ -250,7 +245,7 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                     <div>
                       <div className="flex items-center gap-2 mb-2 text-sm font-medium">
                         <UserPlus className="h-4 w-4" />
-                        <span>Team</span>
+                          <span>{t("details.team")}</span>
                       </div>
                       <div className="flex -space-x-2">
                         {(members ?? []).slice(0, 6).map(m => (
@@ -258,7 +253,7 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                             key={m.user_id} 
                             href={`/u/${m.profile?.username || m.user_id}`}
                             className="hover:z-10 relative transition-transform hover:scale-110"
-                            title={m.profile?.display_name || 'Team member'}
+                            title={m.profile?.display_name || t("common.teamMember")}
                           >
                             <UserAvatar
                               className="border-2 border-background h-8 w-8"
@@ -272,7 +267,7 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                         {(members?.length ?? 0) === 0 && (
                           <UserAvatar 
                             className="border-2 border-background h-8 w-8" 
-                            name="Project Owner" 
+                            name={t("common.projectOwner")} 
                             username={null} 
                             userId={project.owner_id} 
                             src={null} 
@@ -294,16 +289,16 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                   <TabsList className="grid w-auto grid-cols-3">
                     <TabsTrigger value="activity" className="flex items-center gap-2">
                       <Clock className="h-4 w-4" /> 
-                      Activity
+                      {t("activity.title")}
                     </TabsTrigger>
                     <TabsTrigger value="files" className="flex items-center gap-2">
                       <FileAudio className="h-4 w-4" /> 
-                      Files
+                      {t("files.title")}
                     </TabsTrigger>
                     {/* Comments tab removed per new model */}
                   </TabsList>
                   <div className="hidden sm:block text-xs sm:text-sm text-muted-foreground">
-                    {`Last update: ${lastActivityIso ? formatTimeAgo(lastActivityIso) : '—'}`}
+                    {`${t("common.lastUpdate")}: ${lastActivityIso ? formatTimeAgo(lastActivityIso) : '—'}`}
                   </div>
                 </div>
 
@@ -313,8 +308,8 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                     {activeTab === 'activity' && (
                       <>
                         <Input
-                          placeholder="Search activity..."
-                          aria-label="Search activity"
+                          placeholder={t("common.searchActivity")}
+                          aria-label={t("common.searchActivity")}
                           className="h-9 flex-1"
                           value={activityQuery}
                           onChange={(e) => setActivityQuery(e.target.value)}
@@ -323,13 +318,13 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                           value={activitySort} 
                           onValueChange={(value: 'newest' | 'oldest') => setActivitySort(value)}
                         >
-                          <SelectTrigger className="w-auto h-9 gap-1" aria-label="Sort activity">
+                          <SelectTrigger className="w-auto h-9 gap-1" aria-label={t("common.sortActivity")}>
                             <ArrowUpDown className="h-4 w-4" />
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="newest">Newest first</SelectItem>
-                            <SelectItem value="oldest">Oldest first</SelectItem>
+                            <SelectItem value="newest">{t("common.newestFirst")}</SelectItem>
+                            <SelectItem value="oldest">{t("common.oldestFirst")}</SelectItem>
                           </SelectContent>
                         </Select>
                       </>
@@ -337,8 +332,8 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                     {activeTab === 'files' && (
                       <>
                         <Input
-                          placeholder="Search files..."
-                          aria-label="Search files"
+                          placeholder={t("common.searchFiles")}
+                          aria-label={t("common.searchFiles")}
                           className="h-9 flex-1"
                           value={filesQuery}
                           onChange={(e) => setFilesQuery(e.target.value)}
@@ -347,14 +342,14 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                           value={filesSort} 
                           onValueChange={(value: 'newest' | 'oldest' | 'name') => setFilesSort(value)}
                         >
-                          <SelectTrigger className="w-auto h-9 gap-1" aria-label="Sort files">
+                          <SelectTrigger className="w-auto h-9 gap-1" aria-label={t("common.sortFiles")}>
                             <ArrowUpDown className="h-4 w-4" />
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="newest">Newest first</SelectItem>
-                            <SelectItem value="oldest">Oldest first</SelectItem>
-                            <SelectItem value="name">Name A-Z</SelectItem>
+                            <SelectItem value="newest">{t("common.newestFirst")}</SelectItem>
+                            <SelectItem value="oldest">{t("common.oldestFirst")}</SelectItem>
+                            <SelectItem value="name">{t("common.nameAZ")}</SelectItem>
                           </SelectContent>
                         </Select>
                       </>
@@ -362,19 +357,19 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                     {activeTab === 'comments' && (
                       <>
                         <Input
-                          placeholder="Search comments..."
-                          aria-label="Search comments"
+                          placeholder={t("common.searchComments")}
+                          aria-label={t("common.searchComments")}
                           className="h-9 flex-1"
                           disabled
                         />
                         <Select disabled>
-                          <SelectTrigger className="w-auto h-9 gap-1" aria-label="Sort comments" disabled>
+                          <SelectTrigger className="w-auto h-9 gap-1" aria-label={t("common.sortComments")} disabled>
                             <ArrowUpDown className="h-4 w-4" />
-                            <SelectValue placeholder="Newest first" />
+                            <SelectValue placeholder={t("common.newestFirst")} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="newest">Newest first</SelectItem>
-                            <SelectItem value="oldest">Oldest first</SelectItem>
+                            <SelectItem value="newest">{t("common.newestFirst")}</SelectItem>
+                            <SelectItem value="oldest">{t("common.oldestFirst")}</SelectItem>
                           </SelectContent>
                         </Select>
                       </>
@@ -387,9 +382,9 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                         projectId={project.id}
                         onVersionCreated={handleVersionCreated}
                         trigger={
-                          <Button size="sm" className="h-9 gap-2 px-3 w-full sm:w-auto justify-center" aria-label="Create new version">
+                          <Button size="sm" className="h-9 gap-2 px-3 w-full sm:w-auto justify-center" aria-label={t("common.createNewVersion")}>
                             <Plus className="h-4 w-4" />
-                            New Version
+                            {t("common.newVersion")}
                           </Button>
                         }
                       />
@@ -398,9 +393,9 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                       <UploadDialog
                         projectId={project.id}
                         trigger={
-                          <Button size="sm" className="h-9 gap-2 px-3 w-full sm:w-auto justify-center" aria-label="Upload files">
+                          <Button size="sm" className="h-9 gap-2 px-3 w-full sm:w-auto justify-center" aria-label={t("common.uploadFiles")}>
                             <Upload className="h-4 w-4" />
-                            Upload Files
+                            {t("common.uploadFiles")}
                           </Button>
                         }
                       />
@@ -409,11 +404,11 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                       <Button 
                         size="sm" 
                         className="h-9 gap-2 px-3 w-full sm:w-auto justify-center" 
-                        aria-label="Add comment"
+                        aria-label={t("common.addComment")}
                         disabled
                       >
                         <MessageSquare className="h-4 w-4" />
-                        Add Comment
+                        {t("common.addComment")}
                       </Button>
                     )}
                   </div>
@@ -492,7 +487,7 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                 <div>
                   <div className="flex items-center gap-2 mb-2 text-sm font-medium">
                     <UserPlus className="h-4 w-4" />
-                    <span>Team</span>
+                          <span>{t("details.team")}</span>
                   </div>
                   <div className="flex -space-x-2">
                     {(members ?? []).slice(0, 6).map(m => (
@@ -514,7 +509,7 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                     {(members?.length ?? 0) === 0 && (
                       <UserAvatar 
                         className="border-2 border-background h-8 w-8" 
-                        name="Project Owner" 
+                        name={t("common.projectOwner")} 
                         username={null} 
                         userId={project.owner_id} 
                         src={null} 

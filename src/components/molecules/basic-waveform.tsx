@@ -93,7 +93,7 @@ function BasicWaveform(
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full my-2">
       <div ref={containerRef} className="w-full" style={{ height }} />
       <div ref={timelineRef} className="wavesurfer-timeline ws-timeline w-full h-3" />
       <style jsx global>{`
