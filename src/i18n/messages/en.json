@@ -5,13 +5,18 @@
     "openSettings": "Open settings",
     "add": "Add"
   },
+  "sidebar": {
+    "bugs": {
+      "title": "Found a bug?",
+      "description": "UntitledOne is in beta. Please report issues so we can fix them fast.",
+      "report": "Report a bug"
+    }
+  },
   "home": {
     "welcome": "Welcome back, {email}",
     "description": "Lorem ipsum dolor, sit amet consectetur adipisicing elit. Dignissimos atque nisi necessitatibus neque voluptates libero aperiam nam repellat quam, ab perferendis cum animi repellendus ratione eius dolores et iure rerum!"
   },
-  "common": {
-    "logo": "Logo"
-  },
+  
   "navigation": {
     "home": "Home",
     "dashboard": "Dashboard",
@@ -24,7 +29,11 @@
     "files": "Files",
     "activity": "Activity",
     "tasks": "Tasks",
-    "recent": "Recent"
+    "recent": "Recent",
+    "collaboration": "Collaboration",
+    "notifications": "Notifications",
+    "invitations": "Invitations",
+    "mentions": "Mentions"
   },
   "breadcrumbs": {
     "dashboard": "Dashboard",
@@ -114,6 +123,9 @@
   },
   "projects": {
     "title": "My projects",
+    "showMore": "Show more",
+    "showLess": "Show less",
+    "noGenre": "No genre",
     "new": {
       "title": "New Project",
       "fields": {
@@ -222,6 +234,56 @@
         "description": "Failed to load project",
         "forbidden": "You are not allowed to edit this project."
       }
+    },
+    "quick": {
+      "uploadFiles": "Upload files",
+      "newVersion": "New version",
+      "invite": "Invite"
+    },
+    "actions": {
+      "edit": "Edit",
+      "invite": "Invite",
+      "download": "Download",
+      "replace": "Replace",
+      "delete": "Delete",
+      "back": "Back",
+      "tryAgain": "Try again",
+      "backToProjects": "Back to projects"
+    },
+    "details": {
+      "title": "Details",
+      "description": "Description",
+      "tags": "Tags",
+      "daw": "DAW",
+      "plugins": "Plugins",
+      "team": "Team"
+    },
+    "activity": {
+      "title": "Activity",
+      "noActivity": "No activity yet",
+      "noActivityDescription": "Uploads and comments will appear here.",
+      "createFirst": "Create first version"
+    },
+    "files": {
+      "title": "Files"
+    },
+    "common": {
+      "lastUpdate": "Last update",
+      "searchActivity": "Search activity...",
+      "searchFiles": "Search files...",
+      "searchComments": "Search comments...",
+      "newestFirst": "Newest first",
+      "oldestFirst": "Oldest first",
+      "nameAZ": "Name A-Z",
+      "newVersion": "New Version",
+      "createNewVersion": "Create new version",
+      "uploadFiles": "Upload Files",
+      "addComment": "Add Comment",
+      "sortActivity": "Sort activity",
+      "sortFiles": "Sort files",
+      "sortComments": "Sort comments",
+      "teamMember": "Team member",
+      "projectOwner": "Project Owner"
     }
   },
   "activity": {
@@ -231,6 +293,7 @@
     "problemLoadingData": "There was a problem loading the activity data.",
     "noActivityYet": "No activity yet",
     "uploadsAndComments": "Uploads and comments will appear here.",
+    "viewFile": "View file",
     "noActivityFound": "No activity found",
     "tryDifferentSearch": "Try a different search term.",
     "createFirstVersion": "Create first version",
@@ -246,10 +309,32 @@
     }
   },
   "files": {
+    "title": "Files",
     "noFilesFound": "No files found",
     "noFilesYet": "No files yet",
     "tryDifferentSearchTerm": "Try a different search term",
-    "uploadFilesToStart": "Upload files to get started."
+    "uploadFilesToStart": "Upload files to get started.",
+    "fileDeleted": "File deleted",
+    "fileDeletedDescription": "This file was deleted {time} ago{author}.",
+    "fileNotFound": "File not found",
+    "fileNotFoundDescription": "The requested file does not exist or you don't have access.",
+    "loadError": "Loading error",
+    "loadErrorDescription": "There was a problem loading the file.",
+    "superseded": "This file has been replaced. View the latest version:",
+    "openNewFile": "Open new file",
+    "uploadInfo": "Upload information",
+    "uploaded": "Uploaded",
+    "fileMetadata": "File metadata",
+    "duration": "Duration",
+    "sampleRate": "Sample rate",
+    "channels": "Channels",
+    "bitrate": "Bitrate",
+    "size": "Size",
+    "type": "Type",
+    "description": "Description",
+    "version": "Version",
+    "mono": "Mono",
+    "stereo": "Stereo"
   },
   "comments": {
     "title": "Comments",
@@ -321,7 +406,25 @@
     "saving": "Saving...",
     "saveChanges": "Save changes",
     "sidebar": "Sidebar",
-    "toggleSidebar": "Toggle Sidebar"
+    "toggleSidebar": "Toggle Sidebar",
+    "lastUpdate": "Last update",
+    "searchActivity": "Search activity...",
+    "searchFiles": "Search files...",
+    "searchComments": "Search comments...",
+    "newestFirst": "Newest first",
+    "oldestFirst": "Oldest first",
+    "nameAZ": "Name A-Z",
+    "addComment": "Add Comment",
+    "uploadFiles": "Upload Files",
+    "newVersion": "New Version",
+    "createNewVersion": "Create new version",
+    "sortActivity": "Sort activity",
+    "sortFiles": "Sort files",
+    "sortComments": "Sort comments",
+    "teamMember": "Team member",
+    "projectOwner": "Project Owner",
+    "deleteFileConfirm": "Delete this file?",
+    "comingSoon": "Coming soon"
   },
   "dashboard": {
     "title": "Dashboard",

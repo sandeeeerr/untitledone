@@ -142,7 +142,7 @@ export default function ProjectActivity({ projectId, query, sortBy = 'newest', o
         <Button asChild variant="ghost" size="sm" className="h-auto py-1 px-2 text-xs gap-1.5">
           <Link href={href}>
             {icon ?? <FileIcon className="h-3.5 w-3.5" />}
-            <span>{label ?? 'Toon bestand'}</span>
+            <span>{label ?? t('viewFile')}</span>
           </Link>
         </Button>
       </div>

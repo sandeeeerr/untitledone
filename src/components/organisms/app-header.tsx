@@ -7,12 +7,14 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { cn } from "@/lib/utils";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { User2, Monitor, LogOut } from "lucide-react";
-import UserAvatar from "@/components/atoms/user-avatar";
+import ModeToggle from "@/components/molecules/mode-toggle";
+import LanguageToggle from "@/components/molecules/language-toggle";
 import { useProfile } from "@/lib/api/queries";
 import { useState } from "react";
 import { SettingsModal } from "@/components/molecules/settings-modal";
-import supabaseClient from "@/lib/supabase-client";
+import { useTheme } from "next-themes";
+import { setLanguageCookie } from "@/lib/cookies";
+import { useRouter } from "next/navigation";
 
 export function AppHeader({
   containerClassName,
@@ -32,17 +34,16 @@ export function AppHeader({
   const tActions = useTranslations("actions");
   const t = useTranslations("common");
   const [showSettings, setShowSettings] = useState(false);
+  const { theme, setTheme } = useTheme();
+  const router = useRouter();
 
   const innerBase = fullWidth
     ? "w-full flex h-16 items-center justify-between"
     : "container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between";
 
-  const onLogout = async () => {
-    const { error } = await supabaseClient.auth.signOut();
-    if (error) {
-      alert(error.message);
-    }
-    window.location.reload();
+  const onLanguageChange = (locale: string) => {
+    setLanguageCookie(locale);
+    router.refresh();
   };
 
   return (
@@ -53,53 +54,9 @@ export function AppHeader({
             <SidebarTrigger className="md:hidden h-8 w-8 rounded-md hover:bg-sidebar-accent hover:text-sidebar-accent-foreground outline-none ring-sidebar-ring focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0" />
           ) : null}
         </div>
-        <nav className="flex items-center gap-4">
-          {currentUser ? (
-            <>
-              <Button variant="ghost" asChild>
-                <Link href="/dashboard">{tLanding("nav.dashboard")}</Link>
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button aria-label={t('userMenu')} className="rounded-full">
-                    <UserAvatar
-                      className="h-9 w-9 border"
-                      name={profile?.display_name || null}
-                      username={profile?.username || null}
-                      userId={currentUser.id}
-                      src={profile?.avatar_url || null}
-                    />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem asChild>
-                    <Link href={profile?.username ? `/u/${profile.username}` : "/dashboard"}>
-                      <User2 className="h-[1.1rem] w-[1.1rem]" />
-                      <span className="ml-2">{tNav("profile")}</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setShowSettings(true)}>
-                    <Monitor className="h-[1.1rem] w-[1.1rem]" />
-                    <span className="ml-2">{tActions("openSettings")}</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={onLogout}>
-                    <LogOut className="h-[1.1rem] w-[1.1rem]" />
-                    <span className="ml-2">{tActions("logout")}</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <SettingsModal open={showSettings} onOpenChange={setShowSettings} />
-            </>
-          ) : (
-            <>
-              <Button variant="ghost" asChild>
-                <Link href="/auth/login">{tLanding("nav.login")}</Link>
-              </Button>
-              <Button asChild>
-                <Link href="/auth/register">{tLanding("nav.signup")}</Link>
-              </Button>
-            </>
-          )}
+        <nav className="flex items-center gap-2">
+          <ModeToggle />
+          <LanguageToggle />
         </nav>
       </div>
     </header>

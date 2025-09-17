@@ -417,6 +417,20 @@ export async function getProjectActivity(projectId: string): Promise<ProjectActi
   return (await res.json()) as ProjectActivityVersion[];
 }
 
+export async function getProjectsLastActivity(ids: string[]): Promise<Record<string, string>> {
+  const res = await fetch('/api/projects/last-activity', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ids }),
+  })
+  if (!res.ok) {
+    let message = 'Failed to fetch last activity'
+    try { const body = await res.json(); if (body?.error) message = body.error as string } catch {}
+    throw new Error(message)
+  }
+  return (await res.json()) as Record<string, string>
+}
+
 export async function createFeedbackChange(projectId: string, versionId: string, description?: string): Promise<{ id: string; version_id: string }> {
   const res = await fetch(`/api/projects/${projectId}/activity`, {
     method: "POST",

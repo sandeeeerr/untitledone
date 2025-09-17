@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
@@ -33,6 +33,22 @@ export default function CreateVersionDialog({ projectId, trigger, onVersionCreat
 	const createVersion = useCreateProjectVersion(projectId)
 	const { data: existingVersions } = useProjectVersions(projectId)
 	const hasExistingVersions = (existingVersions?.length ?? 0) > 0
+
+  // Lock version type after first version: use the oldest version's type
+  const lockedVersionType: 'semantic' | 'date' | 'custom' | null = (() => {
+    if (!hasExistingVersions) return null
+    const sorted = [...(existingVersions ?? [])].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+    const v = sorted[0]
+    const vt = (v.version_type as 'semantic' | 'date' | 'custom')
+    return vt
+  })()
+
+  // Ensure version type matches locked type when dialog opens or versions load
+  useEffect(() => {
+    if (open && lockedVersionType) {
+      setVersionType(lockedVersionType)
+    }
+  }, [open, lockedVersionType])
 
 	const handleCreate = async () => {
 		if (!description.trim()) {
@@ -137,26 +153,36 @@ export default function CreateVersionDialog({ projectId, trigger, onVersionCreat
 				</DialogHeader>
 
 				<div className="space-y-4">
-					{/* Version Type Selection */}
-					<div className="space-y-2">
-						<Label>Version Type</Label>
-						<Select value={versionType} onValueChange={(value: 'semantic' | 'date' | 'custom') => setVersionType(value)}>
-							<SelectTrigger>
-								<SelectValue />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="semantic">Semantic (v1.0, v2.0)</SelectItem>
-								<SelectItem value="date">Date-based (21/08/2024)</SelectItem>
-								<SelectItem value="custom">Custom name</SelectItem>
-							</SelectContent>
-						</Select>
-						<p className="text-xs text-muted-foreground">
-							{getVersionTypeDescription(versionType)}
-						</p>
-					</div>
+          {/* Version Type Selection (locked after first version) */}
+          {!lockedVersionType ? (
+            <div className="space-y-2">
+              <Label>Version Type</Label>
+              <Select value={versionType} onValueChange={(value: 'semantic' | 'date' | 'custom') => setVersionType(value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="semantic">Semantic (v1.0, v2.0)</SelectItem>
+                  <SelectItem value="date">Date-based (21/08/2024)</SelectItem>
+                  <SelectItem value="custom">Custom name</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {getVersionTypeDescription(versionType)}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              <Label>Version Type</Label>
+              <div className="inline-flex items-center rounded border px-2 py-1 text-xs capitalize text-muted-foreground">
+                {lockedVersionType}
+              </div>
+              <p className="text-xs text-muted-foreground">Fixed for this project.</p>
+            </div>
+          )}
 
-					{/* Custom Version Name (only for custom type) */}
-					{versionType === 'custom' && (
+          {/* Custom Version Name (only for custom type) */}
+          {versionType === 'custom' && (
 						<div className="space-y-2">
 							<Label htmlFor="custom-version-name">Version Name</Label>
 							<Input
@@ -188,8 +214,8 @@ export default function CreateVersionDialog({ projectId, trigger, onVersionCreat
 						/>
 					</div>
 
-					{/* Start Options (only show when there is at least one existing version) */}
-					{hasExistingVersions && (
+          {/* Start Options (only show when there is at least one existing version) */}
+          {hasExistingVersions && (
 						<div className="space-y-2">
 							<Label>Start with</Label>
 							<RadioGroup value={startOption} onValueChange={(value: 'fresh' | 'copy' | 'select') => setStartOption(value)}>
