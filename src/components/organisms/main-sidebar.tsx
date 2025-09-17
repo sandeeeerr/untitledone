@@ -11,24 +11,21 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarGroupAction,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { Logo } from "@/components/ui/logo"
 import {
   Home,
-  ListChecksIcon as ListCheck,
   FolderClosed,
-  Compass,
-  TrendingUp,
-  Files,
-  ActivityIcon,
-  CheckSquare,
+  Plus,
   type LucideIcon,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { useRecentProjects } from "@/lib/api/queries"
+import { useProfile, useRecentProjects } from "@/lib/api/queries"
+import { UserAvatar } from "@/components/atoms/user-avatar"
 
 // Menu items
 const items: Array<{
@@ -36,11 +33,6 @@ const items: Array<{
   url: string
   icon: LucideIcon
 }> = [
-  {
-    titleKey: "navigation.todos",
-    url: "/todos",
-    icon: ListCheck,
-  },
   {
     titleKey: "navigation.projects",
     url: "/projects",
@@ -51,7 +43,8 @@ const items: Array<{
 export default function MainSidebar() {
   const pathname = usePathname()
   const t = useTranslations()
-  const { data: recent } = useRecentProjects(4)
+  const { data: recent } = useRecentProjects(6)
+  const { data: profile } = useProfile()
 
   return (
     <Sidebar collapsible="icon" className="data-[state=collapsed]:w-16">
@@ -76,23 +69,16 @@ export default function MainSidebar() {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton disabled>
-                  <TrendingUp />
-                  <span>{t("navigation.popular")}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton disabled>
-                  <Compass />
-                  <span>{t("navigation.explore")}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
         <SidebarGroup>
           <SidebarGroupLabel className="data-[state=collapsed]:sr-only">{t("navigation.mainMenu")}</SidebarGroupLabel>
+          <SidebarGroupAction asChild>
+            <Link href="/projects/new" aria-label={t("projects.new.title")}>
+              <Plus />
+            </Link>
+          </SidebarGroupAction>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
@@ -105,24 +91,6 @@ export default function MainSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-              <SidebarMenuItem>
-                <SidebarMenuButton disabled>
-                  <Files />
-                  <span>{t("navigation.files")}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton disabled>
-                  <ActivityIcon />
-                  <span>{t("navigation.activity")}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton disabled>
-                  <CheckSquare />
-                  <span>{t("navigation.tasks")}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -144,7 +112,25 @@ export default function MainSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter />
+      <SidebarFooter>
+        {profile?.username && (
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href={`/u/${profile.username}`}>
+                  <UserAvatar
+                    name={profile.display_name ?? profile.username}
+                    username={profile.username}
+                    userId={profile.id}
+                    src={profile.avatar_url}
+                  />
+                  <span className="truncate">{profile.display_name ?? profile.username}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        )}
+      </SidebarFooter>
     </Sidebar>
   )
 }
