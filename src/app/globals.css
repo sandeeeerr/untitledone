@@ -87,3 +87,8 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* Card header-aware content spacing without JS/context */
+.card:has(.card-header) .card-content {
+  padding-top: 0;
+}

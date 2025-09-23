@@ -16,9 +16,7 @@
     "welcome": "Welkom terug, {email}",
     "description": "Lorem ipsum dolor, sit amet consectetur adipisicing elit. Dignissimos atque nisi necessitatibus neque voluptates libero aperiam nam repellat quam, ab perferendis cum animi repellendus ratione eius dolores et iure rerum!"
   },
-  "common": {
-    "logo": "Logo"
-  },
+  
   "navigation": {
     "home": "Home",
     "dashboard": "Dashboard",
@@ -127,15 +125,29 @@
     "noGenre": "Geen genre",
     "new": {
       "title": "Nieuw Project",
+      "ui": {
+        "basicsTitle": "Basisgegevens",
+        "basicsHelp": "Kies een duidelijke naam. Je kunt later meer details toevoegen.",
+        "visibilityTitle": "Zichtbaarheid",
+        "visibilityHelp": "Bepaal wie het project kan zien en of downloads zijn toegestaan.",
+        "detailsTitle": "Details",
+        "detailsHelp": "Geef een korte beschrijving voor context.",
+        "advancedTitle": "Geavanceerd",
+        "advancedHelp": "Optionele metadata om samenwerking te verbeteren (tags, DAW, plugins).",
+        "showMore": "Meer opties tonen",
+        "hideAdvanced": "Minder opties tonen"
+      },
       "fields": {
         "name": {
           "label": "Naam",
-          "placeholder": "Projectnaam"
+          "placeholder": "Projectnaam",
+          "help": "Kies een duidelijke naam. Je kunt later meer details toevoegen."
         },
         "description": {
           "label": "Beschrijving",
           "placeholder": "Beschrijf je project",
-          "help": "Optioneel. Maximaal 2000 karakters."
+          "help": "Optioneel. Maximaal 2000 karakters.",
+          "shortHelp": "Korte beschrijving (optioneel)."
         },
         "tags": {
           "label": "Tags",
@@ -275,6 +287,7 @@
       "oldestFirst": "Oudste eerst",
       "nameAZ": "Naam A-Z",
       "newVersion": "Nieuwe versie",
+      "createNewVersion": "Nieuwe versie aanmaken",
       "uploadFiles": "Bestanden uploaden",
       "addComment": "Opmerking toevoegen",
       "sortActivity": "Sorteer activiteit",
@@ -427,18 +440,28 @@
     "title": "Dashboard",
     "welcomeBack": "Welkom terug,",
     "developmentMessage": "UntitledOne is actief in ontwikkeling. We zijn blij dat je er bent — functies zullen snel verschijnen en evolueren. Bedankt dat je vroeg meedoet!",
-    "alpha": "Alpha",
-    "quickStart": "Snel starten",
-    "quickStartDescription": "Maak een nieuw project en nodig medewerkers uit om samen te werken.",
-    "createProject": "Project maken",
-    "viewProjects": "Projecten bekijken",
-    "whatToExpect": "Wat te verwachten",
-    "expectationDescription": "Uitnodigingen, teambeheer en samenwerkingstools worden gebouwd. Je zult mogelijk vaak veranderingen zien — we houden alles zo stabiel mogelijk.",
-    "features": {
-      "inviteTeammates": "Nodig teamgenoten uit voor je projecten",
-      "manageProjects": "Beheer projectdetails en zichtbaarheid", 
-      "moreFeatures": "Meer samenwerkingsfuncties komen binnenkort"
-    }
+    "betaNote": "Dit is een beta. Ideeën en bugmeldingen zijn meer dan welkom.",
+    "contributeLink": "Deel een idee of meld een bug",
+    "beta": "Beta",
+    "editingOn": "Bewerken AAN",
+    "editingOff": "Bewerken UIT",
+    "dragNewWidget": "Sleep nieuwe widget",
+    "dropToRemove": "Sleep hier om te verwijderen",
+    "editDashboard": "Dashboard bewerken",
+    "addProject": "Project toevoegen",
+    "recentProjects": "Recente projecten",
+    "pinnedProjects": "Vastgezette projecten",
+    "lastActivity": "Laatste activiteit",
+    "lastUpdatedShort": "Bijgewerkt",
+    "open": "Openen",
+    "viewAllProjects": "Alle projecten bekijken",
+    "pendingInvitations": "Openstaande uitnodigingen",
+    "noInvitations": "Geen uitnodigingen",
+    "activityDigest": "Activiteitsoverzicht",
+    "noActivityDigest": "Geen recente activiteit",
+    "unread": "Ongelezen",
+    "noRecentProjects": "Geen recente projecten.",
+      "noPins": "Nog geen vastgezette projecten. Zet projecten vast om snel toegang te hebben."
   },
   "landing": {
     "nav": {
