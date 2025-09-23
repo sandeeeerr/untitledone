@@ -451,6 +451,42 @@ export type Database = {
           },
         ]
       }
+      project_pins: {
+        Row: {
+          created_at: string
+          id: number
+          project_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          project_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          project_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_pins_project_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "_project_visibility"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_pins_project_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_versions: {
         Row: {
           created_at: string

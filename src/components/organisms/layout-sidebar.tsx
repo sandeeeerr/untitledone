@@ -9,6 +9,7 @@ import { DynamicBreadcrumbs } from '../molecules/dynamic-breadcrumbs';
 import { PageTitle } from '../atoms/page-title';
 import { BreadcrumbProvider } from '../atoms/breadcrumb-context';
 import { useEffect, useState } from 'react';
+import { useProject } from '@/lib/api/queries';
 
 export default function LayoutSidebar({
   children,
@@ -19,6 +20,8 @@ export default function LayoutSidebar({
   title,
   titleActions,
   breadcrumbLabelOverride,
+  projectBreadcrumbLabelOverride,
+  projectIdForBreadcrumb,
 }: {
   children: React.ReactNode;
   className?: string;
@@ -28,10 +31,13 @@ export default function LayoutSidebar({
   title?: React.ReactNode;
   titleActions?: React.ReactNode;
   breadcrumbLabelOverride?: string;
+  projectBreadcrumbLabelOverride?: string;
+  projectIdForBreadcrumb?: string;
 }) {
   const currentUser = useCurrentUser();
   const sidebarOpen = isOpen ?? (currentUser.data?.id || currentUser.isLoading ? undefined : false);
   const [sidebarWidthPx, setSidebarWidthPx] = useState(0);
+  const { data: breadcrumbProject } = useProject(projectIdForBreadcrumb || '', undefined);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -90,7 +96,7 @@ export default function LayoutSidebar({
             <div className="pb-3 min-w-0">
               <PageTitle title={title} actions={titleActions} />
               <div className="mt-4">
-                <BreadcrumbProvider value={{ currentPageLabel: breadcrumbLabelOverride }}>
+                <BreadcrumbProvider value={{ currentPageLabel: breadcrumbLabelOverride, projectLabelOverride: projectBreadcrumbLabelOverride || breadcrumbProject?.name }}>
                   <DynamicBreadcrumbs />
                 </BreadcrumbProvider>
               </div>

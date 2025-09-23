@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { SupabaseClient } from "@supabase/supabase-js";
 import createServerClient from "@/lib/supabase/server";
-import { getSignedDownloadUrl, uploadProjectObject, removeObject } from "@/lib/supabase/storage";
+import { getSignedDownloadUrl, uploadProjectObject, removeObject, willExceedUserQuota } from "@/lib/supabase/storage";
+import { getMaxUploadFileBytes } from "@/lib/env";
 
 // Type for file metadata
 interface FileMetadata {
@@ -266,13 +267,34 @@ export async function POST(
       const name = newFile.name || file.filename || "file";
       const type = newFile.type || (file as ProjectFileWithMetadata).file_type || "application/octet-stream";
       const size = Number(newFile.size || 0);
-      const maxBytes = 200 * 1024 * 1024; // 200MB
+      const maxBytes = getMaxUploadFileBytes();
       const allowed = allowMimeOrExt.some((re) => re.test(type) || re.test(name));
       if (!allowed) {
         return NextResponse.json({ error: "Unsupported file type" }, { status: 415 });
       }
       if (size <= 0 || size > maxBytes) {
         return NextResponse.json({ error: "File too large" }, { status: 413 });
+      }
+
+      // Quota check before uploading replacement
+      {
+        const incomingBytes = size;
+        const { allowed, maxBytes: quotaMax, usedBytes } = await willExceedUserQuota(user.id, incomingBytes);
+        if (!allowed) {
+          return NextResponse.json(
+            {
+              error: "Storage quota exceeded",
+              code: "QUOTA_EXCEEDED",
+              details: {
+                maxBytes: quotaMax,
+                usedBytes,
+                incomingBytes,
+                remainingBytes: Math.max(0, quotaMax - usedBytes),
+              },
+            },
+            { status: 413 }
+          );
+        }
       }
 
       // Upload new object under a fresh key
