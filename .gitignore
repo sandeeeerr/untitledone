@@ -43,3 +43,6 @@ yarn-error.log*
 next-env.d.ts
 .vscode
 *storybook.log
+
+.env.local
+.env.production

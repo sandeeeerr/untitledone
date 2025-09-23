@@ -20,8 +20,42 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: 'UntitledOne',
-  description: 'Modern web application platform',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
+  title: {
+    default: 'UntitledOne – Music collaboration platform',
+    template: '%s · UntitledOne',
+  },
+  description: 'Open-source platform for audio creatives to collaborate remotely with file sharing, time-based feedback, and lightweight project management.',
+  applicationName: 'UntitledOne',
+  authors: [{ name: 'UntitledOne' }],
+  keywords: ['music collaboration', 'audio', 'file sharing', 'feedback', 'versions', 'producers', 'djs', 'audio creatives'],
+  openGraph: {
+    type: 'website',
+    siteName: 'UntitledOne',
+    title: 'UntitledOne – Music collaboration platform',
+    description: 'Collaborate remotely with file sharing, time-based feedback, and project management – built for audio creatives.',
+    url: '/',
+    images: [
+      {
+        url: '/images/screenshot.png',
+        width: 1200,
+        height: 630,
+        alt: 'UntitledOne app preview',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'UntitledOne – Music collaboration platform',
+    description: 'Collaborate remotely with file sharing, time-based feedback, and project management – built for audio creatives.',
+    images: ['/images/screenshot.png'],
+  },
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+  },
 };
 
 export default async function RootLayout({
