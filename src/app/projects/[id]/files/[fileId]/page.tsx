@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import FileDetailClient from "./file-detail-client";
 import LayoutSidebar from "@/components/organisms/layout-sidebar";
-import { getProject, getProjectFileDetail } from "@/lib/api/projects";
+import { getProjectFileDetail } from "@/lib/api/projects";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -19,24 +19,15 @@ export default async function FileDetailPage({ params }: PageProps) {
   }
 
   let fileTitle = "Bestand";
-  let projectName: string | undefined = undefined;
   try {
     const detail = await getProjectFileDetail(projectId, fileId);
     fileTitle = detail.filename || fileTitle;
-    projectName = detail.project?.name || projectName;
-  } catch {}
-
-  try {
-    const project = await getProject(projectId);
-    projectName = project?.name;
   } catch {}
 
   return (
     <LayoutSidebar 
       title={fileTitle}
       breadcrumbLabelOverride={fileTitle}
-      projectBreadcrumbLabelOverride={projectName}
-      projectIdForBreadcrumb={projectId}
       titleActions={
         <Button variant="outline" size="sm" asChild>
           <Link href={`/projects/${projectId}`}>

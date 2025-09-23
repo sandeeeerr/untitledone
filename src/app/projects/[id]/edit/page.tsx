@@ -64,9 +64,9 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
 				downloads_enabled: Boolean(values.downloads_enabled),
 				daw_name: values.daw_name || undefined,
 				daw_version: values.daw_version || undefined,
-				plugins: Array.isArray(values.plugins) && values.plugins.length
-					? values.plugins.map(item => {
-						const trimmed = String(item).trim()
+				plugins: values.plugins
+					? values.plugins.split(',').map(item => {
+						const trimmed = item.trim()
 						const atParts = trimmed.split('@')
 						if (atParts.length === 2) return { name: atParts[0].trim(), version: atParts[1].trim() }
 						const colonParts = trimmed.split(':')
@@ -130,8 +130,9 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
 		downloads_enabled: project.downloads_enabled,
 		daw_name: (project.daw_info as { name?: string; version?: string })?.name ?? '',
 		daw_version: (project.daw_info as { name?: string; version?: string })?.version ?? '',
-	plugins: (project.plugins_used || [])
-			.map(p => (p.version ? `${p.name}@${p.version}` : p.name)),
+		plugins: (project.plugins_used || [])
+			.map(p => (p.version ? `${p.name}@${p.version}` : p.name))
+			.join(', '),
 	}
 
 

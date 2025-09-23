@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { SupabaseClient } from "@supabase/supabase-js";
 import createServerClient from "@/lib/supabase/server";
-import { uploadProjectObject, willExceedUserQuota } from "@/lib/supabase/storage";
-import { getMaxUploadFileBytes } from "@/lib/env";
+import { uploadProjectObject } from "@/lib/supabase/storage";
 
 // Type for file metadata
 interface FileMetadata {
@@ -63,41 +62,11 @@ export async function POST(
     if (!(file instanceof File)) {
       return NextResponse.json({ error: "Missing file" }, { status: 400 });
     }
-
-    // Per-file size guard (configurable)
-    {
-      const maxBytes = getMaxUploadFileBytes();
-      const size = Number(file.size || 0);
-      if (size <= 0 || size > maxBytes) {
-        return NextResponse.json({ error: "File too large", code: "FILE_TOO_LARGE", details: { maxBytes, size } }, { status: 413 });
-      }
-    }
     const description = (form.get("description") as string | null) || undefined;
     const versionIdRaw = (form.get("versionId") as string | null) || undefined;
     const meta = metaSchema.safeParse({ description, versionId: versionIdRaw });
     if (!meta.success) {
       return NextResponse.json({ error: "Invalid input", details: meta.error.issues }, { status: 400 });
-    }
-
-    // Quota check before uploading
-    {
-      const incomingBytes = Number(file.size || 0);
-      const { allowed, maxBytes, usedBytes } = await willExceedUserQuota(user.id, incomingBytes);
-      if (!allowed) {
-        return NextResponse.json(
-          {
-            error: "Storage quota exceeded",
-            code: "QUOTA_EXCEEDED",
-            details: {
-              maxBytes,
-              usedBytes,
-              incomingBytes,
-              remainingBytes: Math.max(0, maxBytes - usedBytes),
-            },
-          },
-          { status: 413 }
-        );
-      }
     }
 
     // Upload to Supabase Storage (key: projectId/<uuid>-filename)

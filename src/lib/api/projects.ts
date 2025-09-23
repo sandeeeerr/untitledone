@@ -431,27 +431,6 @@ export async function getProjectsLastActivity(ids: string[]): Promise<Record<str
   return (await res.json()) as Record<string, string>
 }
 
-// Storage usage (current user)
-export type StorageUsage = {
-    bytesUsed: number;
-    bytesMax: number;
-    bytesRemaining: number;
-    mbUsed: number;
-    mbMax: number;
-    mbRemaining: number;
-    percentUsed: number;
-}
-
-export async function getMyStorageUsage(): Promise<StorageUsage> {
-    const res = await fetch(`/api/storage/usage`, { method: 'GET' });
-    if (!res.ok) {
-        let message = 'Failed to load storage usage';
-        try { const body = await res.json(); if (body?.error) message = body.error as string } catch {}
-        throw new Error(message);
-    }
-    return (await res.json()) as StorageUsage;
-}
-
 export async function createFeedbackChange(projectId: string, versionId: string, description?: string): Promise<{ id: string; version_id: string }> {
   const res = await fetch(`/api/projects/${projectId}/activity`, {
     method: "POST",

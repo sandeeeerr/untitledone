@@ -106,26 +106,16 @@ export default function LandingPage() {
             </Button>
           )}
         </div>
-        {/* Mockup screenshot (theme-aware) */}
+        {/* Mockup screenshot */}
         <div className="mt-16  hidden sm:block">
           <div className="mx-auto max-w-6xl">
-            {/* Light theme image */}
             <Image
-              src="/images/ss_light.png"
+              src="/images/screenshot.png"
               alt="UntitledOne dashboard with files and feedback"
               width={2000}
               height={1125}
               priority
-              className="w-full h-auto dark:hidden"
-            />
-            {/* Dark theme image */}
-            <Image
-              src="/images/ss_dark.png"
-              alt="UntitledOne dashboard with files and feedback"
-              width={2000}
-              height={1125}
-              priority
-              className="w-full h-auto hidden dark:block"
+              className="w-full h-auto"
             />
           </div>
         </div>

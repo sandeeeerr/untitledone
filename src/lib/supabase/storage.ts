@@ -1,5 +1,4 @@
 import createServerClient from "./server";
-import { getMaxUserStorageBytes } from "../env";
 
 export async function uploadProjectObject(opts: { projectId: string; file: File; path?: string }) {
   const supabase = await createServerClient();
@@ -31,34 +30,6 @@ export async function replaceObject(path: string, file: File) {
     .from("project-files")
     .upload(path, file, { upsert: true, cacheControl: "3600", contentType: file.type || "application/octet-stream" });
   if (error) throw new Error(error.message);
-}
-
-/**
- * Compute current total bytes used by a user across all their uploaded project files.
- * Based on authoritative `public.project_files` table rows (hard-deleted on removal).
- */
-export async function getUserUsedBytes(userId: string): Promise<number> {
-  const supabase = await createServerClient();
-  // Aggregate sum of file_size for rows uploaded_by = userId
-  const { data, error } = await supabase
-    .from("project_files")
-    .select("file_size", { count: "exact" })
-    .eq("uploaded_by", userId);
-  if (error) throw new Error(error.message);
-  const rows = Array.isArray(data) ? data : [];
-  let total = 0;
-  for (const row of rows as Array<{ file_size: number }>) {
-    const size = Number(row.file_size || 0);
-    if (!Number.isNaN(size) && size > 0) total += size;
-  }
-  return total;
-}
-
-export async function willExceedUserQuota(userId: string, incomingBytes: number): Promise<{ allowed: boolean; maxBytes: number; usedBytes: number }>{
-  const maxBytes = getMaxUserStorageBytes();
-  const usedBytes = await getUserUsedBytes(userId);
-  const allowed = usedBytes + Math.max(0, Number(incomingBytes || 0)) <= maxBytes;
-  return { allowed, maxBytes, usedBytes };
 }
 
 

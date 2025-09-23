@@ -4,7 +4,6 @@ import React, { createContext, useContext } from 'react'
 
 type BreadcrumbOverride = {
 	currentPageLabel?: string
-	projectLabelOverride?: string
 }
 
 const BreadcrumbContext = createContext<BreadcrumbOverride>({})

@@ -33,30 +33,6 @@
     "todos": "Tâches",
     "profile": "Profil"
   },
-  "dashboard": {
-    "title": "Tableau de bord",
-    "editingOn": "Édition ACTIVÉE",
-    "editingOff": "Édition DÉSACTIVÉE",
-    "dragNewWidget": "Glissez un nouveau widget",
-    "dropToRemove": "Déposer pour supprimer",
-    "editDashboard": "Modifier le tableau de bord",
-    "betaNote": "Ceci est une bêta. Les idées et les rapports de bugs sont les bienvenus.",
-    "contributeLink": "Partager une idée ou signaler un bug",
-    "addProject": "Ajouter un projet",
-    "recentProjects": "Projets récents",
-    "pinnedProjects": "Projets épinglés",
-    "lastActivity": "Dernière activité",
-    "lastUpdatedShort": "Mis à jour",
-    "open": "Ouvrir",
-    "viewAllProjects": "Voir tous les projets",
-    "pendingInvitations": "Invitations en attente",
-    "noInvitations": "Aucune invitation",
-    "activityDigest": "Récap d’activité",
-    "noActivityDigest": "Aucune activité récente",
-    "unread": "Non lu",
-    "noRecentProjects": "Aucun projet récent.",
-    "noPins": "Aucun projet épinglé pour l’instant. Épingle des projets pour y accéder rapidement."
-  },
   "settings": {
     "title": "Paramètres",
     "theme": {

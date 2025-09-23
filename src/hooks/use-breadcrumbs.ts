@@ -26,7 +26,7 @@ export function useBreadcrumbs(): BreadcrumbItem[] {
     const username = segments[1];
     return [
       { label: t('dashboard'), href: '/dashboard' },
-      { label: t('users'), href: '#' },
+      { label: 'User', href: '/u' },
       { label: username, isCurrentPage: true }
     ];
   }
@@ -64,7 +64,7 @@ export function useBreadcrumbs(): BreadcrumbItem[] {
       // /projects/[id] -> Project page
       if (segments.length === 2) {
         breadcrumbs.push({ 
-          label: override.projectLabelOverride || override.currentPageLabel || `Project ${projectId}`, 
+          label: override.currentPageLabel || `Project ${projectId}`, 
           isCurrentPage: true 
         });
         return breadcrumbs;
@@ -74,7 +74,7 @@ export function useBreadcrumbs(): BreadcrumbItem[] {
       // Example: /projects/[id]/files/[fileId]
       // Project crumb (link)
       breadcrumbs.push({ 
-        label: override.projectLabelOverride || `Project ${projectId}`, 
+        label: `Project ${projectId}`, 
         href: `/projects/${projectId}` 
       });
 

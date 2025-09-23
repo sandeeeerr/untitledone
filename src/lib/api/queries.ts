@@ -10,7 +10,7 @@ import {
 } from "./todos";
 import { useToast } from "@/hooks/use-toast";
 import { getCurrentProfile, updateCurrentProfile, type Profile, type ProfileUpdate, deleteCurrentProfile } from "./profiles";
-import { getProjects, getProject, type Project, uploadProjectFile, getProjectFiles, getProjectFileDetail, type ProjectFile, type ProjectFileDetail, type UploadFileInput, createProjectVersion, getProjectVersions, type ProjectVersion, type CreateVersionInput, getProjectActivity, type ProjectActivityVersion, createFeedbackChange, updateFeedbackChange, deleteFeedbackChange, getProjectsLastActivity, getMyStorageUsage, type StorageUsage } from "./projects";
+import { getProjects, getProject, type Project, uploadProjectFile, getProjectFiles, getProjectFileDetail, type ProjectFile, type ProjectFileDetail, type UploadFileInput, createProjectVersion, getProjectVersions, type ProjectVersion, type CreateVersionInput, getProjectActivity, type ProjectActivityVersion, createFeedbackChange, updateFeedbackChange, deleteFeedbackChange, getProjectsLastActivity } from "./projects";
 import { listPins, pinProject, unpinProject, type ProjectPin } from "./pins";
 import { createProjectInvitation, listProjectInvitations, type ProjectInvitation, type ProjectInvitationInsert, acceptInvitation, listProjectMembers, type ProjectMember } from "./projects";
 
@@ -188,16 +188,6 @@ export function useProjectsLastActivity(ids: string[], options?: { enabled?: boo
         enabled: (options?.enabled ?? ids.length > 0),
         staleTime: options?.staleTime ?? 60 * 1000,
     })
-}
-
-// Storage usage
-export function useMyStorageUsage(options?: { enabled?: boolean; staleTime?: number }) {
-    return useQuery<StorageUsage>({
-        queryKey: ["storage", "usage", "me"],
-        queryFn: () => getMyStorageUsage(),
-        staleTime: options?.staleTime ?? 30 * 1000,
-        enabled: options?.enabled ?? true,
-    });
 }
 
 // Project Members & Invitations
