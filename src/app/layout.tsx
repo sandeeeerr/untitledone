@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     url: '/',
     images: [
       {
-        url: '/images/screenshot.png',
+        url: '/images/ss_light.png',
         width: 1200,
         height: 630,
         alt: 'UntitledOne app preview',
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'UntitledOne – Music collaboration platform',
     description: 'Collaborate remotely with file sharing, time-based feedback, and project management – built for audio creatives.',
-    images: ['/images/screenshot.png'],
+    images: ['/images/ss_light.png'],
   },
   icons: {
     icon: [
