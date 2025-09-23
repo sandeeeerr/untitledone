@@ -128,15 +128,29 @@
     "noGenre": "No genre",
     "new": {
       "title": "New Project",
+      "ui": {
+        "basicsTitle": "Basics",
+        "basicsHelp": "Pick a clear project name. You can add details later.",
+        "visibilityTitle": "Visibility",
+        "visibilityHelp": "Choose who can see the project and whether downloads are allowed.",
+        "detailsTitle": "Details",
+        "detailsHelp": "Provide a short description for context.",
+        "advancedTitle": "Advanced",
+        "advancedHelp": "Optional metadata to improve collaboration (tags, DAW, plugins).",
+        "showMore": "Show more options",
+        "hideAdvanced": "Show fewer options"
+      },
       "fields": {
         "name": {
           "label": "Name",
-          "placeholder": "Project name"
+          "placeholder": "Project name",
+          "help": "Choose a clear name. You can add details later."
         },
         "description": {
           "label": "Description",
           "placeholder": "Describe your project",
-          "help": "Optional. Max 2000 characters."
+          "help": "Optional. Max 2000 characters.",
+          "shortHelp": "Write a short description (optional)."
         },
         "tags": {
           "label": "Tags",
@@ -430,18 +444,28 @@
     "title": "Dashboard",
     "welcomeBack": "Welcome back,",
     "developmentMessage": "UntitledOne is actively in development. We're excited you're here — features will appear and evolve rapidly. Thanks for joining early!",
-    "alpha": "Alpha",
-    "quickStart": "Quick start",
-    "quickStartDescription": "Create a new project and invite collaborators to start working together.",
-    "createProject": "Create project",
-    "viewProjects": "View projects",
-    "whatToExpect": "What to expect",
-    "expectationDescription": "Invitations, team management, and collaboration tools are being built. You might see changes frequently — we'll keep things as stable as possible.",
-    "features": {
-      "inviteTeammates": "Invite teammates to your projects",
-      "manageProjects": "Manage project details and visibility", 
-      "moreFeatures": "More collaboration features coming soon"
-    }
+    "betaNote": "This is a beta. Ideas and bug reports are very welcome.",
+    "contributeLink": "Share ideas or report a bug",
+    "beta": "Beta",
+    "editingOn": "Editing ON",
+    "editingOff": "Editing OFF",
+    "dragNewWidget": "Drag new widget",
+    "dropToRemove": "Drop to remove",
+    "editDashboard": "Edit dashboard",
+    "addProject": "Add project",
+    "recentProjects": "Recent projects",
+    "pinnedProjects": "Pinned projects",
+    "lastActivity": "Last activity",
+    "lastUpdatedShort": "Updated",
+    "open": "Open",
+    "viewAllProjects": "View all projects",
+    "pendingInvitations": "Pending invitations",
+    "noInvitations": "No invitations",
+    "activityDigest": "Activity digest",
+    "noActivityDigest": "No recent activity",
+    "unread": "Unread",
+    "noRecentProjects": "No recent projects.",
+    "noPins": "No pinned projects yet. Pin projects to access them quickly."
   },
   "landing": {
     "nav": {

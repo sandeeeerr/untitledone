@@ -24,9 +24,9 @@ export default function NewProjectPage() {
 				downloads_enabled: Boolean(values.downloads_enabled),
 				daw_name: values.daw_name || undefined,
 				daw_version: values.daw_version || undefined,
-				plugins: values.plugins
-					? values.plugins.split(',').map(item => {
-						const trimmed = item.trim()
+				plugins: Array.isArray(values.plugins) && values.plugins.length
+					? values.plugins.map((item) => {
+						const trimmed = String(item).trim()
 						const atParts = trimmed.split('@')
 						if (atParts.length === 2) return { name: atParts[0].trim(), version: atParts[1].trim() }
 						const colonParts = trimmed.split(':')
@@ -55,6 +55,7 @@ export default function NewProjectPage() {
 							submittingLabel={t('actions.creating')} 
 							cancelLabel={t('actions.cancel')} 
 							onSubmit={onSubmit} 
+							compact 
 						/>
 					</CardContent>
 				</Card>

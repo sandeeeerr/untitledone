@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar"
+import { useMyStorageUsage } from "@/lib/api/queries"
 import supabaseClient from "@/lib/supabase-client"
 import Link from "next/link"
 
@@ -28,6 +29,7 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
+  const { data: usage } = useMyStorageUsage()
 
   const onLogout = async () => {
     await supabaseClient.auth.signOut()
@@ -90,10 +92,14 @@ export function NavUser({
             <div className="px-2 py-1.5">
               <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
                 <span>Storage</span>
-                <span>112MB / 500MB</span>
+                <span>
+                  {typeof usage?.mbUsed === "number" && typeof usage?.mbMax === "number"
+                    ? `${usage.mbUsed}MB / ${usage.mbMax}MB`
+                    : `-- / --`}
+                </span>
               </div>
               <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-                <div className="h-full bg-primary" style={{ width: `${Math.min(100, Math.round((112/500)*100))}%` }} />
+                <div className="h-full bg-primary" style={{ width: `${Math.min(100, usage?.percentUsed ?? 0)}%` }} />
               </div>
             </div>
           </DropdownMenuContent>
