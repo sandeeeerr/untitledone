@@ -240,6 +240,19 @@
         "forbidden": "Vous n'êtes pas autorisé à modifier ce projet."
       }
     },
+    "actions": {
+      "edit": "Modifier",
+      "invite": "Inviter",
+      "leave": "Quitter le projet",
+      "leaving": "Départ...",
+      "leaveProjectConfirm": "Êtes-vous sûr de vouloir quitter \"{projectName}\" ? Vous perdrez l'accès à tous les fichiers et activités du projet.",
+      "download": "Télécharger",
+      "replace": "Remplacer",
+      "delete": "Supprimer",
+      "back": "Retour",
+      "tryAgain": "Réessayer",
+      "backToProjects": "Retour aux projets"
+    },
     "delete": {
       "title": "Supprimer le projet",
       "description": "Êtes-vous sûr de vouloir supprimer ce projet ? Cette action ne peut pas être annulée.",

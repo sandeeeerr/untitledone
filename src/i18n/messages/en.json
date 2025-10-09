@@ -266,6 +266,9 @@
     "actions": {
       "edit": "Edit",
       "invite": "Invite",
+      "leave": "Leave project",
+      "leaving": "Leaving...",
+      "leaveProjectConfirm": "Are you sure you want to leave \"{projectName}\"? You will lose access to all project files and activity.",
       "download": "Download",
       "replace": "Replace",
       "delete": "Delete",

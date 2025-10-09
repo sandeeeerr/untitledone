@@ -223,6 +223,19 @@ export async function listProjectMembers(projectId: string): Promise<ProjectMemb
 	return (await res.json()) as ProjectMember[];
 }
 
+export async function leaveProject(projectId: string): Promise<{ success: boolean; project_id: string }> {
+	const res = await fetch(`/api/projects/${projectId}/leave`, { method: "POST" });
+	if (!res.ok) {
+		let message = "Failed to leave project";
+		try {
+			const body = await res.json();
+			if (body?.error) message = body.error as string;
+		} catch {}
+		throw new Error(message);
+	}
+	return (await res.json()) as { success: boolean; project_id: string };
+}
+
 // Files
 export type ProjectFile = {
 	id: string;

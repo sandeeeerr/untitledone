@@ -274,6 +274,9 @@
     "actions": {
       "edit": "Bewerken",
       "invite": "Uitnodigen",
+      "leave": "Project verlaten",
+      "leaving": "Verlaten...",
+      "leaveProjectConfirm": "Weet je zeker dat je \"{projectName}\" wilt verlaten? Je verliest toegang tot alle projectbestanden en activiteit.",
       "download": "Downloaden",
       "replace": "Vervangen",
       "delete": "Verwijderen",

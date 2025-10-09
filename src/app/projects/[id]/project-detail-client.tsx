@@ -6,11 +6,12 @@ import LayoutSidebar from '@/components/organisms/layout-sidebar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { FileAudio, Music, Settings, Tags, Wrench, UserPlus, Clock, MessageSquare, Upload, Plus, ArrowUpDown } from 'lucide-react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { FileAudio, Music, Settings, Tags, Wrench, UserPlus, Clock, MessageSquare, Upload, Plus, ArrowUpDown, LogOut } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useCurrentUser } from '@/hooks/use-current-user';
-import { useProject, useProjectActivity } from '@/lib/api/queries';
+import { useProject, useProjectActivity, useLeaveProject } from '@/lib/api/queries';
 import { type Project } from '@/lib/api/projects';
 
 import InviteDialog from '@/components/molecules/invite-dialog';
@@ -46,6 +47,7 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
   const { data: project, isLoading, error, refetch } = useProject(id, initialProject);
   const { data: activity } = useProjectActivity(id);
   const { data: members } = useProjectMembers(id);
+  const leaveProjectMutation = useLeaveProject();
   
   const [activeTab, setActiveTab] = useState<'activity' | 'files' | 'comments'>('activity');
   const [activityQuery, setActivityQuery] = useState<string>("");
@@ -73,6 +75,24 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
     // This will trigger a refetch of the project data
     refetch();
   }, [refetch]);
+
+  const handleLeaveProject = useCallback(async () => {
+    if (!project?.id) return;
+    
+    const confirmed = window.confirm(
+      t('actions.leaveProjectConfirm', { projectName: project.name })
+    );
+    
+    if (!confirmed) return;
+    
+    try {
+      await leaveProjectMutation.mutateAsync(project.id);
+      router.push('/projects');
+    } catch (error) {
+      // Error is handled by the mutation's onError
+      console.error('Failed to leave project:', error);
+    }
+  }, [project, leaveProjectMutation, router, t]);
 
   const lastActivityIso = React.useMemo(() => {
     if (!activity || activity.length === 0) return project?.updated_at ?? null;
@@ -126,6 +146,10 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
   }
 
   const displayName = truncateText(project.name, 80);
+  
+  // Check if current user is a member (collaborator) but not the owner
+  const isCollaborator = currentUser?.id && project?.owner_id !== currentUser.id && 
+    members?.some(m => m.user_id === currentUser.id);
 
   return (
     <LayoutSidebar
@@ -133,12 +157,12 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
       breadcrumbLabelOverride={project.name}
     >
       <div>
-        <div className="w-full grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="w-full grid grid-cols-1 lg:grid-cols-[1fr_320px] xl:grid-cols-[1fr_360px] gap-4 lg:gap-6">
           {/* Left column: overview + tabs + tab content */}
-          <div className="xl:col-span-2">
+          <div className="lg:col-span-1 xl:col-span-1">
             <div className="grid">
               {/* Project meta below title */}
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-3 sm:gap-4">
                 {/* Mobile/Tablet: visibility tag above title */}
                 <div className="flex items-center lg:hidden">
                   <Badge className={!project.is_private ? 'bg-green-600 hover:bg-green-700 text-white' : ''} variant={project.is_private ? 'secondary' : 'default'}>
@@ -146,10 +170,10 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                   </Badge>
                 </div>
                 {/* Title row: stack actions below on mobile */}
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2 lg:gap-3 min-w-0">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4 lg:gap-3 min-w-0">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className="flex items-center gap-2 min-w-0 max-w-full">
-                      <h2 className="text-2xl font-semibold leading-tight truncate overflow-hidden max-w-full" title={project.name}>{displayName}</h2>
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 max-w-full">
+                      <h2 className="text-xl sm:text-2xl font-semibold leading-tight truncate overflow-hidden max-w-full" title={project.name}>{displayName}</h2>
                       {/* Desktop: visibility tag next to title */}
                       <Badge className={`hidden lg:inline-flex ${!project.is_private ? 'bg-green-600 hover:bg-green-700 text-white' : ''}`} variant={project.is_private ? 'secondary' : 'default'}>
                         {project.is_private ? t('private') : t('public')}
@@ -157,8 +181,8 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                     </div>
                   </div>
                   {currentUser?.id && project?.owner_id === currentUser.id && (
-                    <div className="flex items-center gap-2 shrink-0 w-full lg:w-auto lg:justify-end flex-wrap mt-2 lg:mt-0">
-                      <Button size="sm" variant="outline" asChild>
+                    <div className="flex items-center gap-2 shrink-0 w-full md:w-auto md:justify-end mt-2 md:mt-0">
+                      <Button size="sm" variant="outline" asChild className="flex-1 sm:flex-none">
                         <Link href={`/projects/${project.id}/edit`}>
                           <Settings className="h-4 w-4" />
                           {t("actions.edit")}
@@ -167,12 +191,26 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                       <InviteDialog 
                         projectId={project.id} 
                         trigger={
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
                             <UserPlus className="h-4 w-4" />
                             {t("actions.invite")}
                           </Button>
                         } 
                       />
+                    </div>
+                  )}
+                  {isCollaborator && (
+                    <div className="flex items-center gap-2 shrink-0 w-full md:w-auto md:justify-end mt-2 md:mt-0">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={handleLeaveProject}
+                        disabled={leaveProjectMutation.isPending}
+                        className="flex-1 sm:flex-none text-destructive hover:text-destructive"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        {leaveProjectMutation.isPending ? t("actions.leaving") : t("actions.leave")}
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -184,96 +222,100 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                 </div>
               </div>
 
-              {/* Details (mobile-only, under overview) */}
-              <div className="xl:hidden">
-                <Card className="mt-2">
-                  <CardHeader className="p-4 md:p-6">
-                    <CardTitle className="text-base">{t("details.title")}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-4 md:p-6 space-y-6">
-                    {/* Project Description */}
-                    {project.description && (
-                      <div>
-                        <div className="text-sm text-muted-foreground mb-2">{t("details.description")}</div>
-                        <p className="text-sm leading-relaxed">{project.description}</p>
-                      </div>
-                    )}
-
-                    {(project.tags?.length ?? 0) > 0 && (
-                      <div>
-                        <div className="flex items-center gap-2 mb-2 text-sm font-medium">
-                          <Tags className="h-4 w-4" />
-                          <span>{t("details.tags")}</span>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {project.tags?.map((tag) => (
-                            <Badge key={tag} variant="secondary">{tag}</Badge>
-                          )) ?? null}
-                        </div>
-                      </div>
-                    )}
-
-                    {hasDAWInfo(project.daw_info) && (
-                      <div>
-                        <div className="text-sm text-muted-foreground">{t("details.daw")}</div>
-                        <div className="font-medium">
-                          {formatDAWInfo(project.daw_info)}
-                        </div>
-                      </div>
-                    )}
-
-                    {(project.plugins_used?.length ?? 0) > 0 && (
-                      <div>
-                        <div className="flex items-center gap-2 mb-2 text-sm font-medium">
-                          <Wrench className="h-4 w-4" />
-                          <span>{t("details.plugins")}</span>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {project.plugins_used?.map((plugin, idx) => (
-                            <Badge key={getPluginKey(plugin, idx)} variant="outline">
-                              {formatPlugin(plugin)}
-                            </Badge>
-                          )) ?? null}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Team */}
-                    <div>
-                      <div className="flex items-center gap-2 mb-2 text-sm font-medium">
-                        <UserPlus className="h-4 w-4" />
-                          <span>{t("details.team")}</span>
-                      </div>
-                      <div className="flex -space-x-2">
-                        {(members ?? []).slice(0, 6).map(m => (
-                          <Link 
-                            key={m.user_id} 
-                            href={`/u/${m.profile?.username || m.user_id}`}
-                            className="hover:z-10 relative transition-transform hover:scale-110"
-                            title={m.profile?.display_name || t("common.teamMember")}
-                          >
-                            <UserAvatar
-                              className="border-2 border-background h-8 w-8"
-                              name={m.profile?.display_name}
-                              username={m.profile?.username}
-                              userId={m.user_id}
-                              src={m.profile?.avatar_url}
-                            />
-                          </Link>
-                        ))}
-                        {(members?.length ?? 0) === 0 && (
-                          <UserAvatar 
-                            className="border-2 border-background h-8 w-8" 
-                            name={t("common.projectOwner")} 
-                            username={null} 
-                            userId={project.owner_id} 
-                            src={null} 
-                          />
+              {/* Details (mobile-only, under overview) - Collapsible */}
+              <div className="lg:hidden mt-4">
+                <Accordion type="single" collapsible defaultValue="details">
+                  <AccordionItem value="details" className="border rounded-lg px-4">
+                    <AccordionTrigger className="text-base font-semibold py-3 hover:no-underline">
+                      {t("details.title")}
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2 pb-4">
+                      <div className="space-y-6">
+                        {/* Project Description */}
+                        {project.description && (
+                          <div>
+                            <div className="text-xs sm:text-sm text-muted-foreground mb-2">{t("details.description")}</div>
+                            <p className="text-sm sm:text-base leading-relaxed">{project.description}</p>
+                          </div>
                         )}
+
+                        {(project.tags?.length ?? 0) > 0 && (
+                          <div>
+                            <div className="flex items-center gap-2 mb-2 text-sm font-medium">
+                              <Tags className="h-4 w-4" />
+                              <span>{t("details.tags")}</span>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {project.tags?.map((tag) => (
+                                <Badge key={tag} variant="secondary">{tag}</Badge>
+                              )) ?? null}
+                            </div>
+                          </div>
+                        )}
+
+                        {hasDAWInfo(project.daw_info) && (
+                          <div>
+                            <div className="text-xs sm:text-sm text-muted-foreground mb-1">{t("details.daw")}</div>
+                            <div className="font-medium text-sm sm:text-base">
+                              {formatDAWInfo(project.daw_info)}
+                            </div>
+                          </div>
+                        )}
+
+                        {(project.plugins_used?.length ?? 0) > 0 && (
+                          <div>
+                            <div className="flex items-center gap-2 mb-2 text-sm font-medium">
+                              <Wrench className="h-4 w-4" />
+                              <span>{t("details.plugins")}</span>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {project.plugins_used?.map((plugin, idx) => (
+                                <Badge key={getPluginKey(plugin, idx)} variant="outline">
+                                  {formatPlugin(plugin)}
+                                </Badge>
+                              )) ?? null}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Team */}
+                        <div>
+                          <div className="flex items-center gap-2 mb-2 text-sm font-medium">
+                            <UserPlus className="h-4 w-4" />
+                            <span>{t("details.team")}</span>
+                          </div>
+                          <div className="flex -space-x-2">
+                            {(members ?? []).slice(0, 6).map(m => (
+                              <Link 
+                                key={m.user_id} 
+                                href={`/u/${m.profile?.username || m.user_id}`}
+                                className="hover:z-10 relative transition-transform hover:scale-110"
+                                title={m.profile?.display_name || t("common.teamMember")}
+                              >
+                                <UserAvatar
+                                  className="border-2 border-background h-8 w-8"
+                                  name={m.profile?.display_name}
+                                  username={m.profile?.username}
+                                  userId={m.user_id}
+                                  src={m.profile?.avatar_url}
+                                />
+                              </Link>
+                            ))}
+                            {(members?.length ?? 0) === 0 && (
+                              <UserAvatar 
+                                className="border-2 border-background h-8 w-8" 
+                                name={t("common.projectOwner")} 
+                                username={null} 
+                                userId={project.owner_id} 
+                                src={null} 
+                              />
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
               </div>
 
               {/* Tabs */}
@@ -300,14 +342,14 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                 </div>
 
                 {/* Toolbar under tabs */}
-                <div className="mt-3 grid gap-2 sm:flex sm:items-center sm:justify-between">
-                  <div className="w-full sm:flex-1 flex gap-2">
+                <div className="mt-3 flex flex-col sm:flex-row gap-3 sm:gap-2 sm:items-center sm:justify-between">
+                  <div className="flex flex-col min-[480px]:flex-row gap-2 sm:flex-1">
                     {activeTab === 'activity' && (
                       <>
                         <Input
                           placeholder={t("common.searchActivity")}
                           aria-label={t("common.searchActivity")}
-                          className="h-9 flex-1"
+                          className=" w-full min-[480px]:flex-1"
                           value={activityQuery}
                           onChange={(e) => setActivityQuery(e.target.value)}
                         />
@@ -315,7 +357,7 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                           value={activitySort} 
                           onValueChange={(value: 'newest' | 'oldest') => setActivitySort(value)}
                         >
-                          <SelectTrigger className="w-auto h-9 gap-1" aria-label={t("common.sortActivity")}>
+                          <SelectTrigger className="w-full min-[480px]:w-auto  gap-1" aria-label={t("common.sortActivity")}>
                             <ArrowUpDown className="h-4 w-4" />
                             <SelectValue />
                           </SelectTrigger>
@@ -331,7 +373,7 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                         <Input
                           placeholder={t("common.searchFiles")}
                           aria-label={t("common.searchFiles")}
-                          className="h-9 flex-1"
+                          className=" w-full min-[480px]:flex-1"
                           value={filesQuery}
                           onChange={(e) => setFilesQuery(e.target.value)}
                         />
@@ -339,7 +381,7 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                           value={filesSort} 
                           onValueChange={(value: 'newest' | 'oldest' | 'name') => setFilesSort(value)}
                         >
-                          <SelectTrigger className="w-auto h-9 gap-1" aria-label={t("common.sortFiles")}>
+                          <SelectTrigger className="w-full min-[480px]:w-auto  gap-1" aria-label={t("common.sortFiles")}>
                             <ArrowUpDown className="h-4 w-4" />
                             <SelectValue />
                           </SelectTrigger>
@@ -356,11 +398,11 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                         <Input
                           placeholder={t("common.searchComments")}
                           aria-label={t("common.searchComments")}
-                          className="h-9 flex-1"
+                          className=" w-full min-[480px]:flex-1"
                           disabled
                         />
                         <Select disabled>
-                          <SelectTrigger className="w-auto h-9 gap-1" aria-label={t("common.sortComments")} disabled>
+                          <SelectTrigger className="w-full min-[480px]:w-auto  gap-1" aria-label={t("common.sortComments")} disabled>
                             <ArrowUpDown className="h-4 w-4" />
                             <SelectValue placeholder={t("common.newestFirst")} />
                           </SelectTrigger>
@@ -373,14 +415,14 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <div className="flex gap-2">
                     {activeTab === 'activity' && (
                       <>
                         <CreateVersionDialog
                           projectId={project.id}
                           onVersionCreated={handleVersionCreated}
                           trigger={
-                            <Button size="sm" className="h-9 gap-2 px-3 w-full sm:w-auto justify-center" aria-label={t("common.createNewVersion")}>
+                            <Button size="sm" className=" gap-2 px-3 flex-1 sm:flex-none justify-center" aria-label={t("common.createNewVersion")}>
                               <Plus className="h-4 w-4" />
                               {t("common.newVersion")}
                             </Button>
@@ -392,7 +434,7 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                       <UploadDialog
                         projectId={project.id}
                         trigger={
-                          <Button variant="default" size="sm" className="inline-flex items-center gap-2 h-9 px-4 max-w-fit" aria-label={t("common.uploadFiles")}>
+                          <Button variant="default" size="sm" className="inline-flex items-center gap-2  px-4 flex-1 sm:flex-none justify-center" aria-label={t("common.uploadFiles")}>
                             <Upload className="h-4 w-4" />
                             {t("common.uploadFiles")}
                           </Button>
@@ -403,7 +445,7 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                       <Button 
                         variant="ghost"
                         size="sm" 
-                        className="h-9 gap-2 px-3 w-full sm:w-auto justify-center" 
+                        className=" gap-2 px-3 flex-1 sm:flex-none justify-center" 
                         aria-label={t("common.addComment")}
                         disabled
                       >
@@ -432,8 +474,8 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
           </div>
 
           {/* Right column: details sidebar (desktop-only) */}
-          <div className="hidden xl:block xl:col-span-1">
-            <Card>
+          <div className="hidden lg:block">
+            <Card className="sticky top-20">
               <CardHeader className="p-4 md:p-6 !pb-0">
                 <CardTitle className="text-base">Details</CardTitle>
               </CardHeader>

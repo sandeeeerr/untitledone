@@ -12,7 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 import { getCurrentProfile, updateCurrentProfile, type Profile, type ProfileUpdate, deleteCurrentProfile } from "./profiles";
 import { getProjects, getProject, type Project, uploadProjectFile, getProjectFiles, getProjectFileDetail, type ProjectFile, type ProjectFileDetail, type UploadFileInput, createProjectVersion, getProjectVersions, type ProjectVersion, type CreateVersionInput, getProjectActivity, type ProjectActivityVersion, createFeedbackChange, updateFeedbackChange, deleteFeedbackChange, getProjectsLastActivity, getMyStorageUsage, type StorageUsage } from "./projects";
 import { listPins, pinProject, unpinProject, type ProjectPin } from "./pins";
-import { createProjectInvitation, listProjectInvitations, type ProjectInvitation, type ProjectInvitationInsert, acceptInvitation, listProjectMembers, type ProjectMember } from "./projects";
+import { createProjectInvitation, listProjectInvitations, type ProjectInvitationInsert, acceptInvitation, listProjectMembers, leaveProject } from "./projects";
+import type { ProjectInvitation, ProjectMember } from "./projects";
 
 // Utility function to safely extract error message
 function getErrorMessage(error: unknown, fallback: string): string {
@@ -243,6 +244,24 @@ export function useProjectMembers(projectId: string) {
         queryKey: ["project", projectId, "members"],
         queryFn: () => listProjectMembers(projectId),
         enabled: Boolean(projectId),
+    });
+}
+
+export function useLeaveProject() {
+    const queryClient = useQueryClient();
+    const { toast } = useToast();
+    
+    return useMutation({
+        mutationFn: (projectId: string) => leaveProject(projectId),
+        onSuccess: (_, projectId) => {
+            queryClient.invalidateQueries({ queryKey: ["project", projectId, "members"] });
+            queryClient.invalidateQueries({ queryKey: ["projects", "list"] });
+            toast({ title: "Left project", description: "You have successfully left the project." });
+        },
+        onError: (error: unknown) => {
+            const errorMessage = getErrorMessage(error, "Failed to leave project");
+            toast({ variant: "destructive", title: "Error", description: errorMessage });
+        },
     });
 }
 

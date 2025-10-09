@@ -2,40 +2,27 @@ import type { Config } from "tailwindcss";
 import animate from "tailwindcss-animate";
 
 const config: Config = {
-	darkMode: 'class',
+	darkMode: ['class', 'class'],
 	content: [
 		"./src/components/**/*.{js,ts,jsx,tsx,mdx}",
 		"./src/app/**/*.{js,ts,jsx,tsx,mdx}",
 		"!./node_modules",
 	],
 	theme: {
-		container: {
-			center: true,
-			padding: "2rem",
-			screens: { "2xl": "1400px" }
-		},
+    	container: {
+    		center: true,
+    		padding: '2rem',
+    		screens: {
+    			'2xl': '1400px'
+    		}
+    	},
     	extend: {
-			/**
-			 * Component Height Standards (Design Tokens)
-			 * ============================================
-			 * Use these consistent heights across the application:
-			 * 
-			 * h-8  (32px) - Small/compact controls (dense lists, chips, small buttons)
-			 * h-9  (36px) - Default for forms and toolbars (inputs, selects, buttons)
-			 * h-10 (40px) - Large/prominent CTAs (primary action buttons)
-			 * 
-			 * Pair with consistent padding:
-			 * - Buttons: px-4 (16px horizontal)
-			 * - Inputs:  px-3 (12px horizontal), text aligns with py-2
-			 * 
-			 * Border radius: Use rounded-md (calc(var(--radius) - 2px)) for consistency
-			 */
-			boxShadow: {
-				sm: "0 1px 2px 0 hsl(var(--foreground)/0.06)",
-				DEFAULT: "0 1px 3px 0 hsl(var(--foreground)/0.1), 0 1px 2px -1px hsl(var(--foreground)/0.1)",
-				md: "0 4px 6px -1px hsl(var(--foreground)/0.1), 0 2px 4px -2px hsl(var(--foreground)/0.1)",
-				lg: "0 10px 15px -3px hsl(var(--foreground)/0.1), 0 4px 6px -4px hsl(var(--foreground)/0.1)"
-			},
+    		boxShadow: {
+    			sm: '0 1px 2px 0 hsl(var(--foreground)/0.06)',
+    			DEFAULT: '0 1px 3px 0 hsl(var(--foreground)/0.1), 0 1px 2px -1px hsl(var(--foreground)/0.1)',
+    			md: '0 4px 6px -1px hsl(var(--foreground)/0.1), 0 2px 4px -2px hsl(var(--foreground)/0.1)',
+    			lg: '0 10px 15px -3px hsl(var(--foreground)/0.1), 0 4px 6px -4px hsl(var(--foreground)/0.1)'
+    		},
     		colors: {
     			background: 'hsl(var(--background))',
     			foreground: 'hsl(var(--foreground))',
@@ -88,10 +75,32 @@ const config: Config = {
     				ring: 'hsl(var(--sidebar-ring))'
     			}
     		},
-			borderRadius: {
+    		borderRadius: {
     			lg: 'var(--radius)',
     			md: 'calc(var(--radius) - 2px)',
     			sm: 'calc(var(--radius) - 4px)'
+    		},
+    		keyframes: {
+    			'accordion-down': {
+    				from: {
+    					height: '0'
+    				},
+    				to: {
+    					height: 'var(--radix-accordion-content-height)'
+    				}
+    			},
+    			'accordion-up': {
+    				from: {
+    					height: 'var(--radix-accordion-content-height)'
+    				},
+    				to: {
+    					height: '0'
+    				}
+    			}
+    		},
+    		animation: {
+    			'accordion-down': 'accordion-down 0.2s ease-out',
+    			'accordion-up': 'accordion-up 0.2s ease-out'
     		}
     	}
     },
