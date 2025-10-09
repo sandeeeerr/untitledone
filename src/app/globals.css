@@ -88,6 +88,16 @@ body {
   }
 }
 
+/* Hide scrollbars on all browsers */
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+*::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
 /* Card header-aware content spacing without JS/context */
 .card:has(.card-header) .card-content {
   padding-top: 0;
