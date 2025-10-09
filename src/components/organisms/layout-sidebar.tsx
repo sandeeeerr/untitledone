@@ -5,7 +5,6 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import MainSidebar from './main-sidebar';
 import AppHeader from '@/components/organisms/app-header';
-import { DynamicBreadcrumbs } from '../molecules/dynamic-breadcrumbs';
 import { PageTitle } from '../atoms/page-title';
 import { BreadcrumbProvider } from '../atoms/breadcrumb-context';
 import { useEffect, useState } from 'react';
@@ -92,22 +91,19 @@ export default function LayoutSidebar({
           {/* Spacer to offset fixed header height */}
           <div aria-hidden className="h-16" />
 
-          <div className="container mx-auto max-w-7xl px-2 sm:px-4 md:px-6 lg:px-8 py-6 w-full">
-            <div className="pb-3 min-w-0">
-              <PageTitle title={title} actions={titleActions} />
-              <div className="mt-4">
-                <BreadcrumbProvider value={{ currentPageLabel: breadcrumbLabelOverride, projectLabelOverride: projectBreadcrumbLabelOverride || breadcrumbProject?.name }}>
-                  <DynamicBreadcrumbs />
-                </BreadcrumbProvider>
+          <BreadcrumbProvider value={{ currentPageLabel: breadcrumbLabelOverride, projectLabelOverride: projectBreadcrumbLabelOverride || breadcrumbProject?.name }}>
+            <div className="container mx-auto max-w-7xl px-2 sm:px-4 md:px-6 lg:px-8 py-6 w-full">
+              <div className="pb-3 min-w-0">
+                <PageTitle title={title} actions={titleActions} />
               </div>
-            </div>
 
-            <div className={cn('flex-1 min-w-0 py-8', className)}>
-              <div className={cn('flex-1 min-w-0', contentClassName)}>
-                {children}
+              <div className={cn('flex-1 min-w-0 py-8', className)}>
+                <div className={cn('flex-1 min-w-0', contentClassName)}>
+                  {children}
+                </div>
               </div>
             </div>
-          </div>
+          </BreadcrumbProvider>
         </main>
       </SidebarProvider>
     </>

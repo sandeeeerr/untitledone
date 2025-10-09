@@ -415,3 +415,52 @@ Pas DB-schema aan via migrations; genereer types opnieuw (npm run gen:types).
 Breid i18n uit in src/i18n/messages/.
 
 Werk .env bij per omgeving.
+
+
+
+
+tasks:
+  - name: "mcp-test-untitledone"
+    description: "Automatisch testen van MVP user stories met Chrome MCP"
+    tools:
+      - chrome
+    steps:
+      - comment: "1️⃣ Authenticatieflow"
+      - run: |
+          chrome.open("http://localhost:3000/auth/login")
+          chrome.waitForSelector("form")
+          chrome.type("input[name='email']", "${TEST_EMAIL}")
+          chrome.type("input[name='password']", "${TEST_PASSWORD}")
+          chrome.click("button[type='submit']")
+          chrome.waitForSelector(".dashboard")
+          chrome.capturePerformance("auth-trace.json")
+
+      - comment: "2️⃣ Project aanmaken"
+      - run: |
+          chrome.open("http://localhost:3000/dashboard")
+          chrome.click("[data-test='new-project-button']")
+          chrome.type("input[name='title']", "MCP Test Project")
+          chrome.type("textarea[name='description']", "Automated test via MCP")
+          chrome.click("button[type='submit']")
+          chrome.captureNetwork("create-project.json")
+
+      - comment: "3️⃣ Bestand uploaden"
+      - run: |
+          chrome.open("http://localhost:3000/project/1/files")
+          chrome.upload("input[type='file']", "./test-audio.wav")
+          chrome.waitForSelector(".file-item")
+          chrome.capturePerformance("upload-trace.json")
+
+      - comment: "4️⃣ Feedback plaatsen"
+      - run: |
+          chrome.open("http://localhost:3000/project/1/files")
+          chrome.click(".comment-button")
+          chrome.type(".comment-input", "Automated feedback test")
+          chrome.click(".comment-submit")
+          chrome.waitForSelector(".comment-thread")
+          chrome.captureNetwork("feedback.json")
+
+      - comment: "5️⃣ DOM & CSS check"
+      - run: |
+          chrome.inspectDOM("dashboard-dom.json")
+          chrome.inspectCSS(".sidebar, .navbar, .card", "style-check.json")

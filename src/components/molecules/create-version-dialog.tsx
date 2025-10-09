@@ -215,19 +215,19 @@ export default function CreateVersionDialog({ projectId, trigger, onVersionCreat
 					</div>
 
           {/* Start Options (only show when there is at least one existing version) */}
-          {hasExistingVersions && (
+		{hasExistingVersions && (
 						<div className="space-y-2">
 							<Label>Start with</Label>
-							<RadioGroup value={startOption} onValueChange={(value: 'fresh' | 'copy' | 'select') => setStartOption(value)}>
+				<RadioGroup value={startOption} onValueChange={(value: 'fresh' | 'copy' | 'select') => setStartOption(value)} aria-label="Start options">
 								<div className="flex items-center space-x-2">
-									<RadioGroupItem value="fresh" id="start-fresh" />
+						<RadioGroupItem value="fresh" id="start-fresh" aria-checked={startOption === 'fresh'} />
 									<Label htmlFor="start-fresh" className="flex items-center gap-2">
 										<Upload className="h-4 w-4" />
 										Start fresh (upload new files)
 									</Label>
 								</div>
 								<div className="flex items-center space-x-2">
-									<RadioGroupItem value="copy" id="start-copy" />
+						<RadioGroupItem value="copy" id="start-copy" aria-checked={startOption === 'copy'} />
 									<Label htmlFor="start-copy" className="flex items-center gap-2">
 										<Copy className="h-4 w-4" />
 										Copy files from previous version

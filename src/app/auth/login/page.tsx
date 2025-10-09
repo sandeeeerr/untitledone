@@ -112,17 +112,19 @@ export default function LoginPage() {
             window.location.pathname + (params.toString() ? `?${params.toString()}` : '');
           window.history.replaceState({}, '', newUrl);
 
-          // TODO: handle exchangeCodeForSession error and display error of redirect user with next router (no window.location.href) if data is returned
+          const { data, error } = await supabaseClient.auth.exchangeCodeForSession(code);
+          
+          if (error) throw error;
 
-          await supabaseClient.auth.exchangeCodeForSession(code);
-
-          const next = params.get('next') || '/';
-          queryClient.invalidateQueries();
-          window.location.href = next;
+          if (data?.session) {
+            const next = params.get('next') || '/dashboard';
+            await queryClient.invalidateQueries();
+            router.push(next);
+          }
         } catch (error) {
-          console.error('Error exchanging code for session:', error);
+          console.error('OAuth error:', error);
           setError('root.serverError', {
-            message: t('auth.authError'),
+            message: t('auth.oauthFailed'),
           });
         } finally {
           setIsLoading(false);
@@ -194,7 +196,7 @@ export default function LoginPage() {
       queryClient.invalidateQueries();
       router.push(next);
     } catch (error) {
-      console.log(error);
+      console.error('Login error:', error);
       setError('root.serverError', { message: (error as Error).message });
     } finally {
       setIsLoading(false);
@@ -282,6 +284,7 @@ export default function LoginPage() {
                   })}
                   id="email"
                   type="email"
+                  autoComplete="email"
                   placeholder={t('auth.emailPlaceholder')}
                 />
                 {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
@@ -307,6 +310,7 @@ export default function LoginPage() {
                   })}
                   id="password"
                   type="password"
+                  autoComplete="current-password"
                   placeholder={t('auth.passwordPlaceholder')}
                 />
                 {errors.password && (

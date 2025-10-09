@@ -10,6 +10,7 @@ import { useCurrentUser } from '@/hooks/use-current-user';
 import { getCurrentProfile } from '@/lib/api/profiles';
 import LayoutSidebar from '@/components/organisms/layout-sidebar';
 import { Badge } from '@/components/ui/badge';
+import Prose from '@/components/atoms/prose';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -23,11 +24,21 @@ import { listPins } from '@/lib/api/pins';
 import { formatRelativeTime, formatRelativeTimeWithTranslations } from '@/lib/utils/time';
 import { getChangeIcon, getChangePrefix } from '@/lib/ui/activity';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
+// Performance: Dashboard data fetching is already parallelized within categories (Promise.all).
+// For further optimization, consider creating a single /api/dashboard endpoint that aggregates:
+// - Recent projects with last activity
+// - Pinned projects with members
+// - Activity digest
+// This would reduce round trips and improve initial load time.
 export default function DashboardPage() {
   const { data: currentUser, isLoading: userLoading } = useCurrentUser();
+  const { toast } = useToast();
   const [profileMissing, setProfileMissing] = useState<{ needsDisplay: boolean; needsUsername: boolean } | null>(null);
   const [dashboardAlertDismissed, setDashboardAlertDismissed] = useState<boolean>(false);
+  const [resendingEmail, setResendingEmail] = useState<boolean>(false);
+  const [emailResent, setEmailResent] = useState<boolean>(false);
   const t = useTranslations('dashboard');
   const tNav = useTranslations('navigation');
   const tProj = useTranslations('projects');
@@ -53,6 +64,63 @@ export default function DashboardPage() {
   const [digestLoading, setDigestLoading] = useState(false);
 
   const gridOptions = useMemo(() => ({ column: 12, margin: 8, float: true }), []);
+
+  // Once-per-session welcome toast (bottom-right), 20s, dismissible
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const key = 'dashboard_welcome_toast_shown';
+      const hasShown = window.sessionStorage.getItem(key) === '1';
+      if (hasShown) return;
+      window.sessionStorage.setItem(key, '1');
+      const email = currentUser?.email ?? '';
+      toast({
+        title: t('welcome'),
+        description: (
+          <div className="text-sm leading-relaxed">
+            <div className="opacity-80">{email}</div>
+            <div className="mt-2">
+              {t('developmentMessage')}
+            </div>
+            <div className="mt-2">
+              {t('betaNote')}{' '}
+              <a className="underline underline-offset-2" href="https://github.com/sandeeeerr/untitledone/issues" target="_blank" rel="noreferrer">
+                {t('contributeLink')}
+              </a>
+              .
+            </div>
+          </div>
+        ),
+        duration: 20000,
+        // Slightly wider toast content
+        className: 'max-w-[560px]'
+      });
+    } catch {}
+    // Only run on mount and when user changes (e.g., after login)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser?.id]);
+
+  const resendVerificationEmail = async () => {
+    if (!currentUser?.email || resendingEmail) return;
+    
+    setResendingEmail(true);
+    try {
+      const supabase = (await import('@/lib/supabase-client')).default;
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: currentUser.email,
+      });
+      
+      if (error) throw error;
+      
+      setEmailResent(true);
+      setTimeout(() => setEmailResent(false), 5000);
+    } catch (error) {
+      console.error('Error resending verification email:', error);
+    } finally {
+      setResendingEmail(false);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -223,13 +291,31 @@ export default function DashboardPage() {
           return (
             <div className="w-full p-6 flex justify-center">
               <div className="w-full max-w-lg">
-                <Alert className="flex justify-between">
+                <Alert className="flex justify-between" variant={emailResent ? 'default' : 'default'}>
                   <CircleAlertIcon />
-                  <div className="flex flex-1 flex-col gap-1">
-                    <AlertTitle>Verify your email to activate your account</AlertTitle>
+                  <div className="flex flex-1 flex-col gap-2">
+                    <AlertTitle>
+                      {emailResent ? t('alerts.emailResentTitle', { default: 'Email sent!' }) : t('alerts.verifyEmailTitle', { default: 'Verify your email to activate your account' })}
+                    </AlertTitle>
                     <AlertDescription>
-                      We&apos;ve sent a confirmation link to your inbox. Check your email to complete the sign-up.
+                      {emailResent 
+                        ? t('alerts.emailResentDescription', { default: 'Check your inbox for the verification link.' })
+                        : t('alerts.verifyEmailDescription', { default: "We've sent a confirmation link to your inbox. Check your email to complete the sign-up." })
+                      }
                     </AlertDescription>
+                    {!emailResent && (
+                      <Button
+                        variant="link"
+                        className="h-auto p-0 text-sm font-normal justify-start"
+                        onClick={resendVerificationEmail}
+                        disabled={resendingEmail}
+                      >
+                        {resendingEmail 
+                          ? t('alerts.resendingEmail', { default: 'Sending...' })
+                          : t('alerts.resendEmail', { default: 'Resend verification email' })
+                        }
+                      </Button>
+                    )}
                   </div>
                   <button
                     className="cursor-pointer"
@@ -248,31 +334,7 @@ export default function DashboardPage() {
           );
         })()}
 
-        {/* Hero */}
-        <Card>
-          <CardContent className="p-4 md:p-6">
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 text-sm font-semibold mb-2">
-                  <Sparkles className="h-5 w-5 mr-1" />
-                  <span className="truncate">{t('welcomeBack')} <br /> {currentUser?.email ? currentUser.email : ''}</span>
-                </div>
-                <p className="text-muted-foreground mt-1">
-                  {t('developmentMessage')}
-                </p>
-                <p className="text-muted-foreground mt-2">
-                  {t('betaNote')}
-                  {' '}
-                  <Link className="underline underline-offset-2" href="https://github.com/sandeeeerr/untitledone/issues" target="_blank" rel="noreferrer">
-                    {t('contributeLink')}
-                  </Link>
-                  .
-                </p>
-              </div>
-              <Badge variant="secondary" className="shrink-0">{t('beta')}</Badge>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Hero replaced by once-per-session toast */}
 
         {/* removed old profile alert */}
 
@@ -420,13 +482,34 @@ export default function DashboardPage() {
             </div>
           </div>
           {(!recentProjects || recentProjects.length === 0) ? (
-            <div className="flex items-center justify-center py-10 text-sm text-muted-foreground">
-              <Rocket className="mr-2 h-4 w-4" />
-              <span>
-                Get started by{' '}
-                <Link href="/projects/new" className="underline underline-offset-2">creating your first project</Link>.
-              </span>
-            </div>
+            <Card className="border-dashed">
+              <CardContent className="py-12">
+                <div className="flex flex-col items-center text-center space-y-4">
+                  <div className="rounded-full bg-primary/10 p-4">
+                    <Rocket className="h-8 w-8 text-primary" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold">{t('noRecentProjects')}</h3>
+                    <p className="text-sm text-muted-foreground max-w-md">
+                      Create your first project to start collaborating with audio creatives. Share files, exchange feedback, and manage versions all in one place.
+                    </p>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                    <Button asChild size="lg">
+                      <Link href="/projects/new">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Create First Project
+                      </Link>
+                    </Button>
+                    <Button asChild variant="outline" size="lg">
+                      <Link href="https://github.com/sandeeeerr/untitledone#readme" target="_blank" rel="noreferrer">
+                        Learn More
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {(recentProjects ?? []).slice(0, 3).map((project) => (

@@ -1,20 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { cn } from "@/lib/utils";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import ModeToggle from "@/components/molecules/mode-toggle";
-import LanguageToggle from "@/components/molecules/language-toggle";
-import { useProfile } from "@/lib/api/queries";
-import { useState } from "react";
-import { SettingsModal } from "@/components/molecules/settings-modal";
-import { useTheme } from "next-themes";
-import { setLanguageCookie } from "@/lib/cookies";
-import { useRouter } from "next/navigation";
+import { LangToggle } from "@/components/atoms/lang-toggle";
+import { Breadcrumbs } from "@/components/atoms/breadcrumbs";
+import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
 
 export function AppHeader({
   containerClassName,
@@ -28,35 +21,31 @@ export function AppHeader({
   showSidebarTriggerOnMobile?: boolean;
 }) {
   const { data: currentUser } = useCurrentUser();
-  const { data: profile } = useProfile();
-  const tLanding = useTranslations("landing");
-  const tNav = useTranslations("navigation");
-  const tActions = useTranslations("actions");
-  const t = useTranslations("common");
-  const [showSettings, setShowSettings] = useState(false);
-  const { theme, setTheme } = useTheme();
-  const router = useRouter();
+  const breadcrumbs = useBreadcrumbs();
+  const t = useTranslations("breadcrumbs");
 
   const innerBase = fullWidth
-    ? "w-full flex h-16 items-center justify-between"
-    : "container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between";
-
-  const onLanguageChange = (locale: string) => {
-    setLanguageCookie(locale);
-    router.refresh();
-  };
+    ? "w-full flex items-center justify-between gap-4 py-2 min-h-12"
+    : "container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4 py-2 min-h-12";
 
   return (
     <header>
       <div className={cn(innerBase, containerClassName)}>
-        <div className={cn(matchSidebarWidth ? "w-[18rem] flex items-center justify-center" : "flex items-center", "gap-2")}> 
-          {showSidebarTriggerOnMobile ? (
-            <SidebarTrigger className="md:hidden h-8 w-8 rounded-md hover:bg-sidebar-accent hover:text-sidebar-accent-foreground outline-none ring-sidebar-ring focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0" />
-          ) : null}
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          {showSidebarTriggerOnMobile && (
+            <SidebarTrigger className="md:hidden h-8 w-8 flex-shrink-0 rounded-md hover:bg-sidebar-accent hover:text-sidebar-accent-foreground outline-none ring-sidebar-ring focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0" />
+          )}
+          
+          {/* Breadcrumbs - hidden on small screens, wrap on overflow */}
+          <div className="hidden sm:block min-w-0 flex-1 overflow-x-auto">
+            <Breadcrumbs items={breadcrumbs} />
+          </div>
         </div>
-        <nav className="flex items-center gap-2">
+        
+        {/* Actions - language toggle and theme toggle */}
+        <nav className="flex items-center gap-2 flex-shrink-0">
+          <LangToggle />
           <ModeToggle />
-          <LanguageToggle />
         </nav>
       </div>
     </header>

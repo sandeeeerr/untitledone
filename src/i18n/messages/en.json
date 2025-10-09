@@ -80,6 +80,7 @@
     "signingIn": "Signing in...",
     "forgotPassword": "Forgot password?",
     "authError": "Failed to authenticate. Please try again.",
+    "oauthFailed": "Authentication failed. Please try again or use email/password.",
     "signInButton": "Sign in",
     "signInLoading": "Signing in...",
     "signUpTitle": "Create an account",
@@ -264,6 +265,17 @@
       "tryAgain": "Try again",
       "backToProjects": "Back to projects"
     },
+    "delete": {
+      "title": "Delete Project",
+      "description": "Are you sure you want to delete this project? This action cannot be undone.",
+      "confirmPlaceholder": "Type project name to confirm",
+      "confirmMismatch": "Project name doesn't match",
+      "cancel": "Cancel",
+      "confirm": "Delete Project",
+      "deleting": "Deleting...",
+      "success": "Project deleted successfully",
+      "error": "Failed to delete project"
+    },
     "details": {
       "title": "Details",
       "description": "Description",
@@ -443,9 +455,10 @@
   "dashboard": {
     "title": "Dashboard",
     "welcomeBack": "Welcome back,",
-    "developmentMessage": "UntitledOne is actively in development. We're excited you're here — features will appear and evolve rapidly. Thanks for joining early!",
-    "betaNote": "This is a beta. Ideas and bug reports are very welcome.",
-    "contributeLink": "Share ideas or report a bug",
+    "welcome": "Welcome",
+    "developmentMessage": "UntitledOne is in development. Thanks for joining!",
+    "betaNote": "Beta — ideas and bugs welcome.",
+    "contributeLink": "Share idea or bug",
     "beta": "Beta",
     "editingOn": "Editing ON",
     "editingOff": "Editing OFF",
@@ -465,7 +478,23 @@
     "noActivityDigest": "No recent activity",
     "unread": "Unread",
     "noRecentProjects": "No recent projects.",
-    "noPins": "No pinned projects yet. Pin projects to access them quickly."
+    "noPins": "No pinned projects yet. Pin projects to access them quickly.",
+    "alerts": {
+      "verifyEmailTitle": "Verify your email to activate your account",
+      "verifyEmailDescription": "We've sent a confirmation link to your inbox. Check your email to complete the sign-up.",
+      "resendEmail": "Resend verification email",
+      "resendingEmail": "Sending...",
+      "emailResentTitle": "Email sent!",
+      "emailResentDescription": "Check your inbox for the verification link."
+    }
+  },
+  "alerts": {
+    "verifyEmailTitle": "Verify your email to activate your account",
+    "verifyEmailDescription": "We've sent a confirmation link to your inbox. Check your email to complete the sign-up.",
+    "resendEmail": "Resend verification email",
+    "resendingEmail": "Sending...",
+    "emailResentTitle": "Email sent!",
+    "emailResentDescription": "Check your inbox for the verification link."
   },
   "landing": {
     "nav": {

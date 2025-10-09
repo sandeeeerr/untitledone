@@ -8,14 +8,26 @@ import type {
   ToastProps,
 } from "@/components/ui/toast"
 
-const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
+const TOAST_LIMIT = 3
+
+// Standardized toast durations
+const TOAST_DURATION = {
+  default: 5000,
+  success: 3000,
+  error: 7000,
+  info: 5000,
+} as const
+
+const TOAST_REMOVE_DELAY = 200 // Animation delay before removal
+
+type ToastVariant = keyof typeof TOAST_DURATION
 
 type ToasterToast = ToastProps & {
   id: string
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
+  duration?: number
 }
 
 const actionTypes = {
@@ -72,6 +84,12 @@ const addToRemoveQueue = (toastId: string) => {
   }, TOAST_REMOVE_DELAY)
 
   toastTimeouts.set(toastId, timeout)
+}
+
+const scheduleToastDismiss = (toastId: string, duration: number) => {
+  setTimeout(() => {
+    dispatch({ type: "DISMISS_TOAST", toastId })
+  }, duration)
 }
 
 export const reducer = (state: State, action: Action): State => {
@@ -142,7 +160,7 @@ function dispatch(action: Action) {
 
 type Toast = Omit<ToasterToast, "id">
 
-function toast({ ...props }: Toast) {
+function toast({ duration, ...props }: Toast) {
   const id = genId()
 
   const update = (props: ToasterToast) =>
@@ -152,23 +170,59 @@ function toast({ ...props }: Toast) {
     })
   const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
 
+  // Determine duration based on variant or explicit duration
+  const toastDuration = duration ?? 
+    (props.variant === 'destructive' ? TOAST_DURATION.error : TOAST_DURATION.default)
+
   dispatch({
     type: "ADD_TOAST",
     toast: {
       ...props,
       id,
       open: true,
+      duration: toastDuration,
       onOpenChange: (open) => {
         if (!open) dismiss()
       },
     },
   })
 
+  // Auto-dismiss after duration
+  scheduleToastDismiss(id, toastDuration)
+
   return {
     id: id,
     dismiss,
     update,
   }
+}
+
+// Convenience methods for common toast variants
+function success(title: string, description?: string, duration?: number) {
+  return toast({
+    title,
+    description,
+    variant: "default",
+    duration: duration ?? TOAST_DURATION.success,
+  })
+}
+
+function error(title: string, description?: string, duration?: number) {
+  return toast({
+    title,
+    description,
+    variant: "destructive",
+    duration: duration ?? TOAST_DURATION.error,
+  })
+}
+
+function info(title: string, description?: string, duration?: number) {
+  return toast({
+    title,
+    description,
+    variant: "default",
+    duration: duration ?? TOAST_DURATION.info,
+  })
 }
 
 function useToast() {
@@ -187,6 +241,9 @@ function useToast() {
   return {
     ...state,
     toast,
+    success,
+    error,
+    info,
     dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
   }
 }

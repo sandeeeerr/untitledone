@@ -16,7 +16,7 @@ function CircleSpinner({ className }: { className?: string }) {
 export function PageLoading({ title = "Loading...", message = "Loading..." }: { title?: string; message?: string }) {
   return (
     <LayoutSidebar title={title}>
-      <div className="container">
+      <div>
         <div className="flex min-h-[40vh] items-center justify-center">
           <div className="flex flex-col items-center gap-4 text-center">
             <CircleSpinner />

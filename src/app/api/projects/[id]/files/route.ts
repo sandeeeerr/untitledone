@@ -136,13 +136,11 @@ export async function POST(
         .eq("is_active", true)
         .maybeSingle();
       
-      console.log("Active version lookup:", { activeVersion, activeVersionError, projectId });
+      // Active version lookup for auto-linking uploaded files
       resolvedVersionId = activeVersion?.id ?? null;
     }
 
     if (resolvedVersionId) {
-      console.log("Linking file to version:", { fileId: fileRecord.id, versionId: resolvedVersionId });
-      
       // Link file to version
       const { error: linkError } = await (supabase as SupabaseClient)
         .from("version_files")
@@ -166,9 +164,8 @@ export async function POST(
       if (activityError) {
         console.error("Failed to create activity change:", activityError);
       }
-    } else {
-      console.log("No version found - file will remain unversioned");
     }
+    // Note: If no active version exists, file will remain unversioned
 
     return NextResponse.json({
       id: fileRecord.id,

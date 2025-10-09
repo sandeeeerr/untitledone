@@ -35,13 +35,17 @@
   },
   "dashboard": {
     "title": "Tableau de bord",
+    "welcomeBack": "Bienvenue,",
+    "welcome": "Bienvenue",
+    "developmentMessage": "UntitledOne est en développement. Merci de votre participation !",
+    "betaNote": "Bêta — idées et bugs bienvenus.",
+    "contributeLink": "Proposer une idée ou signaler un bug",
+    "beta": "Bêta",
     "editingOn": "Édition ACTIVÉE",
     "editingOff": "Édition DÉSACTIVÉE",
     "dragNewWidget": "Glissez un nouveau widget",
     "dropToRemove": "Déposer pour supprimer",
     "editDashboard": "Modifier le tableau de bord",
-    "betaNote": "Ceci est une bêta. Les idées et les rapports de bugs sont les bienvenus.",
-    "contributeLink": "Partager une idée ou signaler un bug",
     "addProject": "Ajouter un projet",
     "recentProjects": "Projets récents",
     "pinnedProjects": "Projets épinglés",
@@ -51,11 +55,19 @@
     "viewAllProjects": "Voir tous les projets",
     "pendingInvitations": "Invitations en attente",
     "noInvitations": "Aucune invitation",
-    "activityDigest": "Récap d’activité",
+    "activityDigest": "Récap d'activité",
     "noActivityDigest": "Aucune activité récente",
     "unread": "Non lu",
     "noRecentProjects": "Aucun projet récent.",
-    "noPins": "Aucun projet épinglé pour l’instant. Épingle des projets pour y accéder rapidement."
+    "noPins": "Aucun projet épinglé pour l'instant. Épingle des projets pour y accéder rapidement.",
+    "alerts": {
+      "verifyEmailTitle": "Vérifiez votre e-mail pour activer votre compte",
+      "verifyEmailDescription": "Nous avons envoyé un lien de confirmation dans votre boîte de réception. Vérifiez votre e-mail pour compléter l'inscription.",
+      "resendEmail": "Renvoyer l'e-mail de vérification",
+      "resendingEmail": "Envoi en cours...",
+      "emailResentTitle": "E-mail envoyé !",
+      "emailResentDescription": "Vérifiez votre boîte de réception pour le lien de vérification."
+    }
   },
   "settings": {
     "title": "Paramètres",
@@ -94,6 +106,7 @@
     "signingIn": "Connexion en cours...",
     "forgotPassword": "Mot de passe oublié ?",
     "authError": "Échec de l'authentification. Veuillez réessayer.",
+    "oauthFailed": "Échec de l'authentification. Veuillez réessayer ou utiliser votre e-mail/mot de passe.",
     "signInButton": "Se connecter",
     "signInLoading": "Connexion en cours...",
     "signUpTitle": "Créer un compte",
@@ -223,6 +236,17 @@
         "description": "Échec du chargement du projet",
         "forbidden": "Vous n'êtes pas autorisé à modifier ce projet."
       }
+    },
+    "delete": {
+      "title": "Supprimer le projet",
+      "description": "Êtes-vous sûr de vouloir supprimer ce projet ? Cette action ne peut pas être annulée.",
+      "confirmPlaceholder": "Tapez le nom du projet pour confirmer",
+      "confirmMismatch": "Le nom du projet ne correspond pas",
+      "cancel": "Annuler",
+      "confirm": "Supprimer le projet",
+      "deleting": "Suppression...",
+      "success": "Projet supprimé avec succès",
+      "error": "Échec de la suppression du projet"
     }
   },
   "activity": {
@@ -341,5 +365,13 @@
     "addReply": "Ajouter une réponse...",
     "contextSpecific": "Les commentaires sont spécifiques au contexte",
     "openActivityOrFileToComment": "Ouvrez un changement d'activité, une version ou un fichier pour voir et ajouter des commentaires."
+  },
+  "alerts": {
+    "verifyEmailTitle": "Vérifiez votre e-mail pour activer votre compte",
+    "verifyEmailDescription": "Nous avons envoyé un lien de confirmation à votre boîte de réception. Consultez votre e-mail pour terminer l'inscription.",
+    "resendEmail": "Renvoyer l'e-mail de vérification",
+    "resendingEmail": "Envoi...",
+    "emailResentTitle": "E-mail envoyé !",
+    "emailResentDescription": "Consultez votre boîte de réception pour le lien de vérification."
   }
 }

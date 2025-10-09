@@ -176,17 +176,20 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 					text,
 				}),
 			});
-			if (!resp.ok) {
-				const errText = await resp.text().catch(() => "");
-				console.warn(`[invite] Resend responded ${resp.status}: ${errText}`);
-				console.log(`[invite] Fallback link to ${email}: ${inviteUrl}`);
-			}
-		} catch (e) {
-			console.warn("[invite] Email send failed, falling back to log:", e);
-			console.log(`[invite] Send to ${email}: ${inviteUrl}`);
+		if (!resp.ok) {
+			const errText = await resp.text().catch(() => "");
+			console.warn(`[invite] Resend responded ${resp.status}: ${errText}`);
+			// Development fallback: log invite URL (removed in production by Next.js compiler)
+			console.log(`[invite] Fallback link to ${email}: ${inviteUrl}`);
 		}
-	} else {
-		console.log(`[invite] (no RESEND_API_KEY/MAIL_FROM) Send to ${email}: ${inviteUrl}`);
+	} catch (e) {
+		console.warn("[invite] Email send failed, falling back to log:", e);
+		// Development fallback: log invite URL (removed in production by Next.js compiler)
+		console.log(`[invite] Send to ${email}: ${inviteUrl}`);
+	}
+} else {
+	// Development fallback: log invite URL when email service not configured (removed in production by Next.js compiler)
+	console.log(`[invite] (no RESEND_API_KEY/MAIL_FROM) Send to ${email}: ${inviteUrl}`);
 	}
 
 	return NextResponse.json({ id: created.id, project_id: created.project_id }, { status: 201 });

@@ -92,17 +92,29 @@ export default function LandingPage() {
         <p className="mx-auto mb-3 max-w-2xl text-lg text-muted-foreground">
           {t('hero.description')}
         </p>
-        <p className="mx-auto mb-8 max-w-3xl text-base text-muted-foreground">
+        <p className="mx-auto mb-2 max-w-3xl text-base text-muted-foreground">
           {t('hero.tagline')}
         </p>
-        <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
-          <Button size="lg" onClick={handleGetStarted} className="group">
-            {currentUser ? t('hero.dashboard') : t('hero.getStarted')}
+        <p className="mx-auto mb-8 max-w-2xl text-sm text-muted-foreground/80">
+          Create your first project in minutes
+        </p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+          <Button 
+            size="lg" 
+            onClick={handleGetStarted} 
+            className="h-10 px-5 text-base rounded-lg group"
+          >
+            {currentUser ? t('hero.dashboard') : 'Get started'}
             <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
           </Button>
           {!currentUser && (
-            <Button variant="outline" size="lg" asChild>
-              <Link href="/auth/login">{t('hero.login')}</Link>
+            <Button 
+              variant="outline" 
+              size="lg" 
+              className="h-10 px-5 text-base rounded-lg"
+              asChild
+            >
+              <Link href="/auth/login">Try demo</Link>
             </Button>
           )}
         </div>

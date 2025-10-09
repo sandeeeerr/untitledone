@@ -73,7 +73,7 @@ export default function TodosPage() {
 
   return (
     <LayoutSidebar title={t('todos.title')}>
-      <div className="container max-w-2xl py-8 mx-auto">
+      <div className="max-w-2xl py-8 mx-auto">
         <Card className="border-none shadow-md">
           <CardHeader className="space-y-1">
             <div className="flex items-center space-x-2">

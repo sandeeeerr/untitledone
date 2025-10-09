@@ -112,6 +112,7 @@ export default function RegisterPage() {
                   })}
                   id="email"
                   type="email"
+                  autoComplete="email"
                   placeholder={t('auth.emailPlaceholder')}
                 />
                 {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
@@ -129,6 +130,7 @@ export default function RegisterPage() {
                   })}
                   id="password"
                   type="password"
+                  autoComplete="new-password"
                   placeholder={t('auth.passwordPlaceholder')}
                 />
                 {errors.password && (
@@ -148,6 +150,7 @@ export default function RegisterPage() {
                   })}
                   id="confirmPassword"
                   type="password"
+                  autoComplete="new-password"
                   placeholder={t('auth.confirmPasswordPlaceholder', { defaultValue: 'Confirm your password' })}
                 />
                 {errors.confirmPassword && (
