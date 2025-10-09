@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { setLanguageCookie } from '@/lib/cookies';
 import { useRouter } from 'next/navigation';
 import { useLocale } from 'next-intl';
+import { Button } from '@/components/ui/button';
 
 interface Language {
   code: string;
@@ -67,20 +68,15 @@ export function LangToggle({ className }: LangToggleProps) {
       aria-label="Language selection"
     >
       {!isOpen ? (
-        <button
+        <Button
+          variant="outline"
+          size="icon"
           onClick={() => setIsOpen(true)}
-          className={cn(
-            'h-9 w-9 inline-flex items-center justify-center rounded-md',
-            'border border-input bg-background',
-            'hover:bg-accent hover:text-accent-foreground',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-            'transition-colors'
-          )}
           aria-label="Select language"
           aria-expanded={isOpen}
         >
           <Globe className="h-[1.2rem] w-[1.2rem]" />
-        </button>
+        </Button>
       ) : (
         <div 
           className={cn(
@@ -92,21 +88,20 @@ export function LangToggle({ className }: LangToggleProps) {
             const isActive = lang.code === currentLocale;
             
             return (
-              <button
+              <Button
                 key={lang.code}
+                variant={isActive ? "secondary" : "ghost"}
+                size="sm"
                 onClick={() => handleLanguageChange(lang.code)}
                 className={cn(
-                  'h-8 px-3 rounded-md text-sm font-medium transition-colors',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
-                  isActive
-                    ? 'bg-accent text-accent-foreground'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                  'h-8 px-3',
+                  isActive && 'bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground'
                 )}
                 aria-pressed={isActive}
                 aria-label={`Switch to ${lang.label}`}
               >
                 {lang.label}
-              </button>
+              </Button>
             );
           })}
         </div>
