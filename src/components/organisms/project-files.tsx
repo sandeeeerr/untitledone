@@ -3,7 +3,7 @@
 import React from 'react'
 import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2, FileAudio } from 'lucide-react'
+import { FileAudio } from 'lucide-react'
 import { FileCardSkeletonGrid } from '@/components/atoms/skeletons'
 import { getFileIconForName } from '@/lib/ui/file-icons'
 import VersionAccordion from '@/components/molecules/version-accordion'

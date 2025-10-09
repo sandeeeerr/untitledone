@@ -6,7 +6,7 @@ import LayoutSidebar from '@/components/organisms/layout-sidebar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { FileAudio, Music, Settings, Tags, Wrench, UserPlus, Clock, MessageSquare, Upload, Plus, ArrowUpDown, ArrowLeft } from 'lucide-react';
+import { FileAudio, Music, Settings, Tags, Wrench, UserPlus, Clock, MessageSquare, Upload, Plus, ArrowUpDown } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useCurrentUser } from '@/hooks/use-current-user';
@@ -23,8 +23,6 @@ import ProjectActivity from '@/components/organisms/project-activity';
 import ProjectFiles from '@/components/organisms/project-files';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import EmptyState from '@/components/atoms/empty-state';
-import LoadingState from '@/components/atoms/loading-state';
-import PageLoading from '@/components/atoms/page-loading';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatTimeAgo } from '@/lib/utils/date';
@@ -93,7 +91,14 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
   }, [activity, project?.updated_at]);
 
   if (isLoading) {
-    return <PageLoading title="Loading..." message="Loading project..." />
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="text-lg font-medium">Loading...</div>
+          <div className="text-sm text-muted-foreground">Loading project...</div>
+        </div>
+      </div>
+    )
   }
 
   if (error || !project) {

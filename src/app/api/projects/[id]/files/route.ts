@@ -129,7 +129,7 @@ export async function POST(
     // Resolve target version (prefer provided, else active version if any)
     let resolvedVersionId: string | null = meta.data.versionId ?? null;
     if (!resolvedVersionId) {
-      const { data: activeVersion, error: activeVersionError } = await (supabase as SupabaseClient)
+      const { data: activeVersion } = await (supabase as SupabaseClient)
         .from("project_versions")
         .select("id")
         .eq("project_id", projectId)
