@@ -28,7 +28,7 @@ import { useProfile, useRecentProjects, useProjects, usePinnedProjects, usePinPr
 import { getProjectActivity } from "@/lib/api/projects"
 import { useQueries } from "@tanstack/react-query"
 import NavUser from "@/components/molecules/nav-user"
-import SidebarBugReportCard from "@/components/molecules/sidebar-bug-report-card"
+import SidebarStorageCard from "@/components/molecules/sidebar-storage-card"
 import UploadDialog from "@/components/molecules/upload-dialog"
 import CreateVersionDialog from "@/components/molecules/create-version-dialog"
 import InviteDialog from "@/components/molecules/invite-dialog"
@@ -348,7 +348,7 @@ export default function MainSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <div className="px-2 w-full group-data-[collapsible=icon]:hidden">
-          <SidebarBugReportCard />
+          <SidebarStorageCard />
         </div>
         {profile?.username && (
           <NavUser

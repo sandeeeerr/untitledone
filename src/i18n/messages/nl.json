@@ -10,6 +10,10 @@
       "title": "Bug gevonden?",
       "description": "UntitledOne is in beta. Meld problemen zodat we ze snel kunnen oplossen.",
       "report": "Meld een bug"
+    },
+    "storage": {
+      "title": "Opslag",
+      "upgrade": "Upgrade plan"
     }
   },
   "home": {
