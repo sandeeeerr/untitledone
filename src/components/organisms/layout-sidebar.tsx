@@ -85,14 +85,14 @@ export default function LayoutSidebar({
               className="fixed top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
               style={{ left: sidebarWidthPx, width: `calc(100vw - ${sidebarWidthPx}px)` }}
             >
-              <div className="container mx-auto max-w-7xl px-2 sm:px-4 md:px-6 lg:px-8 w-full">
+              <div className="mx-auto max-w-7xl px-2 sm:px-4 md:px-6 lg:px-8">
                 <AppHeader fullWidth={true} matchSidebarWidth={false} showSidebarTriggerOnMobile={true} />
               </div>
             </header>
             {/* Spacer to offset fixed header height */}
             <div aria-hidden className="h-16" />
 
-            <div className="container mx-auto max-w-7xl px-2 sm:px-4 md:px-6 lg:px-8 py-6 w-full">
+            <div className="mx-auto max-w-7xl px-2 sm:px-4 md:px-6 lg:px-8 py-6">
               <div className="pb-3 min-w-0">
                 <PageTitle title={title} actions={titleActions} />
               </div>
