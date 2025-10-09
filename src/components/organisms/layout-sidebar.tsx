@@ -78,33 +78,33 @@ export default function LayoutSidebar({
       <SidebarProvider open={sidebarOpen}>
         <MainSidebar />
 
-        <main className={cn('flex-1 flex flex-col min-h-svh bg-background', containerClassName)}>
-          {/* Fixed header aligned after the sidebar (responsive to sidebar width/icon) */}
-          <header
-            className="fixed top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
-            style={{ left: sidebarWidthPx, width: `calc(100vw - ${sidebarWidthPx}px)` }}
-          >
-            <div className="container mx-auto max-w-7xl px-2 sm:px-4 md:px-6 lg:px-8 w-full">
-              <AppHeader fullWidth={true} matchSidebarWidth={false} showSidebarTriggerOnMobile={true} />
-            </div>
-          </header>
-          {/* Spacer to offset fixed header height */}
-          <div aria-hidden className="h-16" />
+        <BreadcrumbProvider value={{ currentPageLabel: breadcrumbLabelOverride, projectLabelOverride: projectBreadcrumbLabelOverride || breadcrumbProject?.name }}>
+          <main className={cn('flex-1 flex flex-col min-h-svh bg-background', containerClassName)}>
+            {/* Fixed header aligned after the sidebar (responsive to sidebar width/icon) */}
+            <header
+              className="fixed top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+              style={{ left: sidebarWidthPx, width: `calc(100vw - ${sidebarWidthPx}px)` }}
+            >
+              <div className="container mx-auto max-w-7xl px-2 sm:px-4 md:px-6 lg:px-8 w-full">
+                <AppHeader fullWidth={true} matchSidebarWidth={false} showSidebarTriggerOnMobile={true} />
+              </div>
+            </header>
+            {/* Spacer to offset fixed header height */}
+            <div aria-hidden className="h-16" />
 
-          <BreadcrumbProvider value={{ currentPageLabel: breadcrumbLabelOverride, projectLabelOverride: projectBreadcrumbLabelOverride || breadcrumbProject?.name }}>
             <div className="container mx-auto max-w-7xl px-2 sm:px-4 md:px-6 lg:px-8 py-6 w-full">
               <div className="pb-3 min-w-0">
                 <PageTitle title={title} actions={titleActions} />
               </div>
 
-              <div className={cn('flex-1 min-w-0 py-8', className)}>
+              <div className={cn('flex-1 min-w-0 pb-8 pt-4', className)}>
                 <div className={cn('flex-1 min-w-0', contentClassName)}>
                   {children}
                 </div>
               </div>
             </div>
-          </BreadcrumbProvider>
-        </main>
+          </main>
+        </BreadcrumbProvider>
       </SidebarProvider>
     </>
   );
