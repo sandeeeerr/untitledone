@@ -59,3 +59,4 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+supabase/_seed.sql.backup
