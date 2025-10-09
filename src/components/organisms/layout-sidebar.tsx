@@ -82,17 +82,17 @@ export default function LayoutSidebar({
           <main className={cn('flex-1 flex flex-col min-h-svh bg-background', containerClassName)}>
             {/* Fixed header aligned after the sidebar (responsive to sidebar width/icon) */}
             <header
-              className="fixed top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
-              style={{ left: sidebarWidthPx, width: `calc(100vw - ${sidebarWidthPx}px)` }}
+              className="fixed top-0 right-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+              style={{ left: sidebarWidthPx }}
             >
-              <div className="mx-auto max-w-7xl px-2 sm:px-4 md:px-6 lg:px-8">
+              <div className="container mx-auto max-w-7xl px-2 sm:px-4 md:px-6 lg:px-8 w-full">
                 <AppHeader fullWidth={true} matchSidebarWidth={false} showSidebarTriggerOnMobile={true} />
               </div>
             </header>
             {/* Spacer to offset fixed header height */}
             <div aria-hidden className="h-16" />
 
-            <div className="mx-auto max-w-7xl px-2 sm:px-4 md:px-6 lg:px-8 py-6">
+            <div className="container mx-auto max-w-7xl px-2 sm:px-4 md:px-6 lg:px-8 py-6 w-full">
               <div className="pb-3 min-w-0">
                 <PageTitle title={title} actions={titleActions} />
               </div>
