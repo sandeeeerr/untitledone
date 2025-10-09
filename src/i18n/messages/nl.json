@@ -13,6 +13,7 @@
     },
     "storage": {
       "title": "Opslag",
+      "description": "500MB beschikbaar tijdens beta",
       "upgrade": "Upgrade plan"
     }
   },
