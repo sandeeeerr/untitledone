@@ -27,7 +27,7 @@ export default function DashboardError({
           </div>
           <CardTitle>Dashboard Error</CardTitle>
           <CardDescription>
-            We couldn't load your dashboard. This might be a temporary issue.
+            We couldn&apos;t load your dashboard. This might be a temporary issue.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-2">

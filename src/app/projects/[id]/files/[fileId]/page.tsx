@@ -3,9 +3,6 @@ import { Suspense } from "react";
 import FileDetailClient from "./file-detail-client";
 import LayoutSidebar from "@/components/organisms/layout-sidebar";
 import { getProject, getProjectFileDetail } from "@/lib/api/projects";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 
 interface PageProps {
   params: Promise<{ id: string; fileId: string }>;

@@ -3,23 +3,19 @@
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useEffect, useMemo, useState } from 'react';
-import type { WidgetItem } from '@/lib/ui/widget-types';
-import WidgetGrid from '@/components/organisms/widget-grid.client';
+import { useEffect, useState } from 'react';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { getCurrentProfile } from '@/lib/api/profiles';
 import LayoutSidebar from '@/components/organisms/layout-sidebar';
 import { Badge } from '@/components/ui/badge';
-import Prose from '@/components/atoms/prose';
-import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Rocket, Plus, Sparkles, Pencil, Pin, Clock, Users, FileAudio, Star } from 'lucide-react';
+import { Rocket, Plus, Pencil, Clock, Users, FileAudio, Star } from 'lucide-react';
 import { CircleAlert as CircleAlertIcon, X as XIcon } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import UserAvatar from '@/components/atoms/user-avatar';
-import { getProjects, type Project, getProjectsLastActivity, getProject, getProjectActivity, type ProjectActivityMicroChange, type ProjectActivityVersion, listProjectMembers, type ProjectMember } from '@/lib/api/projects';
+import { getProjects, type Project, getProject, getProjectActivity, type ProjectActivityMicroChange, type ProjectActivityVersion, listProjectMembers, type ProjectMember } from '@/lib/api/projects';
 import { listPins } from '@/lib/api/pins';
 import { formatRelativeTime, formatRelativeTimeWithTranslations } from '@/lib/utils/time';
 import { getChangeIcon, getChangePrefix } from '@/lib/ui/activity';
@@ -42,14 +38,7 @@ export default function DashboardPage() {
   const t = useTranslations('dashboard');
   const tNav = useTranslations('navigation');
   const tProj = useTranslations('projects');
-  const [layout, setLayout] = useState<WidgetItem[]>(() => ([
-    { id: 'hello-1', widgetType: 'hello', x: 0, y: 0, w: 4, h: 3, title: 'Widget 1', locked: true },
-    { id: 'hello-2', widgetType: 'hello', x: 4, y: 0, w: 4, h: 3, title: 'Widget 2', locked: true },
-  ]));
-  const [isEditing, setIsEditing] = useState(false);
   const [recentProjects, setRecentProjects] = useState<Project[] | null>(null);
-  const [recentLoading, setRecentLoading] = useState(false);
-  const [recentActivity, setRecentActivity] = useState<Record<string, string>>({});
   const [pinnedProjects, setPinnedProjects] = useState<Project[] | null>(null);
   const [pinsLoading, setPinsLoading] = useState(false);
   const [pinnedMembers, setPinnedMembers] = useState<Record<string, ProjectMember[]>>({});
@@ -62,8 +51,6 @@ export default function DashboardPage() {
     filename?: string;
   }>>([]);
   const [digestLoading, setDigestLoading] = useState(false);
-
-  const gridOptions = useMemo(() => ({ column: 12, margin: 8, float: true }), []);
 
   // Once-per-session welcome toast (bottom-right), 20s, dismissible
   useEffect(() => {
@@ -127,7 +114,7 @@ export default function DashboardPage() {
     async function checkProfile() {
       try {
         if (!currentUser) { setProfileMissing(null); return; }
-        const p = await getCurrentProfile().catch(() => null as any);
+        const p = await getCurrentProfile().catch(() => null);
         if (cancelled) return;
         const needsDisplay = !p?.display_name;
         const needsUsername = !p?.username;
@@ -148,22 +135,14 @@ export default function DashboardPage() {
     let cancelled = false;
     async function loadRecent() {
       try {
-        setRecentLoading(true);
         const projects = await getProjects();
         if (cancelled) return;
         // sort by updated_at desc, take 5
         const sorted = [...projects].sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
         const top = sorted.slice(0, 5);
         setRecentProjects(top);
-        const ids = top.map((p) => p.id);
-        if (ids.length) {
-          const last = await getProjectsLastActivity(ids);
-          if (!cancelled) setRecentActivity(last);
-        }
       } catch {
         setRecentProjects([]);
-      } finally {
-        setRecentLoading(false);
       }
     }
     loadRecent();
@@ -362,12 +341,6 @@ export default function DashboardPage() {
                     addition: 'border-green-200 dark:border-green-900/30',
                     update: 'border-orange-200 dark:border-orange-900/30',
                     deletion: 'border-red-200 dark:border-red-900/30',
-                  };
-                  const barColor: Record<string, string> = {
-                    feedback: 'bg-blue-500',
-                    addition: 'bg-green-500',
-                    update: 'bg-orange-500',
-                    deletion: 'bg-red-500',
                   };
                   const tKey = item.type in typeBg ? item.type : 'update';
                   return (
@@ -594,7 +567,7 @@ export default function DashboardPage() {
         {userLoading && <Skeleton className="h-8 w-64" />}
 
         {/* Edit toolbar (appears only while editing) */}
-        {isEditing && (
+        {false && (
           <div className="flex items-center justify-end">
             <div id="dashboard-toolbar" className="hidden md:flex items-center gap-2">
               <div className="grid-stack-item border rounded px-3 py-2 text-xs text-muted-foreground">

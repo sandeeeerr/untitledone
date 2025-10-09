@@ -27,7 +27,7 @@ export default function ProjectsError({
           </div>
           <CardTitle>Projects Error</CardTitle>
           <CardDescription>
-            We couldn't load your projects. Please try again or contact support if the issue persists.
+            We couldn&apos;t load your projects. Please try again or contact support if the issue persists.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-2">

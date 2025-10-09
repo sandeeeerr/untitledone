@@ -37,7 +37,7 @@ export async function GET() {
       mbRemaining: Math.round(remainingBytes / (1024 * 1024)),
       percentUsed: percent,
     }, { status: 200 });
-  } catch (e) {
+  } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

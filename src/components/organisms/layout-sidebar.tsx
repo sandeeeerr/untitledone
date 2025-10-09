@@ -86,7 +86,7 @@ export default function LayoutSidebar({
               style={{ left: sidebarWidthPx }}
             >
               <div className="container mx-auto max-w-7xl px-2 sm:px-4 md:px-6 lg:px-8 w-full">
-                <AppHeader fullWidth={true} matchSidebarWidth={false} showSidebarTriggerOnMobile={true} />
+                <AppHeader fullWidth={true} showSidebarTriggerOnMobile={true} />
               </div>
             </header>
             {/* Spacer to offset fixed header height */}

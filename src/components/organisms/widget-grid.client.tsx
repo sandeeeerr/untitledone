@@ -87,8 +87,8 @@ export function WidgetGrid({ items, options, onLayoutChange, editable = false, d
     ) => {
       if (!changedItems) return;
       const mapped = changedItems.map((n: GridStackNode) => ({
-        id: String((n as any).id ?? n.el?.getAttribute('gs-id') ?? ''),
-        widgetType: (n.el?.getAttribute('data-widget-type') as any) ?? 'hello',
+        id: String((n as GridStackNode & { id?: string }).id ?? n.el?.getAttribute('gs-id') ?? ''),
+        widgetType: ((n.el?.getAttribute('data-widget-type') as string) ?? 'hello') as 'hello',
         x: n.x ?? 0,
         y: n.y ?? 0,
         w: n.w ?? 1,
@@ -102,7 +102,7 @@ export function WidgetGrid({ items, options, onLayoutChange, editable = false, d
     };
 
     const handleElementEvent: GridStackElementHandler = (_event, el) => {
-      const node = (el as any).gridstackNode as GridStackNode | undefined;
+      const node = (el as HTMLElement & { gridstackNode?: GridStackNode }).gridstackNode;
       if (!node) return;
       const targetW = clampToAllowed(node.w ?? 1, allowedWidths);
       const targetH = clampToAllowed(node.h ?? 1, allowedHeights);
@@ -117,7 +117,7 @@ export function WidgetGrid({ items, options, onLayoutChange, editable = false, d
       nodes.forEach((n, idx) => {
         const el = n.el as HTMLElement | undefined;
         if (!el) return;
-        let id = String((n as any).id ?? el.getAttribute('gs-id') ?? '');
+        let id = String((n as GridStackNode & { id?: string }).id ?? el.getAttribute('gs-id') ?? '');
         if (!id) {
           id = `w-${Date.now()}-${idx}`;
           grid.update(el, { id });
@@ -131,7 +131,7 @@ export function WidgetGrid({ items, options, onLayoutChange, editable = false, d
         const title = el.getAttribute('data-title') ?? 'New Widget';
         const item: WidgetItem = {
           id,
-          widgetType: (el.getAttribute('data-widget-type') as any) ?? 'hello',
+          widgetType: ((el.getAttribute('data-widget-type') as string) ?? 'hello') as 'hello',
           x: n.x ?? 0,
           y: n.y ?? 0,
           w,
@@ -149,7 +149,7 @@ export function WidgetGrid({ items, options, onLayoutChange, editable = false, d
     const handleRemoved: GridStackNodesHandler = (_event, nodes) => {
       if (!nodes?.length) return;
       const ids = nodes
-        .map((n) => String((n as any).id ?? n.el?.getAttribute('gs-id') ?? ''))
+        .map((n) => String((n as GridStackNode & { id?: string }).id ?? n.el?.getAttribute('gs-id') ?? ''))
         .filter(Boolean);
       if (ids.length) onItemsRemovedRef.current?.(ids);
     };

@@ -19,12 +19,12 @@ import {
   SidebarMenuBadge,
 } from "@/components/ui/sidebar"
 import { Logo } from "@/components/ui/logo"
-import { Home, FolderClosed, Plus, Upload, UserPlus, User2, Bell, ChevronRight, Star, AtSign, Compass, type LucideIcon } from "lucide-react"
+import { Home, FolderClosed, Plus, Upload, UserPlus, Bell, ChevronRight, Star, AtSign, Compass } from "lucide-react"
 import Link from "next/link"
 import * as React from "react"
 import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { useProfile, useRecentProjects, useProjects, usePinnedProjects, usePinProject, useUnpinProject } from "@/lib/api/queries"
+import { useProfile, useProjects, usePinnedProjects, usePinProject, useUnpinProject } from "@/lib/api/queries"
 import { getProjectActivity } from "@/lib/api/projects"
 import { useQueries } from "@tanstack/react-query"
 import NavUser from "@/components/molecules/nav-user"
@@ -32,31 +32,11 @@ import SidebarStorageCard from "@/components/molecules/sidebar-storage-card"
 import UploadDialog from "@/components/molecules/upload-dialog"
 import CreateVersionDialog from "@/components/molecules/create-version-dialog"
 import InviteDialog from "@/components/molecules/invite-dialog"
-import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-
-// Menu items
-const items: Array<{
-  titleKey: string
-  url: string
-  icon: LucideIcon
-}> = [
-  {
-    titleKey: "navigation.dashboard",
-    url: "/dashboard",
-    icon: Home,
-  },
-  {
-    titleKey: "navigation.projects",
-    url: "/projects",
-    icon: FolderClosed,
-  },
-]
 
 export default function MainSidebar() {
   const pathname = usePathname()
   const t = useTranslations()
-  const { data: recent } = useRecentProjects(4)
   const { data: profile } = useProfile()
   const { data: allProjects = [] } = useProjects()
   const { data: pins = [] } = usePinnedProjects()

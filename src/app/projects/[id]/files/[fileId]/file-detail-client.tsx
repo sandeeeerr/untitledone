@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import UserAvatar from "@/components/atoms/user-avatar";
 import EmptyState from "@/components/atoms/empty-state";
-import LoadingState from "@/components/atoms/loading-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Download, Clock, User, HardDrive, Trash2, Replace } from "lucide-react";
 import { getFileIconForName, getFileIconForMime } from "@/lib/ui/file-icons";
