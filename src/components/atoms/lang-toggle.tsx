@@ -96,7 +96,7 @@ export function LangToggle({ className }: LangToggleProps) {
         <div 
           className={cn(
             'absolute right-0 top-0 z-50',
-            'inline-flex items-center gap-1 rounded-md border border-input bg-popover p-1 shadow-md',
+            'inline-flex items-center gap-0.5 rounded-md border border-input bg-background px-1 h-9',
             'animate-in fade-in-0 zoom-in-95 duration-200'
           )}
           role="menu"
@@ -109,7 +109,7 @@ export function LangToggle({ className }: LangToggleProps) {
                 key={lang.code}
                 onClick={() => handleLanguageChange(lang.code)}
                 className={cn(
-                  'relative flex cursor-default select-none items-center rounded-sm px-3 py-1.5 text-sm outline-none whitespace-nowrap',
+                  'relative flex h-7 cursor-default select-none items-center rounded-sm px-2.5 text-sm font-medium outline-none whitespace-nowrap',
                   'transition-colors focus:bg-accent focus:text-accent-foreground',
                   isActive 
                     ? 'bg-accent text-accent-foreground' 
