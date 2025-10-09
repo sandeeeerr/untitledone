@@ -142,7 +142,7 @@ export default function MainSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton disabled>
+                <SidebarMenuButton tooltip="Coming soon in beta" disabled>
                   <Compass className="h-4 w-4" />
                   <span>{t("navigation.explore")}</span>
                 </SidebarMenuButton>
@@ -161,13 +161,13 @@ export default function MainSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton className="justify-between" disabled>
+                <SidebarMenuButton className="justify-between" tooltip="Coming soon - activity notifications" disabled>
                   <div className="flex items-center gap-2"><Bell className="h-4 w-4" /><span>{t("navigation.notifications")}</span></div>
                 </SidebarMenuButton>
                 <SidebarMenuBadge>0</SidebarMenuBadge>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton disabled>
+                <SidebarMenuButton tooltip="Coming soon - project invitations" disabled>
                   <UserPlus className="h-4 w-4" />
                   <span>{t("navigation.invitations")}</span>
                 </SidebarMenuButton>

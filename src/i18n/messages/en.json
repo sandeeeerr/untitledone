@@ -125,7 +125,10 @@
     "usernameAutoUpdate": "Username is automatically generated and updated when you change your display name.",
     "displayName": "Display name",
     "displayNamePlaceholder": "Your display name",
-    "noUser": "No user is currently signed in."
+    "noUser": "No user is currently signed in.",
+    "notFound": "User not found",
+    "notFoundDescription": "It looks like this user doesn't exist or doesn't have a public profile.",
+    "backToHome": "Back to home"
   },
   "projects": {
     "title": "My projects",
@@ -325,6 +328,7 @@
     "noActivityYet": "No activity yet",
     "uploadsAndComments": "Uploads and comments will appear here.",
     "viewFile": "View file",
+    "goToComment": "Go to comment",
     "noActivityFound": "No activity found",
     "tryDifferentSearch": "Try a different search term.",
     "createFirstVersion": "Create first version",

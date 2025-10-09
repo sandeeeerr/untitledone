@@ -490,7 +490,7 @@ export default function ProjectActivity({ projectId, query, sortBy = 'newest', o
                                 </div>
                                 {isFeedback ? (
                                   isFileLinked ? (
-                                    <FileCTAs fileId={change.fileId as string} label="Ga naar reactie" anchor={change.id} icon={<MessageSquare className="h-3.5 w-3.5 text-foreground" />} />
+                                    <FileCTAs fileId={change.fileId as string} label={t("goToComment")} anchor={change.id} icon={<MessageSquare className="h-3.5 w-3.5 text-foreground" />} />
                                   ) : (
                                     <CommentButton changeId={change.id} />
                                   )

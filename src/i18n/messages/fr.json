@@ -143,7 +143,10 @@
     "usernameAutoUpdate": "Le nom d'utilisateur est automatiquement généré et mis à jour lorsque vous changez votre nom d'affichage.",
     "displayName": "Nom d'affichage",
     "displayNamePlaceholder": "Votre nom d'affichage",
-    "noUser": "Aucun utilisateur n'est actuellement connecté."
+    "noUser": "Aucun utilisateur n'est actuellement connecté.",
+    "notFound": "Utilisateur introuvable",
+    "notFoundDescription": "Il semble que cet utilisateur n'existe pas ou n'a pas de profil public.",
+    "backToHome": "Retour à l'accueil"
   },
   "projects": {
     "title": "Mes projets",
@@ -256,6 +259,8 @@
     "problemLoadingData": "Un problème est survenu lors du chargement des données d'activité.",
     "noActivityYet": "Aucune activité pour le moment",
     "uploadsAndComments": "Les envois et commentaires apparaîtront ici.",
+    "viewFile": "Voir le fichier",
+    "goToComment": "Aller au commentaire",
     "noActivityFound": "Aucune activité trouvée",
     "tryDifferentSearch": "Essayez un autre terme de recherche.",
     "createFirstVersion": "Créer la première version",

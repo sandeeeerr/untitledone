@@ -139,7 +139,16 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
 	return (
 		<LayoutSidebar 
 			title={t('title')}
-			breadcrumbLabelOverride={project.name}
+			breadcrumbLabelOverride="Edit"
+			projectIdForBreadcrumb={id}
+			titleActions={
+				<button 
+					onClick={() => router.push(`/projects/${id}`)}
+					className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+				>
+					← {t('actions.cancel', { default: 'Cancel' })}
+				</button>
+			}
 		>
 			<div>
 				<Card>

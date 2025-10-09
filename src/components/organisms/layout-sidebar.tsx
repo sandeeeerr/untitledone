@@ -75,11 +75,17 @@ export default function LayoutSidebar({
 
   return (
     <>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-background focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:rounded-md"
+      >
+        Skip to main content
+      </a>
       <SidebarProvider open={sidebarOpen}>
         <MainSidebar />
 
         <BreadcrumbProvider value={{ currentPageLabel: breadcrumbLabelOverride, projectLabelOverride: projectBreadcrumbLabelOverride || breadcrumbProject?.name }}>
-          <main className={cn('flex-1 flex flex-col min-h-svh bg-background', containerClassName)}>
+          <main id="main-content" className={cn('flex-1 flex flex-col min-h-svh bg-background', containerClassName)}>
             {/* Fixed header aligned after the sidebar (responsive to sidebar width/icon) */}
             <header
               className="fixed top-0 right-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"

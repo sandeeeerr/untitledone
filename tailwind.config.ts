@@ -15,6 +15,21 @@ const config: Config = {
 			screens: { "2xl": "1400px" }
 		},
     	extend: {
+			/**
+			 * Component Height Standards (Design Tokens)
+			 * ============================================
+			 * Use these consistent heights across the application:
+			 * 
+			 * h-8  (32px) - Small/compact controls (dense lists, chips, small buttons)
+			 * h-9  (36px) - Default for forms and toolbars (inputs, selects, buttons)
+			 * h-10 (40px) - Large/prominent CTAs (primary action buttons)
+			 * 
+			 * Pair with consistent padding:
+			 * - Buttons: px-4 (16px horizontal)
+			 * - Inputs:  px-3 (12px horizontal), text aligns with py-2
+			 * 
+			 * Border radius: Use rounded-md (calc(var(--radius) - 2px)) for consistency
+			 */
 			boxShadow: {
 				sm: "0 1px 2px 0 hsl(var(--foreground)/0.06)",
 				DEFAULT: "0 1px 3px 0 hsl(var(--foreground)/0.1), 0 1px 2px -1px hsl(var(--foreground)/0.1)",

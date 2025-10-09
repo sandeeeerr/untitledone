@@ -122,7 +122,10 @@
     "usernameAutoUpdate": "Gebruikersnaam wordt automatisch gegenereerd en bijgewerkt wanneer je je weergavenaam wijzigt.",
     "displayName": "Weergavenaam",
     "displayNamePlaceholder": "Je weergavenaam",
-    "noUser": "Er is momenteel geen gebruiker ingelogd."
+    "noUser": "Er is momenteel geen gebruiker ingelogd.",
+    "notFound": "Gebruiker niet gevonden",
+    "notFoundDescription": "Het lijkt erop dat deze gebruiker niet bestaat of geen publiek profiel heeft.",
+    "backToHome": "Ga terug naar home"
   },
   "projects": {
     "title": "Mijn projecten",
@@ -322,6 +325,7 @@
     "noActivityYet": "Nog geen activiteit",
     "uploadsAndComments": "Uploads en opmerkingen verschijnen hier.",
     "viewFile": "Bestand bekijken",
+    "goToComment": "Ga naar reactie",
     "noActivityFound": "Geen activiteit gevonden",
     "tryDifferentSearch": "Probeer een andere zoekterm.",
     "createFirstVersion": "Eerste versie maken",
