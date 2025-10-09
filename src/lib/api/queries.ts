@@ -210,6 +210,43 @@ export function useProjectInvitations(projectId: string) {
     });
 }
 
+export type PendingInvitation = {
+	id: string;
+	project_id: string;
+	role: string;
+	created_at: string;
+	expires_at: string;
+	invited_by: string;
+	projects: {
+		id: string;
+		name: string;
+		description: string | null;
+		genre: string | null;
+		is_private: boolean;
+		owner_id: string;
+		profiles: {
+			id: string;
+			display_name: string | null;
+			username: string | null;
+			avatar_url: string | null;
+		} | null;
+	};
+};
+
+export function usePendingInvitations() {
+	return useQuery<PendingInvitation[]>({
+		queryKey: ["invitations", "pending"],
+		queryFn: async () => {
+			const res = await fetch("/api/invitations/pending");
+			if (res.status === 401) return [];
+			if (!res.ok) throw new Error("Failed to load pending invitations");
+			return res.json();
+		},
+		refetchInterval: 60000, // Poll every minute for new invitations
+		staleTime: 30000, // Consider fresh for 30 seconds
+	});
+}
+
 export function useCreateProjectInvitation(projectId: string) {
     const queryClient = useQueryClient();
     const { toast } = useToast();

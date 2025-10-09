@@ -430,6 +430,7 @@
     "user": "User",
     "userMenu": "User menu",
     "home": "Home",
+    "error": "Error",
     "avatarPreview": "Avatar preview",
     "displayName": "Display name",
     "yourDisplayName": "Your display name",
@@ -573,5 +574,18 @@
         "contact": "Contact"
       }
     }
+  },
+  "invitations": {
+    "description": "Projects you've been invited to join",
+    "noInvitations": "No invitations",
+    "noInvitationsDescription": "You currently have no pending project invitations",
+    "accept": "Accept",
+    "decline": "Decline",
+    "accepted": "Invitation accepted",
+    "declined": "Invitation declined",
+    "youJoined": "You joined",
+    "invitationIgnored": "The invitation has been ignored",
+    "expiresIn": "Expires in",
+    "from": "From"
   }
 }

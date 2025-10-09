@@ -384,6 +384,19 @@
     "contextSpecific": "Les commentaires sont spécifiques au contexte",
     "openActivityOrFileToComment": "Ouvrez un changement d'activité, une version ou un fichier pour voir et ajouter des commentaires."
   },
+  "invitations": {
+    "description": "Projets auxquels vous avez été invité",
+    "noInvitations": "Aucune invitation",
+    "noInvitationsDescription": "Vous n'avez actuellement aucune invitation de projet en attente",
+    "accept": "Accepter",
+    "decline": "Refuser",
+    "accepted": "Invitation acceptée",
+    "declined": "Invitation refusée",
+    "youJoined": "Vous avez rejoint",
+    "invitationIgnored": "L'invitation a été ignorée",
+    "expiresIn": "Expire dans",
+    "from": "De"
+  },
   "alerts": {
     "verifyEmailTitle": "Vérifiez votre e-mail pour activer votre compte",
     "verifyEmailDescription": "Nous avons envoyé un lien de confirmation à votre boîte de réception. Consultez votre e-mail pour terminer l'inscription.",

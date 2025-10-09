@@ -24,7 +24,7 @@ import Link from "next/link"
 import * as React from "react"
 import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { useProfile, useProjects, usePinnedProjects, usePinProject, useUnpinProject } from "@/lib/api/queries"
+import { useProfile, useProjects, usePinnedProjects, usePinProject, useUnpinProject, usePendingInvitations } from "@/lib/api/queries"
 import { getProjectActivity } from "@/lib/api/projects"
 import { useQueries } from "@tanstack/react-query"
 import NavUser from "@/components/molecules/nav-user"
@@ -32,6 +32,7 @@ import SidebarStorageCard from "@/components/molecules/sidebar-storage-card"
 import UploadDialog from "@/components/molecules/upload-dialog"
 import CreateVersionDialog from "@/components/molecules/create-version-dialog"
 import InviteDialog from "@/components/molecules/invite-dialog"
+import InvitationsSheet from "@/components/organisms/invitations-sheet"
 import { cn } from "@/lib/utils"
 
 export default function MainSidebar() {
@@ -40,6 +41,7 @@ export default function MainSidebar() {
   const { data: profile } = useProfile()
   const { data: allProjects = [] } = useProjects()
   const { data: pins = [] } = usePinnedProjects()
+  const { data: pendingInvitations = [] } = usePendingInvitations()
   const pinMut = usePinProject()
   const unpinMut = useUnpinProject()
   const isProjectRoute = pathname?.startsWith("/projects/") && !pathname?.startsWith("/projects/new")
@@ -167,11 +169,17 @@ export default function MainSidebar() {
                 <SidebarMenuBadge>0</SidebarMenuBadge>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Coming soon - project invitations" disabled>
-                  <UserPlus className="h-4 w-4" />
-                  <span>{t("navigation.invitations")}</span>
-                </SidebarMenuButton>
-                <SidebarMenuBadge>0</SidebarMenuBadge>
+                <InvitationsSheet
+                  trigger={
+                    <SidebarMenuButton className="justify-between">
+                      <div className="flex items-center gap-2">
+                        <UserPlus className="h-4 w-4" />
+                        <span>{t("navigation.invitations")}</span>
+                      </div>
+                    </SidebarMenuButton>
+                  }
+                />
+                <SidebarMenuBadge>{pendingInvitations.length}</SidebarMenuBadge>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton tooltip="Coming soon" disabled>

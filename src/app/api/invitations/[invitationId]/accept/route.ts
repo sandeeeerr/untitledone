@@ -26,25 +26,82 @@ export async function POST(req: Request, { params }: { params: Promise<{ invitat
 
 	const url = new URL(req.url);
 	const token = url.searchParams.get("token");
-	if (!token) {
-		return NextResponse.json({ error: "Missing token" }, { status: 400 });
+
+	// Two flows:
+	// 1. Email flow: requires token (external link)
+	// 2. In-app flow: authenticated user accepting their own invitation (no token needed)
+	
+	if (token) {
+		// Email-based flow with token
+		const { data, error } = await (supabase as SupabaseClient)
+			.rpc("accept_invitation", { invitation_id: validation.data.invitationId, raw_token: token });
+
+		if (error) {
+			console.error("accept_invitation RPC error:", error);
+			const msg = (error as PostgrestError)?.message || "Failed to accept invitation";
+			let status = 400;
+			const lower = msg.toLowerCase();
+			if (lower.includes("not authenticated")) status = 401;
+			else if (lower.includes("email mismatch")) status = 403;
+			else if (lower.includes("not found") || lower.includes("expired")) status = 410;
+			return NextResponse.json({ error: msg }, { status });
+		}
+
+		return NextResponse.json({ success: true, project_id: data?.project_id ?? data?.projectId ?? data }, { status: 200 });
 	}
 
-	// Call RPC to accept invitation
-	const { data, error } = await (supabase as SupabaseClient)
-		.rpc("accept_invitation", { invitation_id: validation.data.invitationId, raw_token: token });
+	// In-app flow: authenticated user accepting directly
+	// Verify the invitation belongs to the user's email
+	const { data: invitation, error: fetchError } = await (supabase as SupabaseClient)
+		.from("project_invitations")
+		.select("id, project_id, email, expires_at, accepted_at")
+		.eq("id", validation.data.invitationId)
+		.single();
 
-	if (error) {
-		console.error("accept_invitation RPC error:", error);
-		const msg = (error as PostgrestError)?.message || "Failed to accept invitation";
-		let status = 400;
-		const lower = msg.toLowerCase();
-		if (lower.includes("not authenticated")) status = 401;
-		else if (lower.includes("email mismatch")) status = 403;
-		else if (lower.includes("not found") || lower.includes("expired")) status = 410;
-		return NextResponse.json({ error: msg }, { status });
+	if (fetchError || !invitation) {
+		return NextResponse.json({ error: "Invitation not found" }, { status: 404 });
 	}
 
-	// Expect RPC to return project_id for redirect
-	return NextResponse.json({ success: true, project_id: data?.project_id ?? data?.projectId ?? data }, { status: 200 });
+	if (invitation.email !== user.email) {
+		return NextResponse.json({ error: "This invitation is not for you" }, { status: 403 });
+	}
+
+	if (invitation.accepted_at) {
+		return NextResponse.json({ error: "Invitation already accepted" }, { status: 400 });
+	}
+
+	if (new Date(invitation.expires_at) < new Date()) {
+		return NextResponse.json({ error: "Invitation has expired" }, { status: 410 });
+	}
+
+	// Accept the invitation by updating it
+	const { error: updateError } = await (supabase as SupabaseClient)
+		.from("project_invitations")
+		.update({
+			accepted_at: new Date().toISOString(),
+			accepted_by: user.id,
+		})
+		.eq("id", invitation.id);
+
+	if (updateError) {
+		console.error("Error accepting invitation:", updateError);
+		return NextResponse.json({ error: "Failed to accept invitation" }, { status: 500 });
+	}
+
+	// Add user as project member
+	const { error: memberError } = await (supabase as SupabaseClient)
+		.from("project_members")
+		.insert({
+			project_id: invitation.project_id,
+			user_id: user.id,
+			role: "collaborator", // or use invitation.role if available
+		});
+
+	if (memberError) {
+		console.error("Error adding member:", memberError);
+		// Don't fail the request if member add fails (might already exist)
+	}
+
+	// Success - return project_id for navigation
+	return NextResponse.json({ success: true, project_id: invitation.project_id }, { status: 200 });
 }

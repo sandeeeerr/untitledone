@@ -374,10 +374,10 @@ export default function ProjectActivity({ projectId, query, sortBy = 'newest', o
                     {version.microChanges.map((change) => {
                       const baseClasses = "flex flex-col gap-3 p-3 rounded-lg border w-full max-w-full";
                       const typeStyles: Record<string, string> = {
-                        feedback: "bg-blue-50/30 border-blue-100 dark:bg-blue-950/10 dark:border-blue-900/30",
-                        addition: "bg-green-50/30 border-green-100 dark:bg-green-950/10 dark:border-green-900/30",
-                        update: "bg-orange-50/30 border-orange-100 dark:bg-orange-950/10 dark:border-orange-900/30",
-                        deletion: "bg-red-50/30 border-red-100 dark:bg-red-950/10 dark:border-red-900/30",
+                        feedback: "bg-blue-50/30 border-blue-100 dark:bg-blue-900/25 dark:border-blue-800/60",
+                        addition: "bg-green-50/30 border-green-100 dark:bg-green-900/25 dark:border-green-800/60",
+                        update: "bg-orange-50/30 border-orange-100 dark:bg-orange-900/25 dark:border-orange-800/60",
+                        deletion: "bg-red-50/30 border-red-100 dark:bg-red-900/25 dark:border-red-800/60",
                       };
 
                       const isFeedback = change.type === "feedback";

@@ -426,6 +426,7 @@
     "user": "Gebruiker",
     "userMenu": "Gebruikersmenu",
     "home": "Home",
+    "error": "Fout",
     "avatarPreview": "Avatar voorvertoning",
     "displayName": "Weergavenaam",
     "yourDisplayName": "Jouw weergavenaam",
@@ -561,6 +562,19 @@
         "contact": "Contact"
       }
     }
+  },
+  "invitations": {
+    "description": "Projecten waar je voor bent uitgenodigd",
+    "noInvitations": "Geen uitnodigingen",
+    "noInvitationsDescription": "Je hebt momenteel geen openstaande project uitnodigingen",
+    "accept": "Accepteren",
+    "decline": "Afwijzen",
+    "accepted": "Uitnodiging geaccepteerd",
+    "declined": "Uitnodiging afgewezen",
+    "youJoined": "Je bent toegetreden tot",
+    "invitationIgnored": "De uitnodiging is genegeerd",
+    "expiresIn": "Verloopt over",
+    "from": "Van"
   },
   "alerts": {
     "verifyEmailTitle": "Verifieer je e-mail om je account te activeren",
