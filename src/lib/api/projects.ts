@@ -29,7 +29,7 @@ export type Project = {
 	downloads_enabled: boolean;
 	daw_info: Record<string, string>;
 	plugins_used: Array<{ name: string; version?: string }>;
-	status: string;
+	status: string | null;
 	created_at: string;
 	updated_at: string;
 	owner_id: string;
