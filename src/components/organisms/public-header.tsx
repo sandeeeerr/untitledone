@@ -12,8 +12,6 @@ import { useProfile } from "@/lib/api/queries"
 import supabaseClient from "@/lib/supabase-client"
 import { useState } from "react"
 import { SettingsModal } from "@/components/molecules/settings-modal"
-import { LangToggle } from "@/components/atoms/lang-toggle"
-import ModeToggle from "@/components/molecules/mode-toggle"
 
 export default function LandingHeader() {
 	const { data: currentUser } = useCurrentUser()
@@ -46,8 +44,6 @@ export default function LandingHeader() {
 					</div>
 				</div>
 				<nav className="flex items-center gap-2">
-					<LangToggle className="hidden sm:inline-flex" />
-					<ModeToggle />
 					{currentUser ? (
 						<>
 							<Button variant="ghost" asChild>
