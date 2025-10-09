@@ -80,21 +80,22 @@ export function LangToggle({ className }: LangToggleProps) {
       ref={containerRef}
       className={cn('relative inline-flex items-center', className)}
     >
-      {!isOpen ? (
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => setIsOpen(true)}
-          aria-label="Select language"
-          aria-expanded={isOpen}
-          className="[&_svg]:size-4"
-        >
-          <Globe className="h-[1.2rem] w-[1.2rem]" />
-          <span className="sr-only">Language</span>
-        </Button>
-      ) : (
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={() => setIsOpen(!isOpen)}
+        aria-label="Select language"
+        aria-expanded={isOpen}
+        className={cn('[&_svg]:size-4', isOpen && 'opacity-0 pointer-events-none')}
+      >
+        <Globe className="h-[1.2rem] w-[1.2rem]" />
+        <span className="sr-only">Language</span>
+      </Button>
+
+      {isOpen && (
         <div 
           className={cn(
+            'absolute right-0 top-0 z-50',
             'inline-flex items-center gap-1 rounded-md border border-input bg-popover p-1 shadow-md',
             'animate-in fade-in-0 zoom-in-95 duration-200'
           )}
@@ -108,7 +109,7 @@ export function LangToggle({ className }: LangToggleProps) {
                 key={lang.code}
                 onClick={() => handleLanguageChange(lang.code)}
                 className={cn(
-                  'relative flex cursor-default select-none items-center rounded-sm px-3 py-1.5 text-sm outline-none',
+                  'relative flex cursor-default select-none items-center rounded-sm px-3 py-1.5 text-sm outline-none whitespace-nowrap',
                   'transition-colors focus:bg-accent focus:text-accent-foreground',
                   isActive 
                     ? 'bg-accent text-accent-foreground' 
