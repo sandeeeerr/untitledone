@@ -80,24 +80,23 @@ export function LangToggle({ className }: LangToggleProps) {
       ref={containerRef}
       className={cn('relative inline-flex items-center', className)}
     >
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={() => setIsOpen(!isOpen)}
-        aria-label="Select language"
-        aria-expanded={isOpen}
-        className="[&_svg]:size-4"
-      >
-        <Globe className="h-[1.2rem] w-[1.2rem]" />
-        <span className="sr-only">Language</span>
-      </Button>
-
-      {isOpen && (
+      {!isOpen ? (
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setIsOpen(true)}
+          aria-label="Select language"
+          aria-expanded={isOpen}
+          className="[&_svg]:size-4"
+        >
+          <Globe className="h-[1.2rem] w-[1.2rem]" />
+          <span className="sr-only">Language</span>
+        </Button>
+      ) : (
         <div 
           className={cn(
-            'absolute right-0 top-full mt-2 z-50',
-            'min-w-[8rem] rounded-md border bg-popover p-1 text-popover-foreground shadow-md',
-            'animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 duration-200'
+            'inline-flex items-center gap-1 rounded-md border border-input bg-popover p-1 shadow-md',
+            'animate-in fade-in-0 zoom-in-95 duration-200'
           )}
           role="menu"
         >
@@ -109,7 +108,7 @@ export function LangToggle({ className }: LangToggleProps) {
                 key={lang.code}
                 onClick={() => handleLanguageChange(lang.code)}
                 className={cn(
-                  'relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none',
+                  'relative flex cursor-default select-none items-center rounded-sm px-3 py-1.5 text-sm outline-none',
                   'transition-colors focus:bg-accent focus:text-accent-foreground',
                   isActive 
                     ? 'bg-accent text-accent-foreground' 
