@@ -272,3 +272,46 @@ export async function PATCH(
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const supabase = await createServerClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    }
+
+    const { id } = await params;
+    const validation = paramsSchema.safeParse({ id });
+    
+    if (!validation.success) {
+      return NextResponse.json({ error: "Invalid project ID" }, { status: 400 });
+    }
+
+    // Delete project (RLS policies will ensure only owner can delete)
+    const { error } = await (supabase as SupabaseClient)
+      .from("projects")
+      .delete()
+      .eq("id", validation.data.id);
+
+    if (error) {
+      if (error.code === "PGRST116") {
+        return NextResponse.json({ error: "Project not found" }, { status: 404 });
+      }
+      console.error("Project delete error:", error);
+      return NextResponse.json({ error: "Failed to delete project" }, { status: 500 });
+    }
+
+    return NextResponse.json({ message: "Project deleted successfully" }, { status: 200 });
+  } catch (error) {
+    console.error("Unexpected error in project delete route:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}

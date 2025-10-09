@@ -27,5 +27,19 @@ export default getRequestConfig(async () => {
     return {
         locale,
         messages: (await import(`./messages/${locale}.json`)).default,
+        // Gracefully handle missing translation keys
+        onError(error) {
+            if (process.env.NODE_ENV === 'development') {
+                console.warn('Translation error:', error.message);
+            }
+        },
+        // Return key as fallback for missing translations
+        getMessageFallback({ namespace, key }) {
+            const fullKey = namespace ? `${namespace}.${key}` : key;
+            if (process.env.NODE_ENV === 'development') {
+                return `[Missing: ${fullKey}]`;
+            }
+            return fullKey;
+        },
     };
 }); 

@@ -10,15 +10,15 @@ export function SidebarBugReportCard() {
   const reportUrl = "https://github.com/sandeeeerr/untitledone/issues/new?labels=bug&template=bug_report.md"
 
   return (
-    <Card className="gap-2 shadow-none">
+    <Card className="gap-2 shadow-none mt-8">
       <CardHeader className="p-4 pb-0">
         <CardTitle className="text-sm">{t("title")}</CardTitle>
-        <CardDescription>
+        <CardDescription className="mt-1">
           {t("description")}
         </CardDescription>
       </CardHeader>
       <CardContent className="p-4">
-        <div className="grid gap-2.5">
+        <div className="grid gap-2">
           <Button asChild size="sm" className="w-full">
             <a href={reportUrl} target="_blank" rel="noreferrer">
               {t("report")}

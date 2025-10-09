@@ -60,4 +60,38 @@ export function FileCardSkeletonGrid({ count = 6 }: { count?: number }) {
   )
 }
 
+export function FormSkeleton() {
+  return (
+    <div className="space-y-6">
+      {/* Title field */}
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-20" />
+        <Skeleton className="h-10 w-full" />
+      </div>
 
+      {/* Checkboxes */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="border rounded-md p-3 space-y-2">
+          <Skeleton className="h-4 w-4" />
+          <Skeleton className="h-4 w-32" />
+        </div>
+        <div className="border rounded-md p-3 space-y-2">
+          <Skeleton className="h-4 w-4" />
+          <Skeleton className="h-4 w-32" />
+        </div>
+      </div>
+
+      {/* Description field */}
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-24 w-full" />
+      </div>
+
+      {/* Action buttons */}
+      <div className="flex justify-end gap-2">
+        <Skeleton className="h-10 w-24" />
+        <Skeleton className="h-10 w-32" />
+      </div>
+    </div>
+  )
+}

@@ -92,6 +92,7 @@ export default function ForgotPasswordPage() {
                     })}
                     id="email"
                     type="email"
+                    autoComplete="email"
                     placeholder={t('auth.resetPassword.emailPlaceholder')}
                   />
                   {errors.email && (

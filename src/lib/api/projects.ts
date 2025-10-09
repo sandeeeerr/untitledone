@@ -121,6 +121,21 @@ export async function updateProject(id: string, payload: UpdateProjectInput): Pr
 	return (await res.json()) as Project;
 }
 
+export async function deleteProject(id: string): Promise<void> {
+	const res = await fetch(`/api/projects/${id}`, {
+		method: "DELETE",
+	});
+
+	if (!res.ok) {
+		let message = "Failed to delete project";
+		try {
+			const body = await res.json();
+			if (body?.error) message = body.error as string;
+		} catch {}
+		throw new Error(message);
+	}
+}
+
 // Invitations
 export type ProjectInvitationInsert = {
 	email: string;

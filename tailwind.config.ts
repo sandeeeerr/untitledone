@@ -9,7 +9,18 @@ const config: Config = {
 		"!./node_modules",
 	],
 	theme: {
+		container: {
+			center: true,
+			padding: "2rem",
+			screens: { "2xl": "1400px" }
+		},
     	extend: {
+			boxShadow: {
+				sm: "0 1px 2px 0 hsl(var(--foreground)/0.06)",
+				DEFAULT: "0 1px 3px 0 hsl(var(--foreground)/0.1), 0 1px 2px -1px hsl(var(--foreground)/0.1)",
+				md: "0 4px 6px -1px hsl(var(--foreground)/0.1), 0 2px 4px -2px hsl(var(--foreground)/0.1)",
+				lg: "0 10px 15px -3px hsl(var(--foreground)/0.1), 0 4px 6px -4px hsl(var(--foreground)/0.1)"
+			},
     		colors: {
     			background: 'hsl(var(--background))',
     			foreground: 'hsl(var(--foreground))',
@@ -62,7 +73,7 @@ const config: Config = {
     				ring: 'hsl(var(--sidebar-ring))'
     			}
     		},
-    		borderRadius: {
+			borderRadius: {
     			lg: 'var(--radius)',
     			md: 'calc(var(--radius) - 2px)',
     			sm: 'calc(var(--radius) - 4px)'

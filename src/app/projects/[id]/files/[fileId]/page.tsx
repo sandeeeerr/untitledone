@@ -37,14 +37,6 @@ export default async function FileDetailPage({ params }: PageProps) {
       breadcrumbLabelOverride={fileTitle}
       projectBreadcrumbLabelOverride={projectName}
       projectIdForBreadcrumb={projectId}
-      titleActions={
-        <Button variant="outline" size="sm" asChild>
-          <Link href={`/projects/${projectId}`}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Terug
-          </Link>
-        </Button>
-      }
     >
       <Suspense 
         fallback={

@@ -80,6 +80,7 @@
     "signingIn": "Inloggen...",
     "forgotPassword": "Wachtwoord vergeten?",
     "authError": "Authenticatie mislukt. Probeer het opnieuw.",
+    "oauthFailed": "Authenticatie mislukt. Probeer het opnieuw of gebruik e-mail/wachtwoord.",
     "signInButton": "Inloggen",
     "signInLoading": "Inloggen...",
     "signUpTitle": "Account aanmaken",
@@ -245,6 +246,17 @@
         "description": "Project laden mislukt",
         "forbidden": "Je hebt geen rechten om dit project te bewerken."
       }
+    },
+    "delete": {
+      "title": "Project verwijderen",
+      "description": "Weet je zeker dat je dit project wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
+      "confirmPlaceholder": "Typ projectnaam ter bevestiging",
+      "confirmMismatch": "Projectnaam komt niet overeen",
+      "cancel": "Annuleren",
+      "confirm": "Project verwijderen",
+      "deleting": "Verwijderen...",
+      "success": "Project succesvol verwijderd",
+      "error": "Project verwijderen mislukt"
     },
     "quick": {
       "uploadFiles": "Bestanden uploaden",
@@ -439,9 +451,10 @@
   "dashboard": {
     "title": "Dashboard",
     "welcomeBack": "Welkom terug,",
-    "developmentMessage": "UntitledOne is actief in ontwikkeling. We zijn blij dat je er bent — functies zullen snel verschijnen en evolueren. Bedankt dat je vroeg meedoet!",
-    "betaNote": "Dit is een beta. Ideeën en bugmeldingen zijn meer dan welkom.",
-    "contributeLink": "Deel een idee of meld een bug",
+    "welcome": "Welkom",
+    "developmentMessage": "UntitledOne is in ontwikkeling. Bedankt voor je deelname!",
+    "betaNote": "Beta — ideeën en bugs welkom.",
+    "contributeLink": "Idee of bug melden",
     "beta": "Beta",
     "editingOn": "Bewerken AAN",
     "editingOff": "Bewerken UIT",
@@ -461,7 +474,15 @@
     "noActivityDigest": "Geen recente activiteit",
     "unread": "Ongelezen",
     "noRecentProjects": "Geen recente projecten.",
-      "noPins": "Nog geen vastgezette projecten. Zet projecten vast om snel toegang te hebben."
+    "noPins": "Nog geen vastgezette projecten. Zet projecten vast om snel toegang te hebben.",
+    "alerts": {
+      "verifyEmailTitle": "Verifieer je e-mail om je account te activeren",
+      "verifyEmailDescription": "We hebben een bevestigingslink naar je inbox gestuurd. Controleer je e-mail om de registratie te voltooien.",
+      "resendEmail": "Verificatie e-mail opnieuw versturen",
+      "resendingEmail": "Versturen...",
+      "emailResentTitle": "E-mail verstuurd!",
+      "emailResentDescription": "Controleer je inbox voor de verificatielink."
+    }
   },
   "landing": {
     "nav": {
@@ -528,5 +549,13 @@
         "contact": "Contact"
       }
     }
+  },
+  "alerts": {
+    "verifyEmailTitle": "Verifieer je e-mail om je account te activeren",
+    "verifyEmailDescription": "We hebben een bevestigingslink naar je inbox gestuurd. Controleer je e-mail om de registratie te voltooien.",
+    "resendEmail": "Verificatie e-mail opnieuw versturen",
+    "resendingEmail": "Versturen...",
+    "emailResentTitle": "E-mail verstuurd!",
+    "emailResentDescription": "Controleer je inbox voor de verificatielink."
   }
 } 

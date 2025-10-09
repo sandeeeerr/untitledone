@@ -100,7 +100,7 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
     const errorMessage = error instanceof Error ? error.message : 'Project not found';
     return (
       <LayoutSidebar title="Error">
-        <div className="container">
+        <div>
           <EmptyState
             title="Error"
             description={errorMessage}
@@ -126,16 +126,8 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
     <LayoutSidebar
       title="Project"
       breadcrumbLabelOverride={project.name}
-      titleActions={
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleBack}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Terug
-          </Button>
-        </div>
-      }
     >
-      <div className="container">
+      <div>
         <div className="w-full grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* Left column: overview + tabs + tab content */}
           <div className="xl:col-span-2">
@@ -378,22 +370,24 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
 
                   <div className="flex items-center gap-2 w-full sm:w-auto">
                     {activeTab === 'activity' && (
-                      <CreateVersionDialog
-                        projectId={project.id}
-                        onVersionCreated={handleVersionCreated}
-                        trigger={
-                          <Button size="sm" className="h-9 gap-2 px-3 w-full sm:w-auto justify-center" aria-label={t("common.createNewVersion")}>
-                            <Plus className="h-4 w-4" />
-                            {t("common.newVersion")}
-                          </Button>
-                        }
-                      />
+                      <>
+                        <CreateVersionDialog
+                          projectId={project.id}
+                          onVersionCreated={handleVersionCreated}
+                          trigger={
+                            <Button size="sm" className="h-9 gap-2 px-3 w-full sm:w-auto justify-center" aria-label={t("common.createNewVersion")}>
+                              <Plus className="h-4 w-4" />
+                              {t("common.newVersion")}
+                            </Button>
+                          }
+                        />
+                      </>
                     )}
                     {activeTab === 'files' && project?.id && (
                       <UploadDialog
                         projectId={project.id}
                         trigger={
-                          <Button size="sm" className="h-9 gap-2 px-3 w-full sm:w-auto justify-center" aria-label={t("common.uploadFiles")}>
+                          <Button variant="default" size="sm" className="inline-flex items-center gap-2 h-9 px-4 max-w-fit" aria-label={t("common.uploadFiles")}>
                             <Upload className="h-4 w-4" />
                             {t("common.uploadFiles")}
                           </Button>
@@ -402,6 +396,7 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                     )}
                     {activeTab === 'comments' && (
                       <Button 
+                        variant="ghost"
                         size="sm" 
                         className="h-9 gap-2 px-3 w-full sm:w-auto justify-center" 
                         aria-label={t("common.addComment")}

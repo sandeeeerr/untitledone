@@ -18,6 +18,7 @@ import { useProjects } from "@/lib/api/queries"
 import { type Project } from "@/lib/api/projects"
 import { formatRelativeTimeWithTranslations } from "@/lib/utils/time"
 import { getPaginationWindow } from "@/lib/utils/pagination"
+import Toolbar from "@/components/molecules/toolbar"
 
 // ExtendedProject is no longer needed since Project type now includes these fields
 
@@ -106,7 +107,7 @@ export default function ProjectsPage() {
   if (isLoading) {
     return (
       <LayoutSidebar title={t("title")}>
-        <div className="container">
+        <div>
           <div className="mb-6 h-8 w-48" />
           <ProjectCardSkeletonGrid count={6} />
         </div>
@@ -128,7 +129,7 @@ export default function ProjectsPage() {
           </Button>
         }
       >
-        <div className="container">
+        <div>
           <EmptyState
             title={t("error.title")}
             description={errorMessage}
@@ -153,9 +154,9 @@ export default function ProjectsPage() {
         </Button>
       }
     >
-      <div className="container">
+      <div>
         <div className="mb-8 space-y-4">
-          <div className="flex flex-col sm:flex-row gap-4">
+          <Toolbar className="flex-col sm:flex-row gap-4">
             {/* Search Bar */}
             <div className="relative flex-1 min-w-0">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -206,7 +207,7 @@ export default function ProjectsPage() {
                 <ArrowUpDown className="h-4 w-4" />
               </Button>
             </div>
-          </div>
+          </Toolbar>
 
           {/* Results count and pagination info */}
           <div className="flex items-center justify-between">
@@ -218,7 +219,9 @@ export default function ProjectsPage() {
                 </span>
               )}
             </div>
-          </div>
+          
+        </div>
+
         </div>
 
         {filteredProjects.length === 0 ? (
