@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { SupabaseClient } from "@supabase/supabase-js";
+import crypto from "crypto";
 import createServerClient from "@/lib/supabase/server";
-import { uploadProjectObject, willExceedUserQuota } from "@/lib/supabase/storage";
+import { willExceedUserQuota } from "@/lib/supabase/storage";
 import { getMaxUploadFileBytes } from "@/lib/env";
+import { getStorageProvider } from "@/lib/storage/factory";
+import type { StorageProviderType } from "@/lib/storage/types";
 
 // Type for file metadata
 interface FileMetadata {
@@ -33,6 +36,7 @@ const paramsSchema = z.object({
 const metaSchema = z.object({
   description: z.string().optional(),
   versionId: z.string().uuid().optional(),
+  storageProvider: z.enum(['local', 'dropbox', 'google_drive']).optional().default('local'),
 });
 
 export async function POST(
@@ -74,13 +78,16 @@ export async function POST(
     }
     const description = (form.get("description") as string | null) || undefined;
     const versionIdRaw = (form.get("versionId") as string | null) || undefined;
-    const meta = metaSchema.safeParse({ description, versionId: versionIdRaw });
+    const storageProviderRaw = (form.get("storageProvider") as string | null) || undefined;
+    const meta = metaSchema.safeParse({ description, versionId: versionIdRaw, storageProvider: storageProviderRaw });
     if (!meta.success) {
       return NextResponse.json({ error: "Invalid input", details: meta.error.issues }, { status: 400 });
     }
 
-    // Quota check before uploading
-    {
+    const storageProvider = meta.data.storageProvider as StorageProviderType;
+
+    // Quota check before uploading (only for local storage)
+    if (storageProvider === 'local') {
       const incomingBytes = Number(file.size || 0);
       const { allowed, maxBytes, usedBytes } = await willExceedUserQuota(user.id, incomingBytes);
       if (!allowed) {
@@ -100,8 +107,36 @@ export async function POST(
       }
     }
 
-    // Upload to Supabase Storage (key: projectId/<uuid>-filename)
-    const storageKey = await uploadProjectObject({ projectId, file });
+    // Get storage provider adapter
+    let uploadResult;
+    try {
+      const adapter = await getStorageProvider(storageProvider, user.id);
+      const uploadPath = `${projectId}/${crypto.randomUUID()}-${file.name}`;
+      uploadResult = await adapter.upload(file, uploadPath, user.id);
+    } catch (error) {
+      console.error("Storage provider upload failed:", error);
+      
+      // Check for specific error codes
+      if (error instanceof Error) {
+        if (error.message.includes('PROVIDER_NOT_CONNECTED')) {
+          return NextResponse.json(
+            { error: "Storage provider not connected", code: "PROVIDER_NOT_CONNECTED" },
+            { status: 400 }
+          );
+        }
+        if (error.message.includes('PROVIDER_TOKEN_EXPIRED')) {
+          return NextResponse.json(
+            { error: "Storage provider token expired", code: "PROVIDER_TOKEN_EXPIRED" },
+            { status: 401 }
+          );
+        }
+      }
+      
+      return NextResponse.json(
+        { error: "Failed to upload file to storage provider" },
+        { status: 500 }
+      );
+    }
 
     // Insert file metadata
     const { data: fileRecord, error: insertError } = await (supabase as SupabaseClient)
@@ -109,10 +144,13 @@ export async function POST(
       .insert({
         project_id: projectId,
         filename: file.name,
-        file_path: storageKey,
-        file_size: Number(file.size || 0),
+        file_path: uploadResult.path,
+        file_size: uploadResult.size,
         file_type: file.type || "application/octet-stream",
         uploaded_by: user.id,
+        storage_provider: storageProvider,
+        external_file_id: storageProvider !== 'local' ? uploadResult.fileId : null,
+        external_metadata: storageProvider !== 'local' ? uploadResult.metadata : null,
         metadata: {
           description: meta.data.description || null,
           uploaded_at: new Date().toISOString(),
@@ -201,7 +239,7 @@ export async function GET(
     // Base files
     const { data: files, error: filesError } = await (supabase as SupabaseClient)
       .from("project_files")
-      .select("id, filename, file_size, file_type, uploaded_at, uploaded_by, metadata")
+      .select("id, filename, file_size, file_type, uploaded_at, uploaded_by, metadata, storage_provider")
       .eq("project_id", projectId)
       .order("uploaded_at", { ascending: false });
     if (filesError) {
@@ -241,7 +279,7 @@ export async function GET(
     const enrichedFiles = (files || [])
       .filter((f) => {
         try {
-          const meta = (f as ProjectFileWithMetadata)?.metadata;
+          const meta = (f as any)?.metadata;
           return !(meta && typeof meta === 'object' && (meta as FileMetadata).deleted_at);
         } catch {
           return true;
@@ -258,6 +296,7 @@ export async function GET(
         uploadedBy: profileMap.get(file.uploaded_by) || { name: "Unknown", avatar: null },
         description: file.metadata?.description || null,
         versionName: vid ? versionNameById.get(vid) || null : null,
+        storageProvider: (file as any).storage_provider || 'local',
       };
     });
 

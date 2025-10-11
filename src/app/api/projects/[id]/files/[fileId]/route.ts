@@ -2,8 +2,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { SupabaseClient } from "@supabase/supabase-js";
 import createServerClient from "@/lib/supabase/server";
-import { getSignedDownloadUrl, uploadProjectObject, removeObject, willExceedUserQuota } from "@/lib/supabase/storage";
+import { uploadProjectObject, removeObject, willExceedUserQuota } from "@/lib/supabase/storage";
 import { getMaxUploadFileBytes } from "@/lib/env";
+import { getStorageProvider } from "@/lib/storage/factory";
+import type { StorageProviderType } from "@/lib/storage/types";
 
 // Type for file metadata
 interface FileMetadata {
@@ -91,7 +93,7 @@ export async function GET(
     // Get file details
     const { data: file, error: fileError } = await (supabase as SupabaseClient)
       .from("project_files")
-      .select("id, filename, file_path, file_size, file_type, uploaded_at, uploaded_by, metadata")
+      .select("id, filename, file_path, file_size, file_type, uploaded_at, uploaded_by, metadata, storage_provider, external_file_id")
       .eq("id", validFileId)
       .eq("project_id", projectId)
       .single();
@@ -141,7 +143,7 @@ export async function GET(
       .single();
 
     // Enrich file data
-    const isDeleted = Boolean((file as ProjectFileWithMetadata)?.metadata?.deleted_at);
+    const isDeleted = Boolean((file as any)?.metadata?.deleted_at);
     const enrichedFile = {
       id: file.id,
       filename: file.filename,
@@ -158,7 +160,7 @@ export async function GET(
       description: file.metadata?.description || null,
       supersededByFileId: (file.metadata as FileMetadata | null)?.superseded_by ?? null,
       supersedesFileId: (file.metadata as FileMetadata | null)?.supersedes ?? null,
-      deletedAt: isDeleted ? (file as ProjectFileWithMetadata).metadata?.deleted_at ?? null : null,
+      deletedAt: isDeleted ? (file as any).metadata?.deleted_at ?? null : null,
       version: versionMeta ? {
         id: versionMeta.id,
         name: versionMeta.version_name,
@@ -225,7 +227,7 @@ export async function POST(
 
     const { data: file } = await (supabase as SupabaseClient)
       .from("project_files")
-      .select("id, file_path, filename, uploaded_by, metadata, file_type")
+      .select("id, file_path, filename, uploaded_by, metadata, file_type, storage_provider, external_file_id")
       .eq("id", validFileId)
       .eq("project_id", projectId)
       .single();
@@ -233,13 +235,45 @@ export async function POST(
 
     if (action === "download") {
       // Block download if file is soft-deleted
-      const isDeleted = Boolean((file as ProjectFileWithMetadata)?.metadata?.deleted_at);
+      const isDeleted = Boolean((file as any)?.metadata?.deleted_at);
       if (isDeleted) return NextResponse.json({ error: "File deleted" }, { status: 410 });
       if (!project.downloads_enabled) return NextResponse.json({ error: "Downloads disabled" }, { status: 403 });
+      
       try {
-        const signed = await getSignedDownloadUrl(file.file_path, 60 * 5);
-        return NextResponse.json({ url: signed }, { status: 200 });
-      } catch {
+        // Get storage provider using UPLOADER's userId (ownership proxying)
+        const storageProvider = ((file as any).storage_provider || 'local') as StorageProviderType;
+        const uploadedByUserId = file.uploaded_by;
+        const fileIdentifier = (file as any).external_file_id || file.file_path;
+        
+        const adapter = await getStorageProvider(storageProvider, uploadedByUserId);
+        const signedUrl = await adapter.getDownloadUrl(fileIdentifier, uploadedByUserId, 60 * 5);
+        
+        return NextResponse.json({ url: signedUrl }, { status: 200 });
+      } catch (error) {
+        console.error("Failed to generate download URL:", error);
+        
+        // Check for specific error codes
+        if (error instanceof Error) {
+          if (error.message.includes('PROVIDER_TOKEN_EXPIRED')) {
+            return NextResponse.json(
+              { 
+                error: "File owner needs to reconnect their storage provider", 
+                code: "PROVIDER_TOKEN_EXPIRED" 
+              },
+              { status: 401 }
+            );
+          }
+          if (error.message.includes('PROVIDER_NOT_CONNECTED')) {
+            return NextResponse.json(
+              { 
+                error: "File owner's storage provider is not connected", 
+                code: "PROVIDER_NOT_CONNECTED" 
+              },
+              { status: 400 }
+            );
+          }
+        }
+        
         // Storage object missing or unauthorized
         return NextResponse.json({ error: "File not found" }, { status: 404 });
       }
@@ -265,7 +299,7 @@ export async function POST(
         /\.(wav|mp3|flac|aac|aiff|ogg|m4a|opus|mid|midi|syx|als|flp|logicx|band|cpr|ptx|rpp|song|bwproject|reason|nki|adg|fst|fxp|fxb|nmsv|h2p|zip|rar|7z|tar|gz|txt|md|doc|docx|pdf|png|jpg|jpeg|gif|webp|svg|mp4|mov|mkv|json|xml)$/i,
       ];
       const name = newFile.name || file.filename || "file";
-      const type = newFile.type || (file as ProjectFileWithMetadata).file_type || "application/octet-stream";
+      const type = newFile.type || (file as any).file_type || "application/octet-stream";
       const size = Number(newFile.size || 0);
       const maxBytes = getMaxUploadFileBytes();
       const allowed = allowMimeOrExt.some((re) => re.test(type) || re.test(name));

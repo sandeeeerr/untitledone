@@ -1,16 +1,15 @@
 "use client"
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { ProfileEditModal } from "@/components/organisms/profile-edit-dialog";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { useProfile } from "@/lib/api/queries";
 import { Pencil } from "lucide-react";
+import Link from "next/link";
 
 export function OwnerEditButton({ viewedUsername }: { viewedUsername: string }) {
   const { data: user } = useCurrentUser();
   const { data: myProfile } = useProfile();
-  const [open, setOpen] = useState(false);
 
   const isOwner = useMemo(() => {
     if (!user || !myProfile) return false;
@@ -20,11 +19,10 @@ export function OwnerEditButton({ viewedUsername }: { viewedUsername: string }) 
   if (!isOwner) return null;
 
   return (
-    <>
-      <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
-        <Pencil className="h-4 w-4 mr-2" /> Edit
-      </Button>
-      <ProfileEditModal open={open} onOpenChange={setOpen} />
-    </>
+    <Button size="sm" variant="outline" asChild>
+      <Link href="/settings/profile">
+        <Pencil className="h-4 w-4 mr-2" /> Edit profile
+      </Link>
+    </Button>
   );
 } 

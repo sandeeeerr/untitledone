@@ -389,34 +389,40 @@ export default function FileDetailClient({ projectId, fileId }: FileDetailClient
 }
 
 function SimpleWaveWrapper({ projectId, fileId, onTime, forwardRef, onAnalyzed }: { projectId: string; fileId: string; onTime?: (ms: number) => void; forwardRef?: React.Ref<BasicWaveformHandle | null>; onAnalyzed?: (meta: { sampleRate?: number; channels?: number; durationMs?: number; bitrateKbps?: number }) => void }) {
-  const [url, setUrl] = React.useState<string>("");
+  // Use content proxy endpoint directly - handles CORS for external storage providers
+  const url = `/api/projects/${projectId}/files/${fileId}/content`;
+  
   // Keep a stable reference to the callback to avoid re-running the effect on each render
   const onAnalyzedRef = React.useRef<typeof onAnalyzed | undefined>(onAnalyzed);
   React.useEffect(() => { onAnalyzedRef.current = onAnalyzed; }, [onAnalyzed]);
+  
+  // Extract audio metadata when component mounts
   React.useEffect(() => {
     let mounted = true;
     (async () => {
-      const res = await fetch(`/api/projects/${projectId}/files/${fileId}?action=download`, { method: "POST" });
-      if (!res.ok) return;
-      const { url } = await res.json();
-      if (mounted) setUrl(url || "");
-
       // Client-side audio metadata (Web Audio API)
       try {
         const response = await fetch(url);
+        if (!response.ok) return;
+        
         const arrayBuf = await response.arrayBuffer();
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
         const audioBuf = await ctx.decodeAudioData(arrayBuf.slice(0));
+        
+        if (!mounted) return;
+        
         const durationMs = Math.floor(audioBuf.duration * 1000);
         const sampleRate = audioBuf.sampleRate;
         const channels = audioBuf.numberOfChannels;
         const bitrateKbps = durationMs > 0 ? Math.round(((response.headers.get('Content-Length') ? Number(response.headers.get('Content-Length')) : 0) * 8) / (durationMs / 1000) / 1000) : undefined;
         onAnalyzedRef.current?.({ durationMs, sampleRate, channels, bitrateKbps });
         ctx.close().catch(() => {});
-      } catch {}
+      } catch (err) {
+        console.error('Failed to analyze audio:', err);
+      }
     })();
     return () => { mounted = false };
-  }, [projectId, fileId]);
-  if (!url) return null;
+  }, [url]);
+  
   return <BasicWaveform ref={forwardRef as React.RefObject<BasicWaveformHandle>} url={url} height={96} onTime={onTime} />;
 }

@@ -13,7 +13,7 @@
     },
     "storage": {
       "title": "Storage",
-      "description": "500MB available during beta",
+      "description": "50MB available during beta",
       "upgrade": "Upgrade plan"
     }
   },

@@ -1,0 +1,8 @@
+# Cron schedule for automatic storage token refresh
+# Runs every 30 minutes to refresh tokens expiring within the next hour
+
+- name: "refresh-storage-tokens"
+  schedule: "*/30 * * * *"
+  # Schedule format: minute hour day month weekday
+  # */30 * * * * means: every 30 minutes, every hour, every day
+

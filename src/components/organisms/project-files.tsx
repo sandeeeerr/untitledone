@@ -159,6 +159,7 @@ export default function ProjectFiles({ projectId, query, sortBy = 'newest' }: { 
 									dateLabel={formatDate(file.uploadedAt)}
 									icon={getFileIcon(file.filename)}
 									downloadDisabled={project ? !project.downloads_enabled : false}
+									storageProvider={file.storageProvider}
 									onClick={() => router.push(`/projects/${projectId}/files/${file.id}`)}
 									onDownload={async () => {
 										try {

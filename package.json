@@ -41,6 +41,8 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
+    "dropbox": "^10.34.0",
+    "googleapis": "^162.0.0",
     "gridstack": "^12.3.3",
     "lucide-react": "^0.539.0",
     "motion": "^12.23.12",
