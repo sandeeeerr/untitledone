@@ -62,8 +62,10 @@ export async function GET() {
 
   } catch (error) {
     console.error('Error fetching storage connections:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Detailed error:', errorMessage);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: errorMessage },
       { status: 500 }
     );
   }

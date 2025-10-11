@@ -64,7 +64,8 @@ export async function GET(
     
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
     
-    await serviceClient
+    console.log('[OAuth Connect] Storing state token in database for user:', user.id);
+    const { error: upsertError } = await serviceClient
       .from('storage_connections')
       .upsert({
         user_id: user.id,
@@ -82,6 +83,16 @@ export async function GET(
         onConflict: 'user_id,provider',
         ignoreDuplicates: false,
       });
+
+    if (upsertError) {
+      console.error('[OAuth Connect] Failed to store state token:', upsertError);
+      return NextResponse.json(
+        { error: 'Failed to initialize OAuth flow' },
+        { status: 500 }
+      );
+    }
+
+    console.log('[OAuth Connect] State token stored successfully');
 
     // Construct OAuth authorization URL based on provider
     let authUrl: string;
@@ -144,8 +155,10 @@ export async function GET(
 
   } catch (error) {
     console.error('[OAuth Connect] Error initiating OAuth flow:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[OAuth Connect] Detailed error:', errorMessage);
     return NextResponse.json(
-      { error: 'Failed to initiate OAuth flow' },
+      { error: 'Failed to initiate OAuth flow', details: errorMessage },
       { status: 500 }
     );
   }

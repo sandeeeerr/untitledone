@@ -83,10 +83,16 @@ export async function GET(
       .single();
     
     console.log('[OAuth Callback] Pending connection found:', !!pendingConnection);
+    console.log('[OAuth Callback] State from URL:', state);
+    console.log('[OAuth Callback] State from DB:', pendingConnection?.encrypted_access_token);
     console.log('[OAuth Callback] Stored state matches:', pendingConnection?.encrypted_access_token === state);
     
     if (!pendingConnection || pendingConnection.encrypted_access_token !== state) {
-      console.error('[OAuth Callback] State validation failed. Pending:', !!pendingConnection, 'Match:', pendingConnection?.encrypted_access_token === state);
+      console.error('[OAuth Callback] State validation failed.');
+      console.error('[OAuth Callback] - Pending connection exists:', !!pendingConnection);
+      console.error('[OAuth Callback] - State from URL:', state);
+      console.error('[OAuth Callback] - State from DB:', pendingConnection?.encrypted_access_token);
+      console.error('[OAuth Callback] - States match:', pendingConnection?.encrypted_access_token === state);
       return errorPage('Invalid or expired state token. Please try connecting again.');
     }
 
