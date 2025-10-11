@@ -1,23 +1,23 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import StorageProviderCard from '@/components/molecules/storage-provider-card'
 import DisconnectDialog from '@/components/molecules/disconnect-dialog'
 import { useStorageConnections, useConnectStorageProvider, useDisconnectStorageProvider, useMyStorageUsage } from '@/lib/api/queries'
 import { Loader2 } from 'lucide-react'
-import { useRouter } from 'next/navigation' 
-
+import { toast } from '@/hooks/use-toast'
 
 export default function StoragePage() {
-  const router = useRouter()
+  const searchParams = useSearchParams()
   const [connectingProvider, setConnectingProvider] = useState<'dropbox' | 'google_drive' | null>(null)
   const [disconnectDialogOpen, setDisconnectDialogOpen] = useState(false)
   const [providerToDisconnect, setProviderToDisconnect] = useState<'dropbox' | 'google_drive' | null>(null)
 
   // Fetch data
-  const { data: connections, isLoading: loadingConnections, refetch: refetchConnections } = useStorageConnections()
+  const { data: connections, isLoading: loadingConnections } = useStorageConnections()
   const { data: storageUsage, isLoading: loadingUsage } = useMyStorageUsage()
   
   // Mutations
@@ -28,18 +28,29 @@ export default function StoragePage() {
   const dropboxConnection = connections?.find(c => c.provider === 'dropbox') || null
   const driveConnection = connections?.find(c => c.provider === 'google_drive') || null
 
+  // Show success message if redirected from OAuth
+  useEffect(() => {
+    const connectedProvider = searchParams.get('connected')
+    if (connectedProvider) {
+      const providerName = connectedProvider === 'dropbox' ? 'Dropbox' : 'Google Drive'
+      toast({
+        title: 'Connected Successfully',
+        description: `Your ${providerName} account has been connected.`,
+      })
+      // Clean up URL
+      window.history.replaceState({}, '', '/settings/storage')
+    }
+  }, [searchParams])
+
   // Handlers
   const handleConnect = async (provider: 'dropbox' | 'google_drive') => {
     setConnectingProvider(provider)
     try {
+      // This will redirect to OAuth flow, so we won't return here
       await connectMutation.mutateAsync(provider)
-      // Refresh the page to show updated connection status
-      await refetchConnections()
-      router.refresh()
     } catch (error) {
       // Error handled by mutation hook (toast)
       console.error('Connection failed:', error)
-    } finally {
       setConnectingProvider(null)
     }
   }

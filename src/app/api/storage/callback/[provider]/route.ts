@@ -30,7 +30,6 @@ export async function GET(
   { params }: { params: Promise<{ provider: string }> }
 ) {
   try {
-    const supabase = await createServerClient();
     const searchParams = request.nextUrl.searchParams;
     
     // Get and normalize provider parameter
@@ -71,8 +70,8 @@ export async function GET(
     }
 
     // Validate state token against database (CSRF protection)
-    // NOTE: We don't use supabase.auth.getUser() here because the popup window
-    // doesn't have the user's session cookies. Instead, we trust the state token
+    // NOTE: We don't use supabase.auth.getUser() here because the OAuth redirect
+    // might have lost the user's session cookies. Instead, we trust the state token
     // validation which cryptographically proves the user initiated this flow.
     const serviceClient = createServiceClient();
     const { data: pendingConnection } = await serviceClient
@@ -253,7 +252,7 @@ export async function GET(
 
     console.log('[OAuth Callback] ✓ Connection saved successfully for', provider);
 
-    // Return success page that posts message to opener and closes popup
+    // Return success page that redirects back to settings
     return successPage(provider);
 
   } catch (error) {
@@ -263,7 +262,7 @@ export async function GET(
 }
 
 /**
- * Renders a success page that notifies the opener window and closes the popup
+ * Renders a success page that redirects back to settings
  */
 function successPage(provider: string) {
   const html = `
@@ -271,6 +270,7 @@ function successPage(provider: string) {
     <html>
     <head>
       <title>Connection Successful</title>
+      <meta http-equiv="refresh" content="2;url=/settings/storage">
       <style>
         body {
           font-family: system-ui, -apple-system, sans-serif;
@@ -308,18 +308,13 @@ function successPage(provider: string) {
         <div class="success">✓</div>
         <h1>Connected Successfully</h1>
         <p>Your ${provider === 'dropbox' ? 'Dropbox' : 'Google Drive'} account has been connected.</p>
-        <p>This window will close automatically...</p>
+        <p>Redirecting back to settings...</p>
       </div>
       <script>
-        // Notify opener window
-        if (window.opener) {
-          window.opener.postMessage({
-            type: 'storage-connection-success',
-            provider: '${provider}'
-          }, '*');
-        }
-        // Close popup after brief delay
-        setTimeout(() => window.close(), 1500);
+        // Force refresh the page to reload session
+        setTimeout(() => {
+          window.location.href = '/settings/storage?connected=' + encodeURIComponent('${provider}');
+        }, 2000);
       </script>
     </body>
     </html>
@@ -330,7 +325,7 @@ function successPage(provider: string) {
 }
 
 /**
- * Renders an error page with a close button
+ * Renders an error page with a back to settings button
  */
 function errorPage(message: string) {
   const html = `
@@ -388,7 +383,7 @@ function errorPage(message: string) {
         <div class="error">✗</div>
         <h1>Connection Failed</h1>
         <p>${message}</p>
-        <button onclick="window.close()">Close Window</button>
+        <button onclick="window.location.href='/settings/storage'">Back to Settings</button>
       </div>
     </body>
     </html>
