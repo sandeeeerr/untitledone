@@ -4,10 +4,9 @@ import { createServiceClient } from '@/lib/supabase/service';
 import type { StorageConnection } from '@/lib/storage/types';
 
 /**
- * Storage Connections List Endpoint
+ * Storage Connections Endpoint
  * 
- * GET: Lists all storage connections for the authenticated user
- * Returns safe metadata only (NEVER returns encrypted tokens)
+ * GET: List all storage connections for the authenticated user
  */
 export async function GET() {
   try {
@@ -22,29 +21,42 @@ export async function GET() {
       );
     }
 
-    // Use service client to query storage_connections table
-    // This bypasses RLS since the table denies all direct access
+    // Use service client to access storage_connections table
+    // (Regular client is blocked by RLS policy)
     const serviceClient = createServiceClient();
-    const { data: connections, error: queryError } = await serviceClient
+    
+    const { data: connections, error } = await serviceClient
       .from('storage_connections')
-      .select('provider, provider_account_name, status, connected_at, last_used_at')
-      .eq('user_id', user.id);
+      .select('*')
+      .eq('user_id', user.id)
+      .neq('encryption_key_version', 'pending') // Exclude pending OAuth flows
+      .order('connected_at', { ascending: false });
 
-    if (queryError) {
-      console.error('Failed to query storage connections:', queryError);
+    if (error) {
+      console.error('Failed to fetch storage connections:', error);
       return NextResponse.json(
         { error: 'Failed to fetch storage connections' },
         { status: 500 }
       );
     }
 
-    // Map to safe StorageConnection type (no sensitive data)
+    // Transform to client-safe format (remove sensitive fields)
     const safeConnections: StorageConnection[] = (connections || []).map(conn => ({
+      id: conn.id,
+      userId: conn.user_id,
       provider: conn.provider as 'dropbox' | 'google_drive',
-      providerAccountName: conn.provider_account_name,
-      status: conn.status as 'active' | 'expired' | 'error',
+      providerAccountId: conn.provider_account_id || '',
+      providerAccountName: conn.provider_account_name || '',
+      // Don't send encrypted tokens to client
+      encrypted_access_token: '', 
+      encrypted_refresh_token: null,
+      encryption_key_version: conn.encryption_key_version,
+      tokenExpiresAt: conn.token_expires_at,
       connectedAt: conn.connected_at,
       lastUsedAt: conn.last_used_at,
+      status: conn.status as 'active' | 'expired' | 'error',
+      createdAt: conn.created_at,
+      updatedAt: conn.updated_at,
     }));
 
     return NextResponse.json(safeConnections, { status: 200 });
@@ -57,4 +69,3 @@ export async function GET() {
     );
   }
 }
-

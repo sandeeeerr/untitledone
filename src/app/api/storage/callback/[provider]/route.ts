@@ -30,7 +30,6 @@ export async function GET(
   { params }: { params: Promise<{ provider: string }> }
 ) {
   try {
-    const supabase = await createServerClient();
     const searchParams = request.nextUrl.searchParams;
     
     // Get and normalize provider parameter
@@ -46,10 +45,6 @@ export async function GET(
     const state = searchParams.get('state');
     const error = searchParams.get('error');
 
-    console.log('[OAuth Callback] Provider:', provider);
-    console.log('[OAuth Callback] Code present:', !!code);
-    console.log('[OAuth Callback] State present:', !!state);
-
     // Handle user denial or error from provider
     if (error) {
       console.error('[OAuth Callback] Provider returned error:', error);
@@ -63,16 +58,14 @@ export async function GET(
 
     // Extract user ID from state (format: randomBytes.userId)
     const userId = state.split('.')[1];
-    console.log('[OAuth Callback] User ID from state:', userId);
     
     if (!userId) {
-      console.error('[OAuth Callback] Invalid state format, no user ID found');
       return errorPage('Invalid state format');
     }
 
     // Validate state token against database (CSRF protection)
-    // NOTE: We don't use supabase.auth.getUser() here because the popup window
-    // doesn't have the user's session cookies. Instead, we trust the state token
+    // NOTE: We don't use supabase.auth.getUser() here because the OAuth redirect
+    // might have lost the user's session cookies. Instead, we trust the state token
     // validation which cryptographically proves the user initiated this flow.
     const serviceClient = createServiceClient();
     const { data: pendingConnection } = await serviceClient
@@ -83,15 +76,10 @@ export async function GET(
       .eq('encryption_key_version', 'pending')
       .single();
     
-    console.log('[OAuth Callback] Pending connection found:', !!pendingConnection);
-    console.log('[OAuth Callback] Stored state matches:', pendingConnection?.encrypted_access_token === state);
-    
     if (!pendingConnection || pendingConnection.encrypted_access_token !== state) {
-      console.error('[OAuth Callback] State validation failed. Pending:', !!pendingConnection, 'Match:', pendingConnection?.encrypted_access_token === state);
+      console.error('[OAuth Callback] State validation failed for provider:', provider);
       return errorPage('Invalid or expired state token. Please try connecting again.');
     }
-
-    console.log('[OAuth Callback] Starting token exchange for', provider);
 
     // Exchange authorization code for tokens based on provider
     let accessToken: string;
@@ -151,21 +139,15 @@ export async function GET(
         redirectUri
       );
 
-      console.log('[OAuth Callback] Exchanging code for tokens...');
-      
       // Exchange code for tokens
       let tokens;
       try {
         const result = await oauth2Client.getToken(code);
         tokens = result.tokens;
-        console.log('[OAuth Callback] Token exchange successful');
       } catch (tokenError) {
         console.error('[OAuth Callback] Token exchange failed:', tokenError);
         return errorPage('Failed to exchange authorization code with Google');
       }
-      
-      console.log('[OAuth Callback] Token exchange response - has access token:', !!tokens.access_token);
-      console.log('[OAuth Callback] Token exchange response - has refresh token:', !!tokens.refresh_token);
       
       if (!tokens.access_token) {
         return errorPage('Failed to get access token from Google');
@@ -253,7 +235,7 @@ export async function GET(
 
     console.log('[OAuth Callback] ✓ Connection saved successfully for', provider);
 
-    // Return success page that posts message to opener and closes popup
+    // Return success page that redirects back to settings
     return successPage(provider);
 
   } catch (error) {
@@ -263,7 +245,7 @@ export async function GET(
 }
 
 /**
- * Renders a success page that notifies the opener window and closes the popup
+ * Renders a success page that redirects back to settings
  */
 function successPage(provider: string) {
   const html = `
@@ -271,56 +253,14 @@ function successPage(provider: string) {
     <html>
     <head>
       <title>Connection Successful</title>
-      <style>
-        body {
-          font-family: system-ui, -apple-system, sans-serif;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          min-height: 100vh;
-          margin: 0;
-          background: #f5f5f5;
-        }
-        .container {
-          text-align: center;
-          padding: 2rem;
-          background: white;
-          border-radius: 8px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        .success {
-          color: #10b981;
-          font-size: 3rem;
-          margin-bottom: 1rem;
-        }
-        h1 {
-          color: #111;
-          margin: 0 0 0.5rem 0;
-        }
-        p {
-          color: #666;
-          margin: 0;
-        }
-      </style>
+      <meta http-equiv="refresh" content="0;url=/settings/storage?connected=${encodeURIComponent(provider)}">
     </head>
     <body>
-      <div class="container">
-        <div class="success">✓</div>
-        <h1>Connected Successfully</h1>
-        <p>Your ${provider === 'dropbox' ? 'Dropbox' : 'Google Drive'} account has been connected.</p>
-        <p>This window will close automatically...</p>
-      </div>
       <script>
-        // Notify opener window
-        if (window.opener) {
-          window.opener.postMessage({
-            type: 'storage-connection-success',
-            provider: '${provider}'
-          }, '*');
-        }
-        // Close popup after brief delay
-        setTimeout(() => window.close(), 1500);
+        // Immediate redirect to settings with success parameter
+        window.location.href = '/settings/storage?connected=' + encodeURIComponent('${provider}');
       </script>
+      <p>Redirecting...</p>
     </body>
     </html>
   `;
@@ -330,7 +270,7 @@ function successPage(provider: string) {
 }
 
 /**
- * Renders an error page with a close button
+ * Renders an error page with a back to settings button
  */
 function errorPage(message: string) {
   const html = `
@@ -338,58 +278,11 @@ function errorPage(message: string) {
     <html>
     <head>
       <title>Connection Failed</title>
-      <style>
-        body {
-          font-family: system-ui, -apple-system, sans-serif;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          min-height: 100vh;
-          margin: 0;
-          background: #f5f5f5;
-        }
-        .container {
-          text-align: center;
-          padding: 2rem;
-          background: white;
-          border-radius: 8px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-          max-width: 400px;
-        }
-        .error {
-          color: #ef4444;
-          font-size: 3rem;
-          margin-bottom: 1rem;
-        }
-        h1 {
-          color: #111;
-          margin: 0 0 0.5rem 0;
-        }
-        p {
-          color: #666;
-          margin: 0 0 1.5rem 0;
-        }
-        button {
-          background: #111;
-          color: white;
-          border: none;
-          padding: 0.75rem 1.5rem;
-          border-radius: 6px;
-          cursor: pointer;
-          font-size: 1rem;
-        }
-        button:hover {
-          background: #333;
-        }
-      </style>
+      <meta http-equiv="refresh" content="0;url=/settings/storage?error=${encodeURIComponent(message)}">
     </head>
     <body>
-      <div class="container">
-        <div class="error">✗</div>
-        <h1>Connection Failed</h1>
-        <p>${message}</p>
-        <button onclick="window.close()">Close Window</button>
-      </div>
+      <script>window.location.href = '/settings/storage?error=' + encodeURIComponent('${message}');</script>
+      <p>Redirecting...</p>
     </body>
     </html>
   `;

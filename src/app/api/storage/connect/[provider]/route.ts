@@ -61,24 +61,33 @@ export async function GET(
     
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
     
-    await serviceClient
+    // Store state token in database for validation during callback
+    const { error: upsertError } = await serviceClient
       .from('storage_connections')
       .upsert({
         user_id: user.id,
         provider,
-        provider_account_id: `pending_${state}`, // Temporary marker
+        provider_account_id: `pending_${state}`,
         provider_account_name: 'Pending OAuth',
-        encrypted_access_token: state, // Store state token temporarily
+        encrypted_access_token: state,
         encrypted_refresh_token: null,
         encryption_key_version: 'pending',
         token_expires_at: expiresAt.toISOString(),
-        status: 'error', // Mark as error so it won't be used
+        status: 'error',
         connected_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       }, {
         onConflict: 'user_id,provider',
         ignoreDuplicates: false,
       });
+
+    if (upsertError) {
+      console.error('[OAuth Connect] Failed to store state token:', upsertError);
+      return NextResponse.json(
+        { error: 'Failed to initialize OAuth flow' },
+        { status: 500 }
+      );
+    }
 
     // Construct OAuth authorization URL based on provider
     let authUrl: string;
@@ -88,6 +97,7 @@ export async function GET(
       const redirectUri = env().DROPBOX_REDIRECT_URI;
 
       if (!clientId || !redirectUri) {
+        console.error('[OAuth Connect] Missing Dropbox OAuth configuration');
         return NextResponse.json(
           { error: 'Dropbox OAuth configuration missing' },
           { status: 500 }
@@ -106,6 +116,7 @@ export async function GET(
       const redirectUri = env().GOOGLE_DRIVE_REDIRECT_URI;
 
       if (!clientId || !redirectUri) {
+        console.error('[OAuth Connect] Missing Google Drive OAuth configuration');
         return NextResponse.json(
           { error: 'Google Drive OAuth configuration missing' },
           { status: 500 }
@@ -129,11 +140,10 @@ export async function GET(
     }
 
     // Redirect to provider's OAuth authorization URL
-    // This will open in a popup window (handled by frontend)
     return NextResponse.redirect(authUrl);
 
   } catch (error) {
-    console.error('Error initiating OAuth flow:', error);
+    console.error('[OAuth Connect] Error initiating OAuth flow:', error);
     return NextResponse.json(
       { error: 'Failed to initiate OAuth flow' },
       { status: 500 }

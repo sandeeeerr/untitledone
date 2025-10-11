@@ -123,13 +123,16 @@ export function NavUser({
                 <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
                   <div className="h-full bg-primary" style={{ width: `${Math.min(100, usage?.percentUsed ?? 0)}%` }} />
                 </div>
-                <div className="mt-2">
+                <div className="mt-2 space-y-1">
                   <Link href="/settings/storage">
                     <div className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
                       <Plus className="h-3 w-3" />
-                      <span>Connect external storage</span>
+                      <span>Connect Dropbox or Google Drive</span>
                     </div>
                   </Link>
+                  <p className="text-[10px] text-muted-foreground/70 leading-tight">
+                    Get unlimited storage for your files
+                  </p>
                 </div>
               </div>
             ) : (
@@ -150,6 +153,9 @@ export function NavUser({
                 <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
                   <div className="h-full bg-primary" style={{ width: `${Math.min(100, usage?.percentUsed ?? 0)}%` }} />
                 </div>
+                <p className="text-[10px] text-muted-foreground/70 leading-tight mt-1">
+                  {connectedProvidersCount} external storage connected
+                </p>
               </div>
             )}
             <DropdownMenuSeparator />

@@ -1,23 +1,23 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import StorageProviderCard from '@/components/molecules/storage-provider-card'
 import DisconnectDialog from '@/components/molecules/disconnect-dialog'
 import { useStorageConnections, useConnectStorageProvider, useDisconnectStorageProvider, useMyStorageUsage } from '@/lib/api/queries'
 import { Loader2 } from 'lucide-react'
-import { useRouter } from 'next/navigation' 
-
+import { toast } from '@/hooks/use-toast'
 
 export default function StoragePage() {
-  const router = useRouter()
+  const searchParams = useSearchParams()
   const [connectingProvider, setConnectingProvider] = useState<'dropbox' | 'google_drive' | null>(null)
   const [disconnectDialogOpen, setDisconnectDialogOpen] = useState(false)
   const [providerToDisconnect, setProviderToDisconnect] = useState<'dropbox' | 'google_drive' | null>(null)
 
   // Fetch data
-  const { data: connections, isLoading: loadingConnections, refetch: refetchConnections } = useStorageConnections()
+  const { data: connections, isLoading: loadingConnections } = useStorageConnections()
   const { data: storageUsage, isLoading: loadingUsage } = useMyStorageUsage()
   
   // Mutations
@@ -28,18 +28,39 @@ export default function StoragePage() {
   const dropboxConnection = connections?.find(c => c.provider === 'dropbox') || null
   const driveConnection = connections?.find(c => c.provider === 'google_drive') || null
 
+  // Show success or error message if redirected from OAuth
+  useEffect(() => {
+    const connectedProvider = searchParams.get('connected')
+    const errorMessage = searchParams.get('error')
+    
+    if (connectedProvider) {
+      const providerName = connectedProvider === 'dropbox' ? 'Dropbox' : 'Google Drive'
+      toast({
+        title: 'Connected Successfully',
+        description: `Your ${providerName} account has been connected.`,
+      })
+      // Clean up URL
+      window.history.replaceState({}, '', '/settings/storage')
+    } else if (errorMessage) {
+      toast({
+        variant: 'destructive',
+        title: 'Connection Failed',
+        description: errorMessage,
+      })
+      // Clean up URL
+      window.history.replaceState({}, '', '/settings/storage')
+    }
+  }, [searchParams])
+
   // Handlers
   const handleConnect = async (provider: 'dropbox' | 'google_drive') => {
     setConnectingProvider(provider)
     try {
+      // This will redirect to OAuth flow, so we won't return here
       await connectMutation.mutateAsync(provider)
-      // Refresh the page to show updated connection status
-      await refetchConnections()
-      router.refresh()
     } catch (error) {
       // Error handled by mutation hook (toast)
       console.error('Connection failed:', error)
-    } finally {
       setConnectingProvider(null)
     }
   }
@@ -74,6 +95,48 @@ export default function StoragePage() {
         </p>
       </div>
       <Separator />
+        {/* External Storage Providers Section */}
+        <div className="space-y-4">
+          <div>
+            <h2 className="text-lg font-medium">External Storage</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Connect external storage to upload files without using your platform quota
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <StorageProviderCard
+              provider="dropbox"
+              connection={dropboxConnection}
+              onConnect={() => handleConnect('dropbox')}
+              onDisconnect={() => handleDisconnectClick('dropbox')}
+              isConnecting={connectingProvider === 'dropbox'}
+            />
+            <StorageProviderCard
+              provider="google_drive"
+              connection={driveConnection}
+              onConnect={() => handleConnect('google_drive')}
+              onDisconnect={() => handleDisconnectClick('google_drive')}
+              isConnecting={connectingProvider === 'google_drive'}
+            />
+          </div>
+
+          {/* Info about external storage */}
+          <div className="rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950 p-4">
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                📦 How External Storage Works
+              </p>
+              <ul className="text-sm text-blue-900 dark:text-blue-100 space-y-1 list-disc list-inside">
+                <li>Files uploaded to Dropbox or Google Drive <strong>don&apos;t count</strong> against your 50 MB platform quota</li>
+                <li>Storage limits are determined by your <strong>own Dropbox or Google Drive account</strong></li>
+                <li>You can select which storage to use when uploading files</li>
+                <li>Collaborators can access your files without needing their own external storage</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
 
         {/* Local Storage Usage Section - Show First */}
         <div className="space-y-4">
@@ -124,39 +187,6 @@ export default function StoragePage() {
           </Card>
         </div>
 
-        {/* External Storage Providers Section */}
-        <div className="space-y-4">
-          <div>
-            <h2 className="text-lg font-medium">External Storage</h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Connect external storage to upload files without using your platform quota
-            </p>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <StorageProviderCard
-              provider="dropbox"
-              connection={dropboxConnection}
-              onConnect={() => handleConnect('dropbox')}
-              onDisconnect={() => handleDisconnectClick('dropbox')}
-              isConnecting={connectingProvider === 'dropbox'}
-            />
-            <StorageProviderCard
-              provider="google_drive"
-              connection={driveConnection}
-              onConnect={() => handleConnect('google_drive')}
-              onDisconnect={() => handleDisconnectClick('google_drive')}
-              isConnecting={connectingProvider === 'google_drive'}
-            />
-          </div>
-
-          {/* Info about external storage */}
-          <div className="rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950 p-4">
-            <p className="text-sm text-blue-900 dark:text-blue-100">
-              <strong>Tip:</strong> Files uploaded to Dropbox or Google Drive don&apos;t count against your local storage quota.
-            </p>
-          </div>
-        </div>
 
       {/* Disconnect confirmation dialog */}
       {providerToDisconnect && (

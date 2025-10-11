@@ -1,4 +1,3 @@
-import { Separator } from "@/components/ui/separator";
 import { SidebarNav } from "./sidebar-nav";
 import LayoutSidebar from "@/components/organisms/layout-sidebar";
 import { useTranslations } from "next-intl";
