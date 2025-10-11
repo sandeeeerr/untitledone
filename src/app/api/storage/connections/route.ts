@@ -41,21 +41,11 @@ export async function GET() {
 
     // Transform to client-safe format (remove sensitive fields)
     const safeConnections: StorageConnection[] = (connections || []).map(conn => ({
-      id: conn.id,
-      userId: conn.user_id,
       provider: conn.provider as 'dropbox' | 'google_drive',
-      providerAccountId: conn.provider_account_id || '',
-      providerAccountName: conn.provider_account_name || '',
-      // Don't send encrypted tokens to client
-      encrypted_access_token: '', 
-      encrypted_refresh_token: null,
-      encryption_key_version: conn.encryption_key_version,
-      tokenExpiresAt: conn.token_expires_at,
+      providerAccountName: conn.provider_account_name || null,
+      status: conn.status as 'active' | 'expired' | 'error',
       connectedAt: conn.connected_at,
       lastUsedAt: conn.last_used_at,
-      status: conn.status as 'active' | 'expired' | 'error',
-      createdAt: conn.created_at,
-      updatedAt: conn.updated_at,
     }));
 
     return NextResponse.json(safeConnections, { status: 200 });
