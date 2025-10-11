@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import crypto from 'crypto';
-import createServerClient from '@/lib/supabase/server';
+import { Dropbox } from 'dropbox';
+import { google } from 'googleapis';
 import { env } from '@/lib/env';
+import { encryptToken } from '@/lib/utils/encryption';
+import { createServiceClient } from '@/lib/supabase/service';
 
 type Provider = 'dropbox' | 'google_drive';
 
@@ -17,136 +19,218 @@ function normalizeProvider(slug: string): Provider | null {
 }
 
 /**
- * OAuth Connect Endpoint
+ * OAuth Callback Endpoint
  * 
- * Initiates the OAuth flow for external storage providers.
- * Opens in popup window and redirects to provider's authorization URL.
+ * Handles the OAuth callback from external storage providers.
+ * Exchanges authorization code for access token and stores encrypted tokens.
  */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ provider: string }> }
 ) {
   try {
-    const supabase = await createServerClient();
-    
-    // Authenticate user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
+    const { searchParams } = new URL(request.url);
+    const code = searchParams.get('code');
+    const state = searchParams.get('state');
 
-    // Validate and normalize provider parameter
+    // Validate and normalize provider
     const { provider: providerRaw } = await params;
     const provider = normalizeProvider(providerRaw);
     
     if (!provider) {
-      return NextResponse.json(
-        { error: 'Invalid provider. Must be "dropbox" or "google-drive"' },
-        { status: 400 }
-      );
+      return errorPage('Invalid provider');
     }
 
-    // Generate cryptographically secure state token
-    // Includes random string + user ID for CSRF protection
-    const randomBytes = crypto.randomBytes(32).toString('hex');
-    const state = `${randomBytes}.${user.id}`;
+    if (!code || !state) {
+      return errorPage('Missing authorization code or state');
+    }
 
-    // Store state token in database (expires in 10 minutes)
-    // Using service client since we're storing session data server-side
-    const { createServiceClient } = await import('@/lib/supabase/service');
+    // Validate state token from database
     const serviceClient = createServiceClient();
+    const [stateToken, userId] = state.split('.');
     
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-    
-    // Store state token in database for validation during callback
-    const { error: upsertError } = await serviceClient
-      .from('storage_connections')
-      .upsert({
-        user_id: user.id,
-        provider,
-        provider_account_id: `pending_${state}`,
-        provider_account_name: 'Pending OAuth',
-        encrypted_access_token: state,
-        encrypted_refresh_token: null,
-        encryption_key_version: 'pending',
-        token_expires_at: expiresAt.toISOString(),
-        status: 'error',
-        connected_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }, {
-        onConflict: 'user_id,provider',
-        ignoreDuplicates: false,
-      });
-
-    if (upsertError) {
-      console.error('[OAuth Connect] Failed to store state token:', upsertError);
-      return NextResponse.json(
-        { error: 'Failed to initialize OAuth flow' },
-        { status: 500 }
-      );
+    if (!userId) {
+      return errorPage('Invalid state format');
     }
 
-    // Construct OAuth authorization URL based on provider
-    let authUrl: string;
+    // Verify state token exists in database
+    const { data: pendingConnection, error: stateError } = await serviceClient
+      .from('storage_connections')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('provider', provider)
+      .eq('encrypted_access_token', state)
+      .single();
+
+    if (stateError || !pendingConnection) {
+      return errorPage('Invalid or expired authorization state');
+    }
+
+    // Exchange code for tokens and get user info
+    let accessToken: string;
+    let refreshToken: string | null = null;
+    let expiresIn: number | null = null;
+    let accountId = '';
+    let accountName = '';
 
     if (provider === 'dropbox') {
-      const clientId = env().DROPBOX_APP_KEY;
-      const redirectUri = env().DROPBOX_REDIRECT_URI;
+      // Dropbox token exchange
+      const response = await fetch('https://api.dropboxapi.com/oauth2/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          code,
+          grant_type: 'authorization_code',
+          client_id: env().DROPBOX_APP_KEY,
+          client_secret: env().DROPBOX_APP_SECRET,
+          redirect_uri: env().DROPBOX_REDIRECT_URI,
+        }),
+      });
 
-      if (!clientId || !redirectUri) {
-        console.error('[OAuth Connect] Missing Dropbox OAuth configuration');
-        return NextResponse.json(
-          { error: 'Dropbox OAuth configuration missing' },
-          { status: 500 }
-        );
+      if (!response.ok) {
+        return errorPage('Failed to exchange Dropbox authorization code');
       }
 
-      authUrl = `https://www.dropbox.com/oauth2/authorize?` +
-        `client_id=${encodeURIComponent(clientId)}` +
-        `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-        `&response_type=code` +
-        `&token_access_type=offline` + // Request refresh token
-        `&state=${encodeURIComponent(state)}`;
+      const tokenData = await response.json();
+      accessToken = tokenData.access_token;
+      refreshToken = tokenData.refresh_token || null;
+      expiresIn = tokenData.expires_in || null;
+
+      // Fetch account info
+      const dbx = new Dropbox({ accessToken, fetch: fetch as any });
+      const accountInfo = await dbx.usersGetCurrentAccount();
+      accountId = accountInfo.result.account_id;
+      accountName = accountInfo.result.email;
     } else {
-      // Google Drive
-      const clientId = env().GOOGLE_DRIVE_CLIENT_ID;
-      const redirectUri = env().GOOGLE_DRIVE_REDIRECT_URI;
+      // Google Drive token exchange
+      const oauth2Client = new google.auth.OAuth2(
+        env().GOOGLE_DRIVE_CLIENT_ID,
+        env().GOOGLE_DRIVE_CLIENT_SECRET,
+        env().GOOGLE_DRIVE_REDIRECT_URI
+      );
 
-      if (!clientId || !redirectUri) {
-        console.error('[OAuth Connect] Missing Google Drive OAuth configuration');
-        return NextResponse.json(
-          { error: 'Google Drive OAuth configuration missing' },
-          { status: 500 }
+      const { tokens } = await oauth2Client.getToken(code);
+      accessToken = tokens.access_token!;
+      refreshToken = tokens.refresh_token || null;
+      expiresIn = tokens.expiry_date ? Math.floor((tokens.expiry_date - Date.now()) / 1000) : null;
+
+      // Fetch user info from Google
+      try {
+        const userInfoResponse = await fetch(
+          'https://www.googleapis.com/oauth2/v2/userinfo',
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
         );
-      }
 
-      // Request both drive.file and email scopes
-      const scopes = [
-        'https://www.googleapis.com/auth/drive.file',
-        'https://www.googleapis.com/auth/userinfo.email',
-      ].join(' ');
-      
-      authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-        `client_id=${encodeURIComponent(clientId)}` +
-        `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-        `&response_type=code` +
-        `&access_type=offline` + // Request refresh token
-        `&prompt=consent` + // Force consent screen to get refresh token
-        `&scope=${encodeURIComponent(scopes)}` +
-        `&state=${encodeURIComponent(state)}`;
+        if (userInfoResponse.ok) {
+          const userInfo = await userInfoResponse.json();
+          accountId = userInfo.id || '';
+          accountName = userInfo.email || '';
+        } else {
+          // Fallback: extract from token info
+          const tokenInfoResponse = await fetch(
+            `https://oauth2.googleapis.com/tokeninfo?access_token=${accessToken}`
+          );
+          if (tokenInfoResponse.ok) {
+            const tokenInfo = await tokenInfoResponse.json();
+            accountId = tokenInfo.sub || '';
+            accountName = tokenInfo.email || '';
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch Google user info:', error);
+        accountId = 'unknown';
+        accountName = 'Google Drive User';
+      }
     }
 
-    // Redirect to provider's OAuth authorization URL
-    return NextResponse.redirect(authUrl);
+    // Encrypt tokens
+    const encryptedAccessToken = encryptToken(accessToken);
+    const encryptedRefreshToken = refreshToken ? encryptToken(refreshToken) : null;
+    const tokenExpiresAt = expiresIn 
+      ? new Date(Date.now() + expiresIn * 1000).toISOString() 
+      : null;
+
+    // Update connection in database
+    const { error: upsertError } = await serviceClient
+      .from('storage_connections')
+      .update({
+        provider_account_id: accountId,
+        provider_account_name: accountName,
+        encrypted_access_token: encryptedAccessToken,
+        encrypted_refresh_token: encryptedRefreshToken,
+        encryption_key_version: env().STORAGE_TOKEN_ENCRYPTION_CURRENT_VERSION,
+        token_expires_at: tokenExpiresAt,
+        status: 'active',
+        connected_at: new Date().toISOString(),
+        last_used_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('user_id', userId)
+      .eq('provider', provider);
+
+    if (upsertError) {
+      console.error('Failed to save storage connection:', upsertError);
+      return errorPage('Failed to save storage connection');
+    }
+
+    // Success! Redirect back to settings
+    return successPage(provider);
 
   } catch (error) {
-    console.error('[OAuth Connect] Error initiating OAuth flow:', error);
-    return NextResponse.json(
-      { error: 'Failed to initiate OAuth flow' },
-      { status: 500 }
-    );
+    console.error('Error in OAuth callback:', error);
+    return errorPage('An unexpected error occurred');
   }
+}
+
+/**
+ * Redirects immediately to settings page with success parameter for toast notification
+ */
+function successPage(provider: string) {
+  const redirectUrl = `/settings/storage?connected=${encodeURIComponent(provider)}`;
+  
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+  <title>Redirecting...</title>
+  <meta http-equiv="refresh" content="0;url=${redirectUrl}">
+</head>
+<body style="font-family: sans-serif; text-align: center; padding: 50px;">
+  <p>Connection successful! Redirecting...</p>
+  <script>window.location.href = '${redirectUrl}';</script>
+</body>
+</html>`;
+  
+  return new NextResponse(html, {
+    headers: { 'Content-Type': 'text/html; charset=utf-8' },
+  });
+}
+
+/**
+ * Redirects to settings page with error parameter
+ */
+function errorPage(message: string) {
+  const redirectUrl = `/settings/storage?error=${encodeURIComponent(message)}`;
+  
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+  <title>Redirecting...</title>
+  <meta http-equiv="refresh" content="0;url=${redirectUrl}">
+</head>
+<body style="font-family: sans-serif; text-align: center; padding: 50px;">
+  <p>Redirecting back to settings...</p>
+  <script>window.location.href = '${redirectUrl}';</script>
+</body>
+</html>`;
+  
+  return new NextResponse(html, {
+    headers: { 'Content-Type': 'text/html; charset=utf-8' },
+    status: 400,
+  });
 }
