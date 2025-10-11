@@ -166,14 +166,33 @@ export default function UploadDialog({ projectId, trigger }: UploadDialogProps) 
 								</SelectItem>
 							</SelectContent>
 						</Select>
-						{selectedProvider !== 'local' ? (
-							<p className="text-xs text-muted-foreground">
-								Files uploaded to external storage don&apos;t count against your quota
-							</p>
+						{selectedProvider === 'local' ? (
+							<div className="rounded-md bg-muted p-3 space-y-1">
+								<p className="text-xs text-muted-foreground">
+									📊 Using your <strong>50 MB platform quota</strong>
+								</p>
+								<p className="text-xs text-muted-foreground">
+									Want unlimited space? <Link href="/settings/storage" className="underline hover:text-foreground font-medium">Connect Dropbox or Google Drive</Link>
+								</p>
+							</div>
+						) : selectedProvider === 'dropbox' ? (
+							<div className="rounded-md bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-900 p-3 space-y-1">
+								<p className="text-xs text-blue-900 dark:text-blue-100">
+									<strong>✓ Unlimited storage</strong> - Files use your Dropbox quota
+								</p>
+								<p className="text-xs text-blue-700 dark:text-blue-300">
+									No platform limits apply
+								</p>
+							</div>
 						) : (
-							<p className="text-xs text-muted-foreground">
-								Files uploaded to local storage count against your quota. <Link href="/settings/storage" className="underline hover:text-foreground">Connect external storage</Link>
-							</p>
+							<div className="rounded-md bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-900 p-3 space-y-1">
+								<p className="text-xs text-blue-900 dark:text-blue-100">
+									<strong>✓ Unlimited storage</strong> - Files use your Google Drive quota
+								</p>
+								<p className="text-xs text-blue-700 dark:text-blue-300">
+									No platform limits apply
+								</p>
+							</div>
 						)}
 					</div>
 					{/* Drag & Drop Zone */}
