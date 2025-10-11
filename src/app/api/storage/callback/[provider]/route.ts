@@ -45,10 +45,6 @@ export async function GET(
     const state = searchParams.get('state');
     const error = searchParams.get('error');
 
-    console.log('[OAuth Callback] Provider:', provider);
-    console.log('[OAuth Callback] Code present:', !!code);
-    console.log('[OAuth Callback] State present:', !!state);
-
     // Handle user denial or error from provider
     if (error) {
       console.error('[OAuth Callback] Provider returned error:', error);
@@ -62,10 +58,8 @@ export async function GET(
 
     // Extract user ID from state (format: randomBytes.userId)
     const userId = state.split('.')[1];
-    console.log('[OAuth Callback] User ID from state:', userId);
     
     if (!userId) {
-      console.error('[OAuth Callback] Invalid state format, no user ID found');
       return errorPage('Invalid state format');
     }
 
@@ -82,21 +76,10 @@ export async function GET(
       .eq('encryption_key_version', 'pending')
       .single();
     
-    console.log('[OAuth Callback] Pending connection found:', !!pendingConnection);
-    console.log('[OAuth Callback] State from URL:', state);
-    console.log('[OAuth Callback] State from DB:', pendingConnection?.encrypted_access_token);
-    console.log('[OAuth Callback] Stored state matches:', pendingConnection?.encrypted_access_token === state);
-    
     if (!pendingConnection || pendingConnection.encrypted_access_token !== state) {
-      console.error('[OAuth Callback] State validation failed.');
-      console.error('[OAuth Callback] - Pending connection exists:', !!pendingConnection);
-      console.error('[OAuth Callback] - State from URL:', state);
-      console.error('[OAuth Callback] - State from DB:', pendingConnection?.encrypted_access_token);
-      console.error('[OAuth Callback] - States match:', pendingConnection?.encrypted_access_token === state);
+      console.error('[OAuth Callback] State validation failed for provider:', provider);
       return errorPage('Invalid or expired state token. Please try connecting again.');
     }
-
-    console.log('[OAuth Callback] Starting token exchange for', provider);
 
     // Exchange authorization code for tokens based on provider
     let accessToken: string;
@@ -156,21 +139,15 @@ export async function GET(
         redirectUri
       );
 
-      console.log('[OAuth Callback] Exchanging code for tokens...');
-      
       // Exchange code for tokens
       let tokens;
       try {
         const result = await oauth2Client.getToken(code);
         tokens = result.tokens;
-        console.log('[OAuth Callback] Token exchange successful');
       } catch (tokenError) {
         console.error('[OAuth Callback] Token exchange failed:', tokenError);
         return errorPage('Failed to exchange authorization code with Google');
       }
-      
-      console.log('[OAuth Callback] Token exchange response - has access token:', !!tokens.access_token);
-      console.log('[OAuth Callback] Token exchange response - has refresh token:', !!tokens.refresh_token);
       
       if (!tokens.access_token) {
         return errorPage('Failed to get access token from Google');

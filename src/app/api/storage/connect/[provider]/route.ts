@@ -42,10 +42,7 @@ export async function GET(
     const { provider: providerRaw } = await params;
     const provider = normalizeProvider(providerRaw);
     
-    console.log('[OAuth Connect] Provider requested:', providerRaw, '→', provider);
-    
     if (!provider) {
-      console.error('[OAuth Connect] Invalid provider:', providerRaw);
       return NextResponse.json(
         { error: 'Invalid provider. Must be "dropbox" or "google-drive"' },
         { status: 400 }
@@ -64,19 +61,19 @@ export async function GET(
     
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
     
-    console.log('[OAuth Connect] Storing state token in database for user:', user.id);
+    // Store state token in database for validation during callback
     const { error: upsertError } = await serviceClient
       .from('storage_connections')
       .upsert({
         user_id: user.id,
         provider,
-        provider_account_id: `pending_${state}`, // Temporary marker
+        provider_account_id: `pending_${state}`,
         provider_account_name: 'Pending OAuth',
-        encrypted_access_token: state, // Store state token temporarily
+        encrypted_access_token: state,
         encrypted_refresh_token: null,
         encryption_key_version: 'pending',
         token_expires_at: expiresAt.toISOString(),
-        status: 'error', // Mark as error so it won't be used
+        status: 'error',
         connected_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       }, {
@@ -92,8 +89,6 @@ export async function GET(
       );
     }
 
-    console.log('[OAuth Connect] State token stored successfully');
-
     // Construct OAuth authorization URL based on provider
     let authUrl: string;
 
@@ -101,10 +96,8 @@ export async function GET(
       const clientId = env().DROPBOX_APP_KEY;
       const redirectUri = env().DROPBOX_REDIRECT_URI;
 
-      console.log('[OAuth Connect] Dropbox config - Client ID:', !!clientId, 'Redirect URI:', redirectUri);
-
       if (!clientId || !redirectUri) {
-        console.error('[OAuth Connect] Missing Dropbox config - Client ID:', !!clientId, 'Redirect URI:', !!redirectUri);
+        console.error('[OAuth Connect] Missing Dropbox OAuth configuration');
         return NextResponse.json(
           { error: 'Dropbox OAuth configuration missing' },
           { status: 500 }
@@ -122,10 +115,8 @@ export async function GET(
       const clientId = env().GOOGLE_DRIVE_CLIENT_ID;
       const redirectUri = env().GOOGLE_DRIVE_REDIRECT_URI;
 
-      console.log('[OAuth Connect] Google Drive config - Client ID:', !!clientId, 'Redirect URI:', redirectUri);
-
       if (!clientId || !redirectUri) {
-        console.error('[OAuth Connect] Missing Google Drive config - Client ID:', !!clientId, 'Redirect URI:', !!redirectUri);
+        console.error('[OAuth Connect] Missing Google Drive OAuth configuration');
         return NextResponse.json(
           { error: 'Google Drive OAuth configuration missing' },
           { status: 500 }
@@ -149,16 +140,12 @@ export async function GET(
     }
 
     // Redirect to provider's OAuth authorization URL
-    // This will open in a popup window (handled by frontend)
-    console.log('[OAuth Connect] Redirecting to:', authUrl.substring(0, 100) + '...');
     return NextResponse.redirect(authUrl);
 
   } catch (error) {
     console.error('[OAuth Connect] Error initiating OAuth flow:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[OAuth Connect] Detailed error:', errorMessage);
     return NextResponse.json(
-      { error: 'Failed to initiate OAuth flow', details: errorMessage },
+      { error: 'Failed to initiate OAuth flow' },
       { status: 500 }
     );
   }

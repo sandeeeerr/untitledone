@@ -29,6 +29,7 @@ export async function GET() {
       .from('storage_connections')
       .select('*')
       .eq('user_id', user.id)
+      .neq('encryption_key_version', 'pending') // Exclude pending OAuth flows
       .order('connected_at', { ascending: false });
 
     if (error) {
@@ -62,10 +63,8 @@ export async function GET() {
 
   } catch (error) {
     console.error('Error fetching storage connections:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Detailed error:', errorMessage);
     return NextResponse.json(
-      { error: 'Internal server error', details: errorMessage },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

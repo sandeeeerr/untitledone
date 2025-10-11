@@ -682,17 +682,12 @@ export function useConnectStorageProvider() {
     
     return useMutation({
         mutationFn: (provider: 'dropbox' | 'google_drive') => initiateOAuthFlow(provider),
-        onSuccess: (_, provider) => {
-            queryClient.invalidateQueries({ queryKey: ["storage", "connections"] });
-            toast({ 
-                title: "Connected", 
-                description: `${provider === 'dropbox' ? 'Dropbox' : 'Google Drive'} has been connected successfully.` 
-            });
-        },
         onError: (error: unknown) => {
             const errorMessage = getErrorMessage(error, "Failed to connect storage provider");
             toast({ variant: "destructive", title: "Connection failed", description: errorMessage });
         },
+        // Note: onSuccess is NOT called here because initiateOAuthFlow redirects away
+        // Success toast is shown in settings page after OAuth callback redirect
     });
 }
 
