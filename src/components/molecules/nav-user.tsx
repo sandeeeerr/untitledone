@@ -1,6 +1,6 @@
 "use client"
 
-import { Bell, ChevronsUpDown, LogOut, User2 } from "lucide-react"
+import { Bell, ChevronsUpDown, LogOut, User2, HardDrive, Plus, Settings } from "lucide-react"
 import UserAvatar from "@/components/atoms/user-avatar"
 import {
   DropdownMenu,
@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar"
-import { useMyStorageUsage } from "@/lib/api/queries"
+import { useMyStorageUsage, useStorageConnections } from "@/lib/api/queries"
 import supabaseClient from "@/lib/supabase-client"
 import Link from "next/link"
 
@@ -30,6 +30,11 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar()
   const { data: usage } = useMyStorageUsage()
+  const { data: connections } = useStorageConnections()
+  
+  // Count active external storage connections
+  const activeConnections = connections?.filter(c => c.status === 'active') || []
+  const connectedProvidersCount = activeConnections.length
 
   const onLogout = async () => {
     await supabaseClient.auth.signOut()
@@ -78,30 +83,80 @@ export function NavUser({
                   </Link>
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem>
+              <DropdownMenuItem disabled>
                 <Bell />
                 Notifications
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem asChild>
+                <Link href="/settings/storage">
+                  <HardDrive />
+                  Manage Storage
+                  {connectedProvidersCount > 0 && (
+                    <span className="ml-auto text-xs text-muted-foreground">
+                      {connectedProvidersCount} connected
+                    </span>
+                  )}
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/settings">
+                  <Settings />
+                  Settings
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            {/* Local storage card */}
+            {connectedProvidersCount === 0 ? (
+              <div className="px-2 py-1.5">
+                <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                  <span>Local Storage</span>
+                  <span>
+                    {typeof usage?.mbUsed === "number" && typeof usage?.mbMax === "number"
+                      ? `${usage.mbUsed}MB / ${usage.mbMax}MB`
+                      : `-- / --`}
+                  </span>
+                </div>
+                <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                  <div className="h-full bg-primary" style={{ width: `${Math.min(100, usage?.percentUsed ?? 0)}%` }} />
+                </div>
+                <div className="mt-2">
+                  <Link href="/settings/storage">
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                      <Plus className="h-3 w-3" />
+                      <span>Connect external storage</span>
+                    </div>
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="px-2 py-1.5">
+                <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                  <div className="flex items-center gap-1">
+                    <span>Local Storage</span>
+                    <span className="inline-flex h-4 px-1.5 items-center rounded-full bg-primary/10 text-[10px] font-medium text-primary">
+                      +{connectedProvidersCount}
+                    </span>
+                  </div>
+                  <span>
+                    {typeof usage?.mbUsed === "number" && typeof usage?.mbMax === "number"
+                      ? `${usage.mbUsed}MB / ${usage.mbMax}MB`
+                      : `-- / --`}
+                  </span>
+                </div>
+                <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                  <div className="h-full bg-primary" style={{ width: `${Math.min(100, usage?.percentUsed ?? 0)}%` }} />
+                </div>
+              </div>
+            )}
+            <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onLogout}>
               <LogOut />
               Log out
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <div className="px-2 py-1.5">
-              <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                <span>Storage</span>
-                <span>
-                  {typeof usage?.mbUsed === "number" && typeof usage?.mbMax === "number"
-                    ? `${usage.mbUsed}MB / ${usage.mbMax}MB`
-                    : `-- / --`}
-                </span>
-              </div>
-              <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-                <div className="h-full bg-primary" style={{ width: `${Math.min(100, usage?.percentUsed ?? 0)}%` }} />
-              </div>
-            </div>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

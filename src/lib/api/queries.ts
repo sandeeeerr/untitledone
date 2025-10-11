@@ -14,6 +14,8 @@ import { getProjects, getProject, type Project, uploadProjectFile, getProjectFil
 import { listPins, pinProject, unpinProject, type ProjectPin } from "./pins";
 import { createProjectInvitation, listProjectInvitations, type ProjectInvitationInsert, acceptInvitation, listProjectMembers, leaveProject } from "./projects";
 import type { ProjectInvitation, ProjectMember } from "./projects";
+import { getStorageConnections, deleteStorageConnection, initiateOAuthFlow } from "./storage-connections";
+import type { StorageConnection } from "@/lib/storage/types";
 
 // Utility function to safely extract error message
 function getErrorMessage(error: unknown, fallback: string): string {
@@ -328,6 +330,9 @@ export function useProjectFiles(projectId: string) {
         queryKey: ["project", projectId, "files"],
         queryFn: () => getProjectFiles(projectId),
         enabled: Boolean(projectId),
+        staleTime: 0, // Always refetch to show latest files immediately
+        refetchOnMount: true,
+        refetchOnWindowFocus: true,
     });
 }
 
@@ -345,9 +350,15 @@ export function useUploadProjectFile(projectId: string) {
     
     return useMutation({
         mutationFn: (payload: UploadFileInput) => uploadProjectFile(projectId, payload),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["project", projectId, "files"] });
-            queryClient.invalidateQueries({ queryKey: ["project", projectId, "activity"] });
+        onSuccess: async () => {
+            // Immediately refetch to show the new file
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: ["project", projectId, "files"] }),
+                queryClient.invalidateQueries({ queryKey: ["project", projectId, "activity"] }),
+                queryClient.invalidateQueries({ queryKey: ["storage", "usage"] }),
+            ]);
+            // Force immediate refetch instead of waiting for stale time
+            await queryClient.refetchQueries({ queryKey: ["project", projectId, "files"] });
             toast({ title: "File uploaded", description: "File has been uploaded successfully." });
         },
         onError: (error: unknown) => {
@@ -652,6 +663,72 @@ export function useDeleteProjectComment(projectId: string) {
             // Refresh activity to sync badges/threads if needed
             queryClient.invalidateQueries({ queryKey: ["project", projectId, "activity"] });
             toast({ title: "Deleted", description: "Comment deleted." });
+        },
+    });
+}
+
+// Storage Connections
+export function useStorageConnections() {
+    return useQuery<StorageConnection[]>({
+        queryKey: ["storage", "connections"],
+        queryFn: () => getStorageConnections(),
+        staleTime: 5 * 60 * 1000, // 5 minutes
+    });
+}
+
+export function useConnectStorageProvider() {
+    const queryClient = useQueryClient();
+    const { toast } = useToast();
+    
+    return useMutation({
+        mutationFn: (provider: 'dropbox' | 'google_drive') => initiateOAuthFlow(provider),
+        onSuccess: (_, provider) => {
+            queryClient.invalidateQueries({ queryKey: ["storage", "connections"] });
+            toast({ 
+                title: "Connected", 
+                description: `${provider === 'dropbox' ? 'Dropbox' : 'Google Drive'} has been connected successfully.` 
+            });
+        },
+        onError: (error: unknown) => {
+            const errorMessage = getErrorMessage(error, "Failed to connect storage provider");
+            toast({ variant: "destructive", title: "Connection failed", description: errorMessage });
+        },
+    });
+}
+
+export function useDisconnectStorageProvider() {
+    const queryClient = useQueryClient();
+    const { toast } = useToast();
+    
+    return useMutation({
+        mutationFn: (provider: 'dropbox' | 'google_drive') => deleteStorageConnection(provider),
+        onMutate: async (provider) => {
+            // Optimistically update cache
+            const queryKey = ["storage", "connections"];
+            await queryClient.cancelQueries({ queryKey });
+            const previous = queryClient.getQueryData<StorageConnection[]>(queryKey);
+            
+            if (previous) {
+                const updated = previous.filter(conn => conn.provider !== provider);
+                queryClient.setQueryData(queryKey, updated);
+            }
+            
+            return { previous } as const;
+        },
+        onError: (error: unknown, _provider, context) => {
+            // Rollback optimistic update
+            if (context?.previous) {
+                queryClient.setQueryData(["storage", "connections"], context.previous);
+            }
+            const errorMessage = getErrorMessage(error, "Failed to disconnect storage provider");
+            toast({ variant: "destructive", title: "Error", description: errorMessage });
+        },
+        onSuccess: (_, provider) => {
+            queryClient.invalidateQueries({ queryKey: ["storage", "connections"] });
+            toast({ 
+                title: "Disconnected", 
+                description: `${provider === 'dropbox' ? 'Dropbox' : 'Google Drive'} has been disconnected.` 
+            });
         },
     });
 }

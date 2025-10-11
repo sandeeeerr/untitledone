@@ -249,6 +249,7 @@ export type ProjectFile = {
 		avatar: string | null;
 	};
 	description: string | null;
+	storageProvider: 'local' | 'dropbox' | 'google_drive';
 };
 
 export type ProjectFileDetail = {
@@ -280,6 +281,7 @@ export type UploadFileInput = {
 	file: File;
 	description?: string;
 	versionId?: string;
+	storageProvider?: 'local' | 'dropbox' | 'google_drive';
 };
 
 export async function uploadProjectFile(projectId: string, payload: UploadFileInput): Promise<{ id: string; filename: string; uploaded_at: string }> {
@@ -287,6 +289,7 @@ export async function uploadProjectFile(projectId: string, payload: UploadFileIn
 	form.append("file", payload.file);
 	if (payload.description) form.append("description", payload.description);
 	if (payload.versionId) form.append("versionId", payload.versionId);
+	if (payload.storageProvider) form.append("storageProvider", payload.storageProvider);
 
 	const res = await fetch(`/api/projects/${projectId}/files`, {
 		method: "POST",

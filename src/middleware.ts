@@ -14,14 +14,17 @@ const PUBLIC_ROUTES = {
     pages: {
         landing: "/",
         auth: "/auth",
-        publicProfile: "/u/",
-        skeletonDemo: "/projects/skeleton",
     },
     // API routes accessible without auth (GET only)
     api: {
         profile: "/api/profile/",
         socials: "/api/socials/",
         projects: "/api/projects",
+    },
+    // OAuth routes (all methods) - these handle their own auth
+    oauth: {
+        storageConnect: "/api/storage/connect/",
+        storageCallback: "/api/storage/callback/",
     },
 } as const;
 
@@ -35,9 +38,15 @@ function isPublicRoute(request: NextRequest): boolean {
     // Public pages (all methods)
     if (
         path === PUBLIC_ROUTES.pages.landing ||
-        path.startsWith(PUBLIC_ROUTES.pages.auth) ||
-        path.startsWith(PUBLIC_ROUTES.pages.publicProfile) ||
-        path.startsWith(PUBLIC_ROUTES.pages.skeletonDemo)
+        path.startsWith(PUBLIC_ROUTES.pages.auth) 
+    ) {
+        return true;
+    }
+
+    // OAuth routes (all methods) - handle their own auth validation
+    if (
+        path.startsWith(PUBLIC_ROUTES.oauth.storageConnect) ||
+        path.startsWith(PUBLIC_ROUTES.oauth.storageCallback)
     ) {
         return true;
     }

@@ -7,10 +7,30 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "13.0.4"
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
   public: {
     Tables: {
@@ -241,6 +261,8 @@ export type Database = {
       project_files: {
         Row: {
           collaboration_mode: string | null
+          external_file_id: string | null
+          external_metadata: Json | null
           file_path: string
           file_size: number
           file_type: string
@@ -249,11 +271,14 @@ export type Database = {
           last_activity: string
           metadata: Json | null
           project_id: string
+          storage_provider: string
           uploaded_at: string
           uploaded_by: string
         }
         Insert: {
           collaboration_mode?: string | null
+          external_file_id?: string | null
+          external_metadata?: Json | null
           file_path: string
           file_size: number
           file_type: string
@@ -262,11 +287,14 @@ export type Database = {
           last_activity?: string
           metadata?: Json | null
           project_id: string
+          storage_provider?: string
           uploaded_at?: string
           uploaded_by: string
         }
         Update: {
           collaboration_mode?: string | null
+          external_file_id?: string | null
+          external_metadata?: Json | null
           file_path?: string
           file_size?: number
           file_type?: string
@@ -275,6 +303,7 @@ export type Database = {
           last_activity?: string
           metadata?: Json | null
           project_id?: string
+          storage_provider?: string
           uploaded_at?: string
           uploaded_by?: string
         }
@@ -607,6 +636,65 @@ export type Database = {
           },
         ]
       }
+      storage_connections: {
+        Row: {
+          connected_at: string
+          created_at: string
+          encrypted_access_token: string
+          encrypted_refresh_token: string | null
+          encryption_key_version: string
+          id: string
+          last_used_at: string | null
+          provider: string
+          provider_account_id: string | null
+          provider_account_name: string | null
+          status: string
+          token_expires_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          connected_at?: string
+          created_at?: string
+          encrypted_access_token: string
+          encrypted_refresh_token?: string | null
+          encryption_key_version?: string
+          id?: string
+          last_used_at?: string | null
+          provider: string
+          provider_account_id?: string | null
+          provider_account_name?: string | null
+          status?: string
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          connected_at?: string
+          created_at?: string
+          encrypted_access_token?: string
+          encrypted_refresh_token?: string | null
+          encryption_key_version?: string
+          id?: string
+          last_used_at?: string | null
+          provider?: string
+          provider_account_id?: string | null
+          provider_account_name?: string | null
+          status?: string
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "storage_connections_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       todos: {
         Row: {
           created_at: string
@@ -875,6 +963,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       social_platform: [
@@ -892,3 +983,4 @@ export const Constants = {
     },
   },
 } as const
+

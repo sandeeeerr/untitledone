@@ -1,6 +1,7 @@
 import React from 'react'
 import { Button } from '@/components/ui/button'
 import { FileAudio, Download } from 'lucide-react'
+import StorageProviderBadge from '@/components/atoms/storage-provider-badge'
 
 export type FileCardProps = {
 	filename: string
@@ -12,9 +13,10 @@ export type FileCardProps = {
 	onDownload?: () => void
 	downloadDisabled?: boolean
 	onClick?: () => void
+	storageProvider?: 'local' | 'dropbox' | 'google_drive'
 }
 
-export default function FileCard({ filename, description, fileSizeLabel, dateLabel, icon, onPreview, onDownload, onClick, downloadDisabled }: FileCardProps) {
+export default function FileCard({ filename, description, fileSizeLabel, dateLabel, icon, onPreview, onDownload, onClick, downloadDisabled, storageProvider = 'local' }: FileCardProps) {
 	return (
 		<div
 			onClick={onClick}
@@ -24,7 +26,10 @@ export default function FileCard({ filename, description, fileSizeLabel, dateLab
 		>
 			<div className="flex items-center gap-2 mb-2">
 				{icon ?? <FileAudio className="h-4 w-4 text-blue-600" />}
-				<p className="font-medium text-sm truncate" title={filename}>{filename}</p>
+				<p className="font-medium text-sm truncate flex-1" title={filename}>{filename}</p>
+				{storageProvider !== 'local' && (
+					<StorageProviderBadge provider={storageProvider} size="sm" />
+				)}
 			</div>
 			<div className="flex items-center gap-3 text-xs text-muted-foreground">
 				<span>{fileSizeLabel}</span>

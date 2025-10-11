@@ -1,63 +1,62 @@
-import { NextRequest, NextResponse } from 'next/server';
-import createClient from '@/lib/supabase/server';
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
+import createServerClient from '@/lib/supabase/server';
+
+const paramsSchema = z.object({
+  id: z.string().uuid('Invalid project ID'),
+});
 
 /**
- * POST /api/projects/[id]/leave
- * Leave a project (remove yourself as member)
- * Only works if you're not the owner
+ * Leave Project Endpoint
+ * 
+ * POST: Remove the authenticated user from project members
  */
 export async function POST(
-  req: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = await createClient();
-    const { id: projectId } = await context.params;
-
-    // Get current user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
+    const supabase = await createServerClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
-    // Check if user is the owner (owners can't leave their own projects)
-    const { data: project, error: projectError } = await supabase
+    const { id } = await params;
+    const validation = paramsSchema.safeParse({ id });
+    
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: 'Invalid project ID' },
+        { status: 400 }
+      );
+    }
+
+    const projectId = validation.data.id;
+
+    // Check if user is a member (not owner)
+    const { data: project } = await supabase
       .from('projects')
       .select('owner_id')
       .eq('id', projectId)
       .single();
 
-    if (projectError || !project) {
+    if (!project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
 
     if (project.owner_id === user.id) {
       return NextResponse.json(
-        { error: 'Project owner cannot leave. Transfer ownership or delete the project instead.' },
+        { error: 'Project owner cannot leave. Delete the project instead.' },
         { status: 400 }
       );
     }
 
-    // Check if user is actually a member
-    const { data: membership, error: membershipError } = await supabase
-      .from('project_members')
-      .select('id')
-      .eq('project_id', projectId)
-      .eq('user_id', user.id)
-      .single();
-
-    if (membershipError || !membership) {
-      return NextResponse.json(
-        { error: 'You are not a member of this project' },
-        { status: 404 }
-      );
-    }
-
-    // Remove membership (RLS policy allows this)
+    // Remove user from project members
     const { error: deleteError } = await supabase
       .from('project_members')
       .delete()
@@ -72,13 +71,16 @@ export async function POST(
       );
     }
 
-    return NextResponse.json({ success: true, project_id: projectId }, { status: 200 });
+    return NextResponse.json(
+      { success: true, project_id: projectId },
+      { status: 200 }
+    );
+
   } catch (error) {
-    console.error('Leave project error:', error);
+    console.error('Error leaving project:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     );
   }
 }
-

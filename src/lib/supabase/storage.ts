@@ -36,14 +36,18 @@ export async function replaceObject(path: string, file: File) {
 /**
  * Compute current total bytes used by a user across all their uploaded project files.
  * Based on authoritative `public.project_files` table rows (hard-deleted on removal).
+ * 
+ * NOTE: Only counts files stored in LOCAL storage (storage_provider = 'local').
+ * External storage files (Dropbox, Google Drive) do NOT count against user quota.
  */
 export async function getUserUsedBytes(userId: string): Promise<number> {
   const supabase = await createServerClient();
-  // Aggregate sum of file_size for rows uploaded_by = userId
+  // Aggregate sum of file_size for rows uploaded_by = userId AND storage_provider = 'local'
   const { data, error } = await supabase
     .from("project_files")
     .select("file_size", { count: "exact" })
-    .eq("uploaded_by", userId);
+    .eq("uploaded_by", userId)
+    .eq("storage_provider", "local");
   if (error) throw new Error(error.message);
   const rows = Array.isArray(data) ? data : [];
   let total = 0;

@@ -3,14 +3,16 @@
 import { useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Upload, X } from 'lucide-react'
+import { Upload, X, HardDrive } from 'lucide-react'
+import { FaDropbox, FaGoogleDrive } from 'react-icons/fa'
 import { getFileIconForName } from '@/lib/ui/file-icons'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
-import { useUploadProjectFile } from '@/lib/api/queries'
+import { useUploadProjectFile, useStorageConnections } from '@/lib/api/queries'
+import Link from 'next/link'
 
 export type UploadDialogProps = {
 	projectId: string
@@ -28,9 +30,11 @@ export default function UploadDialog({ projectId, trigger }: UploadDialogProps) 
 	const [open, setOpen] = useState(false)
 	const [files, setFiles] = useState<FileToUpload[]>([])
 	const [isUploading, setIsUploading] = useState(false)
+	const [selectedProvider, setSelectedProvider] = useState<'local' | 'dropbox' | 'google_drive'>('local')
 	// Removed targetVersionId; server will link to active version if any
 	const { toast } = useToast()
 	const uploadFile = useUploadProjectFile(projectId)
+	const { data: connections, isLoading: loadingConnections } = useStorageConnections()
 	// No version fetching
 
 	const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -61,6 +65,10 @@ export default function UploadDialog({ projectId, trigger }: UploadDialogProps) 
 		return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 	}
 
+	// Determine available providers
+	const dropboxConnected = connections?.find(c => c.provider === 'dropbox' && c.status === 'active')
+	const driveConnected = connections?.find(c => c.provider === 'google_drive' && c.status === 'active')
+
 	async function handleUpload() {
 		if (files.length === 0) return
 
@@ -70,13 +78,34 @@ export default function UploadDialog({ projectId, trigger }: UploadDialogProps) 
 				await uploadFile.mutateAsync({
 					file: fileToUpload.file,
 					description: fileToUpload.description,
+					storageProvider: selectedProvider,
 				})
 			}
-			toast({ title: "Upload successful", description: `Uploaded ${files.length} file(s)` })
+			// Don't show toast here - mutation hook already shows success toast
 			setOpen(false)
 			setFiles([])
-		} catch {
-			toast({ variant: "destructive", title: "Upload failed", description: "Failed to upload files. Please try again." })
+			setSelectedProvider('local') // Reset to default
+		} catch (error) {
+			// Check for specific error codes
+			if (error instanceof Error) {
+				if (error.message.includes('PROVIDER_NOT_CONNECTED')) {
+					toast({ 
+						variant: "destructive", 
+						title: "Upload failed", 
+						description: "Please connect your storage provider in Settings" 
+					})
+					return
+				}
+				if (error.message.includes('PROVIDER_TOKEN_EXPIRED')) {
+					toast({ 
+						variant: "destructive", 
+						title: "Upload failed", 
+						description: "Your storage provider connection expired. Please reconnect in Settings." 
+					})
+					return
+				}
+			}
+			// Don't show generic toast here - mutation hook already shows error toast
 		} finally {
 			setIsUploading(false)
 		}
@@ -101,6 +130,52 @@ export default function UploadDialog({ projectId, trigger }: UploadDialogProps) 
 				</DialogHeader>
 
 				<div className="space-y-4">
+					{/* Storage Provider Selection */}
+					<div className="space-y-2">
+						<Label htmlFor="storage-provider" className="text-sm font-medium">
+							Storage Location
+						</Label>
+						<Select 
+							value={selectedProvider} 
+							onValueChange={(value) => setSelectedProvider(value as 'local' | 'dropbox' | 'google_drive')}
+							disabled={isUploading || loadingConnections}
+						>
+							<SelectTrigger id="storage-provider" className="w-full">
+								<SelectValue />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="local">
+									<div className="flex items-center gap-2">
+										<HardDrive className="h-4 w-4" />
+										<span>Local Storage</span>
+									</div>
+								</SelectItem>
+								<SelectItem value="dropbox" disabled={!dropboxConnected}>
+									<div className="flex items-center gap-2">
+										<FaDropbox className="h-4 w-4 text-[#0061FF]" />
+										<span>Dropbox</span>
+										{!dropboxConnected && <span className="text-xs text-muted-foreground">(Not connected)</span>}
+									</div>
+								</SelectItem>
+								<SelectItem value="google_drive" disabled={!driveConnected}>
+									<div className="flex items-center gap-2">
+										<FaGoogleDrive className="h-4 w-4 text-[#4285F4]" />
+										<span>Google Drive</span>
+										{!driveConnected && <span className="text-xs text-muted-foreground">(Not connected)</span>}
+									</div>
+								</SelectItem>
+							</SelectContent>
+						</Select>
+						{selectedProvider !== 'local' ? (
+							<p className="text-xs text-muted-foreground">
+								Files uploaded to external storage don&apos;t count against your quota
+							</p>
+						) : (
+							<p className="text-xs text-muted-foreground">
+								Files uploaded to local storage count against your quota. <Link href="/settings/storage" className="underline hover:text-foreground">Connect external storage</Link>
+							</p>
+						)}
+					</div>
 					{/* Drag & Drop Zone */}
 					<div
 						className={cn(
