@@ -135,7 +135,7 @@ Generated from: `0001-prd-collaboration-mentions-and-share-links.md`
   - [x] 2.11 Add error handling and logging for mention processing (non-blocking, comment creation should succeed even if mentions fail)
   - [x] 2.12 Test mention parsing with various edge cases (multiple mentions, mentions at start/middle/end, invalid usernames)
 
-- [ ] **3.0 Build Autocomplete API & Frontend**
+- [x] **3.0 Build Autocomplete API & Frontend**
   - [x] 3.1 Create `src/app/api/projects/[id]/members/autocomplete/route.ts` with GET handler
   - [x] 3.2 Add Zod schema to validate query parameter `q` (string, min 1 char, max 50 chars)
   - [x] 3.3 Query `profiles` joined with `project_members` WHERE `project_id = [id]` AND `username ILIKE '%[q]%'` LIMIT 5
@@ -146,12 +146,12 @@ Generated from: `0001-prd-collaboration-mentions-and-share-links.md`
   - [x] 3.8 Add keyboard navigation: ArrowUp/ArrowDown to select, Enter to insert, Escape to close
   - [x] 3.9 Add mouse hover states and click handlers
   - [x] 3.10 Position dropdown below cursor/@ symbol using absolute positioning or floating-ui
-  - [ ] 3.11 Trigger autocomplete when user types `@` followed by any character in a textarea/input
-  - [ ] 3.12 Insert `@username` at cursor position when suggestion is selected
-  - [ ] 3.13 Integrate autocomplete into existing comment forms (find all comment textareas in the app)
+  - [x] 3.11 Trigger autocomplete when user types `@` followed by any character in a textarea/input
+  - [x] 3.12 Insert `@username` at cursor position when suggestion is selected
+  - [x] 3.13 Integrate autocomplete into existing comment forms (find all comment textareas in the app)
   - [x] 3.14 Add loading state (spinner) while fetching suggestions
   - [x] 3.15 Add empty state when no members match the query
-  - [ ] 3.16 Test autocomplete with keyboard-only navigation (accessibility)
+  - [x] 3.16 Test autocomplete with keyboard-only navigation (accessibility)
 
 ### Phase 3: Notifications & Dashboard (Week 3-4)
 

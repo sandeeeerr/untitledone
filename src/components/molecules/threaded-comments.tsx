@@ -11,6 +11,8 @@ import { type ProjectComment } from "@/lib/api/comments";
 import { buildCommentTree, type CommentTreeNode } from "@/lib/utils/comments";
 import { CornerUpRight, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { useMentionAutocomplete, MentionSuggestion } from "@/hooks/use-mention-autocomplete";
+import { MentionAutocomplete } from "@/components/molecules/mention-autocomplete";
 
 export interface ThreadedCommentsProps {
   projectId: string;
@@ -29,8 +31,76 @@ export default function ThreadedComments({ projectId, context, comments, isLoadi
   useDeleteProjectComment(projectId); // ensure hook remains mounted; delete is used per-thread
   const [newComment, setNewComment] = React.useState("");
   const [newError, setNewError] = React.useState<string | null>(null);
+  const newCommentRef = React.useRef<HTMLTextAreaElement>(null);
+  
+  // Autocomplete state
+  const [showAutocomplete, setShowAutocomplete] = React.useState(false);
+  const [autocompletePosition, setAutocompletePosition] = React.useState({ top: 0, left: 0 });
+  const [autocompleteQuery, setAutocompleteQuery] = React.useState("");
+
+  const { setQuery, suggestions, isLoading: isLoadingAutocomplete } = useMentionAutocomplete({
+    projectId,
+    enabled: showAutocomplete,
+  });
 
   const tree = React.useMemo<CommentTreeNode[]>(() => buildCommentTree(comments || []), [comments]);
+
+  const handleNewCommentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setNewComment(value);
+    
+    // Detect @ mentions for autocomplete
+    const cursorPos = e.target.selectionStart;
+    const textBeforeCursor = value.slice(0, cursorPos);
+    const match = textBeforeCursor.match(/@([a-zA-Z0-9_-]*)$/);
+    
+    if (match) {
+      // @ detected, show autocomplete
+      const query = match[1];
+      setAutocompleteQuery(query);
+      setQuery(query);
+      setShowAutocomplete(true);
+      
+      // Calculate position below textarea
+      const rect = e.target.getBoundingClientRect();
+      setAutocompletePosition({
+        top: rect.bottom + window.scrollY + 4,
+        left: rect.left + window.scrollX,
+      });
+    } else {
+      setShowAutocomplete(false);
+    }
+  };
+
+  const handleSelectMention = (suggestion: MentionSuggestion) => {
+    if (!newCommentRef.current) return;
+    
+    const textarea = newCommentRef.current;
+    const value = textarea.value;
+    const cursorPos = textarea.selectionStart;
+    
+    // Find the @ symbol position
+    const textBeforeCursor = value.slice(0, cursorPos);
+    const atMatch = textBeforeCursor.match(/@([a-zA-Z0-9_-]*)$/);
+    
+    if (atMatch) {
+      const atPos = cursorPos - atMatch[0].length;
+      const newValue = 
+        value.slice(0, atPos) + 
+        `@${suggestion.username} ` + 
+        value.slice(cursorPos);
+      
+      setNewComment(newValue);
+      setShowAutocomplete(false);
+      
+      // Set cursor after inserted mention
+      setTimeout(() => {
+        const newCursorPos = atPos + suggestion.username.length + 2;
+        textarea.setSelectionRange(newCursorPos, newCursorPos);
+        textarea.focus();
+      }, 0);
+    }
+  };
 
   const handlePost = async () => {
     const text = newComment.trim();
@@ -39,6 +109,7 @@ export default function ThreadedComments({ projectId, context, comments, isLoadi
     await create.mutateAsync({ projectId, comment: text, ...(ts !== null ? { timestampMs: ts } : {}), ...context });
     setNewComment("");
     setNewError(null);
+    setShowAutocomplete(false);
   };
 
   const toggleResolved = async (c: ProjectComment) => {
@@ -59,17 +130,31 @@ export default function ThreadedComments({ projectId, context, comments, isLoadi
         tree.map((node) => <Thread key={String(node.comment.id)} node={node} depth={0} onReply={handleReply} onToggleResolved={toggleResolved} projectId={projectId} onSeekToTimestamp={onSeekToTimestamp} highlightedCommentId={highlightedCommentId ?? null} />)
       )}
 
-      <div className="flex gap-2">
-        <Textarea
-          placeholder={t("addComment")}
-          value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-          className="text-sm min-h-[60px] resize-none bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
-          rows={2}
-        />
-        <Button size="sm" onClick={handlePost} disabled={create.isPending} className="self-end">
-          {create.isPending ? t("posting") : t("post")}
-        </Button>
+      <div className="relative">
+        <div className="flex gap-2">
+          <Textarea
+            ref={newCommentRef}
+            placeholder={t("addComment")}
+            value={newComment}
+            onChange={handleNewCommentChange}
+            className="text-sm min-h-[60px] resize-none bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
+            rows={2}
+          />
+          <Button size="sm" onClick={handlePost} disabled={create.isPending} className="self-end">
+            {create.isPending ? t("posting") : t("post")}
+          </Button>
+        </div>
+        
+        {/* Autocomplete dropdown */}
+        {showAutocomplete && (
+          <MentionAutocomplete
+            suggestions={suggestions}
+            isLoading={isLoadingAutocomplete}
+            onSelect={handleSelectMention}
+            onClose={() => setShowAutocomplete(false)}
+            position={autocompletePosition}
+          />
+        )}
       </div>
       {newError && <div className="text-xs text-red-600">{newError}</div>}
     </div>
@@ -88,12 +173,129 @@ function Thread({ node, depth, onReply, onToggleResolved, projectId, onSeekToTim
   const hasManyReplies = node.children.length > 3;
   const [showAllReplies, setShowAllReplies] = React.useState(!node.comment.resolved && !hasManyReplies);
   const isHighlighted = highlightedCommentId && String(node.comment.id) === highlightedCommentId;
+  
+  const replyRef = React.useRef<HTMLTextAreaElement>(null);
+  const editRef = React.useRef<HTMLTextAreaElement>(null);
+  
+  // Autocomplete state for reply
+  const [showReplyAutocomplete, setShowReplyAutocomplete] = React.useState(false);
+  const [replyAutocompletePosition, setReplyAutocompletePosition] = React.useState({ top: 0, left: 0 });
+  
+  const { setQuery: setReplyQuery, suggestions: replySuggestions, isLoading: isLoadingReplyAutocomplete } = useMentionAutocomplete({
+    projectId,
+    enabled: showReplyAutocomplete,
+  });
+  
+  // Autocomplete state for edit
+  const [showEditAutocomplete, setShowEditAutocomplete] = React.useState(false);
+  const [editAutocompletePosition, setEditAutocompletePosition] = React.useState({ top: 0, left: 0 });
+  
+  const { setQuery: setEditQuery, suggestions: editSuggestions, isLoading: isLoadingEditAutocomplete } = useMentionAutocomplete({
+    projectId,
+    enabled: showEditAutocomplete,
+  });
 
   const formatMs = (ms: number) => {
     const total = Math.max(0, Math.floor(ms / 1000));
     const mm = Math.floor(total / 60).toString().padStart(2, '0');
     const ss = (total % 60).toString().padStart(2, '0');
     return `${mm}:${ss}`;
+  };
+
+  // Reply autocomplete handlers
+  const handleReplyChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setReplyText(value);
+    
+    const cursorPos = e.target.selectionStart;
+    const textBeforeCursor = value.slice(0, cursorPos);
+    const match = textBeforeCursor.match(/@([a-zA-Z0-9_-]*)$/);
+    
+    if (match) {
+      setReplyQuery(match[1]);
+      setShowReplyAutocomplete(true);
+      const rect = e.target.getBoundingClientRect();
+      setReplyAutocompletePosition({
+        top: rect.bottom + window.scrollY + 4,
+        left: rect.left + window.scrollX,
+      });
+    } else {
+      setShowReplyAutocomplete(false);
+    }
+  };
+
+  const handleSelectReplyMention = (suggestion: MentionSuggestion) => {
+    if (!replyRef.current) return;
+    const textarea = replyRef.current;
+    const value = textarea.value;
+    const cursorPos = textarea.selectionStart;
+    const textBeforeCursor = value.slice(0, cursorPos);
+    const atMatch = textBeforeCursor.match(/@([a-zA-Z0-9_-]*)$/);
+    
+    if (atMatch) {
+      const atPos = cursorPos - atMatch[0].length;
+      const newValue = 
+        value.slice(0, atPos) + 
+        `@${suggestion.username} ` + 
+        value.slice(cursorPos);
+      
+      setReplyText(newValue);
+      setShowReplyAutocomplete(false);
+      
+      setTimeout(() => {
+        const newCursorPos = atPos + suggestion.username.length + 2;
+        textarea.setSelectionRange(newCursorPos, newCursorPos);
+        textarea.focus();
+      }, 0);
+    }
+  };
+
+  // Edit autocomplete handlers
+  const handleEditChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setDraft(value);
+    
+    const cursorPos = e.target.selectionStart;
+    const textBeforeCursor = value.slice(0, cursorPos);
+    const match = textBeforeCursor.match(/@([a-zA-Z0-9_-]*)$/);
+    
+    if (match) {
+      setEditQuery(match[1]);
+      setShowEditAutocomplete(true);
+      const rect = e.target.getBoundingClientRect();
+      setEditAutocompletePosition({
+        top: rect.bottom + window.scrollY + 4,
+        left: rect.left + window.scrollX,
+      });
+    } else {
+      setShowEditAutocomplete(false);
+    }
+  };
+
+  const handleSelectEditMention = (suggestion: MentionSuggestion) => {
+    if (!editRef.current) return;
+    const textarea = editRef.current;
+    const value = textarea.value;
+    const cursorPos = textarea.selectionStart;
+    const textBeforeCursor = value.slice(0, cursorPos);
+    const atMatch = textBeforeCursor.match(/@([a-zA-Z0-9_-]*)$/);
+    
+    if (atMatch) {
+      const atPos = cursorPos - atMatch[0].length;
+      const newValue = 
+        value.slice(0, atPos) + 
+        `@${suggestion.username} ` + 
+        value.slice(cursorPos);
+      
+      setDraft(newValue);
+      setShowEditAutocomplete(false);
+      
+      setTimeout(() => {
+        const newCursorPos = atPos + suggestion.username.length + 2;
+        textarea.setSelectionRange(newCursorPos, newCursorPos);
+        textarea.focus();
+      }, 0);
+    }
   };
 
   return (
@@ -138,10 +340,27 @@ function Thread({ node, depth, onReply, onToggleResolved, projectId, onSeekToTim
           </div>
         </div>
         {isEditing ? (
-          <div className="mt-1 flex items-end gap-2">
-            <Textarea rows={3} className="text-sm" value={draft} onChange={(e) => setDraft(e.target.value)} />
-            <Button size="sm" variant="secondary" onClick={async () => { const next = draft.trim(); if (next && next !== node.comment.comment) { await update.mutateAsync({ projectId, commentId: String(node.comment.id), comment: next }); } setIsEditing(false); }}>{t("save")}</Button>
-            <Button size="sm" variant="ghost" onClick={() => { setDraft(node.comment.comment); setIsEditing(false); }}>{t("cancel")}</Button>
+          <div className="mt-1 relative">
+            <div className="flex items-end gap-2">
+              <Textarea 
+                ref={editRef}
+                rows={3} 
+                className="text-sm" 
+                value={draft} 
+                onChange={handleEditChange} 
+              />
+              <Button size="sm" variant="secondary" onClick={async () => { const next = draft.trim(); if (next && next !== node.comment.comment) { await update.mutateAsync({ projectId, commentId: String(node.comment.id), comment: next }); } setIsEditing(false); setShowEditAutocomplete(false); }}>{t("save")}</Button>
+              <Button size="sm" variant="ghost" onClick={() => { setDraft(node.comment.comment); setIsEditing(false); setShowEditAutocomplete(false); }}>{t("cancel")}</Button>
+            </div>
+            {showEditAutocomplete && (
+              <MentionAutocomplete
+                suggestions={editSuggestions}
+                isLoading={isLoadingEditAutocomplete}
+                onSelect={handleSelectEditMention}
+                onClose={() => setShowEditAutocomplete(false)}
+                position={editAutocompletePosition}
+              />
+            )}
           </div>
         ) : (
           <p className="mt-1 break-words">{node.comment.comment}</p>
@@ -152,17 +371,29 @@ function Thread({ node, depth, onReply, onToggleResolved, projectId, onSeekToTim
           </button>
         </div>
         {isReplying && (
-          <div className="mt-2 flex gap-2">
-            <Textarea
-              placeholder={t("addReply")}
-              value={replyText}
-              onChange={(e) => setReplyText(e.target.value)}
-              className="text-sm min-h-[60px] resize-none bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
-              rows={2}
-            />
-            <Button size="sm" onClick={async () => { if (replyText.trim()) { await onReply(node.comment, replyText.trim()); setReplyText(""); setIsReplying(false); } }} disabled={!replyText.trim()} className="self-end">
-              {t("post")}
-            </Button>
+          <div className="mt-2 relative">
+            <div className="flex gap-2">
+              <Textarea
+                ref={replyRef}
+                placeholder={t("addReply")}
+                value={replyText}
+                onChange={handleReplyChange}
+                className="text-sm min-h-[60px] resize-none bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
+                rows={2}
+              />
+              <Button size="sm" onClick={async () => { if (replyText.trim()) { await onReply(node.comment, replyText.trim()); setReplyText(""); setIsReplying(false); setShowReplyAutocomplete(false); } }} disabled={!replyText.trim()} className="self-end">
+                {t("post")}
+              </Button>
+            </div>
+            {showReplyAutocomplete && (
+              <MentionAutocomplete
+                suggestions={replySuggestions}
+                isLoading={isLoadingReplyAutocomplete}
+                onSelect={handleSelectReplyMention}
+                onClose={() => setShowReplyAutocomplete(false)}
+                position={replyAutocompletePosition}
+              />
+            )}
           </div>
         )}
         {node.children.length > 0 && (
