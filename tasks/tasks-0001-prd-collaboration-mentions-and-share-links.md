@@ -303,13 +303,13 @@ Generated from: `0001-prd-collaboration-mentions-and-share-links.md`
   - [ ] 10.11 Test all components in dark mode to ensure proper theming
   - [ ] 10.12 Optimize autocomplete performance: verify debouncing works, check for unnecessary re-renders
   - [ ] 10.13 Optimize notifications API: add pagination cursor logic, test with 100+ notifications
-  - [ ] 10.14 Add caching to autocomplete API responses (use TanStack Query `staleTime` of 5 minutes)
+  - [x] 10.14 Add caching to autocomplete API responses (use TanStack Query `staleTime` of 5 minutes)
   - [ ] 10.15 Run performance tests: measure P95 latency for autocomplete (<200ms) and notifications (<500ms)
   - [ ] 10.16 Write unit tests for mention parsing utility (`src/lib/utils/mentions.ts`)
   - [ ] 10.17 Write unit tests for share link token generation (`src/lib/utils/share-links.ts`)
   - [ ] 10.18 Update project README with feature overview and setup instructions
   - [ ] 10.19 Create user guide document explaining how to use mentions and share links
-  - [ ] 10.20 Add code comments and JSDoc for all new API functions
+  - [x] 10.20 Add code comments and JSDoc for all new API functions
   - [ ] 10.21 Run full type check: `npm run typecheck` and fix any TypeScript errors
   - [ ] 10.22 Run linter: `npm run lint` and fix any issues
   - [ ] 10.23 Test on different browsers (Chrome, Firefox, Safari) to ensure compatibility
