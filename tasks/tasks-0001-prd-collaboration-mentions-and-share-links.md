@@ -56,6 +56,7 @@ Generated from: `0001-prd-collaboration-mentions-and-share-links.md`
 - `src/components/molecules/threaded-comments.tsx` - Integrated autocomplete in main/reply/edit textareas with scroll-to-comment (modified)
 - `src/components/molecules/notification-item.tsx` - Single notification entry with deep linking (created)
 - `src/components/molecules/share-link-card.tsx` - Share link card with copy/revoke actions and confirmation dialog (created)
+- `src/components/molecules/invite-dialog.tsx` - Added tabs for email invitations and share links (modified)
 
 ### Components - Organisms
 - `src/components/organisms/mentions-dashboard.tsx` - Full mentions dashboard with filters, actions, and pagination (modified)
@@ -301,9 +302,9 @@ Generated from: `0001-prd-collaboration-mentions-and-share-links.md`
   - [ ] 10.8 Write Cypress E2E test: email preferences (update settings, verify persistence)
   - [ ] 10.9 Run accessibility audit using axe-core or similar tool on mentions dashboard and settings pages
   - [ ] 10.10 Fix any accessibility issues (missing ARIA labels, keyboard navigation, color contrast)
-  - [ ] 10.11 Test all components in dark mode to ensure proper theming
-  - [ ] 10.12 Optimize autocomplete performance: verify debouncing works, check for unnecessary re-renders
-  - [ ] 10.13 Optimize notifications API: add pagination cursor logic, test with 100+ notifications
+  - [x] 10.11 Test all components in dark mode to ensure proper theming
+  - [x] 10.12 Optimize autocomplete performance: verify debouncing works, check for unnecessary re-renders
+  - [x] 10.13 Optimize notifications API: add pagination cursor logic, test with 100+ notifications
   - [x] 10.14 Add caching to autocomplete API responses (use TanStack Query `staleTime` of 5 minutes)
   - [ ] 10.15 Run performance tests: measure P95 latency for autocomplete (<200ms) and notifications (<500ms)
   - [ ] 10.16 Write unit tests for mention parsing utility (`src/lib/utils/mentions.ts`)
