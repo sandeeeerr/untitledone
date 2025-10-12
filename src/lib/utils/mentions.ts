@@ -81,7 +81,9 @@ export async function validateMentions(
     .in("id", Array.from(userIds))
     .in("username", usernames);
 
-  return validUsers || [];
+  // Filter out null usernames and type-cast
+  return (validUsers || [])
+    .filter((user): user is { id: string; username: string } => user.username !== null);
 }
 
 /**

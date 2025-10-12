@@ -82,7 +82,7 @@ export async function sendMentionEmail(
   }
 
   const data = await response.json();
-  console.log("Email sent successfully:", data.id);
+  console.warn("Email sent successfully:", data.id);
 }
 
 /**
@@ -116,7 +116,7 @@ export async function sendMentionDigest(
   }
 
   // Build HTML for digest (simple list of mentions)
-  const mentionsList = mentions.map((mention, index) => `
+  const mentionsList = mentions.map((mention, _index) => `
     <div style="margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid #e5e7eb;">
       <p style="margin: 0 0 8px; color: #1a1a1a; font-size: 15px;">
         <strong>${mention.commenterName}</strong> mentioned you in <strong>${mention.projectName}</strong>
@@ -150,7 +150,7 @@ export async function sendMentionDigest(
           <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 32px 0;">
           <p style="color: #666; font-size: 12px; line-height: 18px; margin: 0;">
             You received this email because you have daily digest enabled.
-            <a href="${linkUrl.split("/projects")[0]}/settings/notifications" style="color: #3b82f6; text-decoration: underline;">
+            <a href="${envVars.NEXT_PUBLIC_SITE_URL}/settings/notifications" style="color: #3b82f6; text-decoration: underline;">
               Manage your notification preferences
             </a>
           </p>
@@ -181,18 +181,6 @@ export async function sendMentionDigest(
   }
 
   const data = await response.json();
-  console.log("Digest email sent successfully:", data.id);
-}
-
-/**
- * Helper to extract base URL from a full URL
- */
-function getBaseUrl(url: string): string {
-  try {
-    const urlObj = new URL(url);
-    return `${urlObj.protocol}//${urlObj.host}`;
-  } catch {
-    return url;
-  }
+  console.warn("Digest email sent successfully:", data.id);
 }
 

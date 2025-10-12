@@ -10,15 +10,16 @@ const paramsSchema = z.object({
 });
 
 const querySchema = z.object({
-  q: z.string().min(1, "Query must be at least 1 character").max(50, "Query too long"),
+  q: z.string().max(50, "Query too long").optional(),
 });
 
 /**
  * GET /api/projects/[id]/members/autocomplete?q=[query]
- * 
+ *
  * Autocomplete endpoint for @mention suggestions
- * Returns up to 5 project members whose usernames match the query
- * 
+ * Returns up to 10 project members whose usernames match the query
+ * If query is empty, returns all project members
+ *
  * @requires Authentication - User must be a project member
  */
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -48,15 +49,15 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   });
   if (!queryValidation.success) {
     return NextResponse.json(
-      { error: queryValidation.error.errors[0]?.message || "Invalid query" },
+      { error: queryValidation.error.issues[0]?.message || "Invalid query" },
       { status: 400 }
     );
   }
 
   const projectId = paramValidation.data.id;
-  const query = queryValidation.data.q.toLowerCase();
+  const query = queryValidation.data.q?.toLowerCase() || "";
 
-  // Verify user has access to this project (is owner or member)
+  // Single query to verify access and get project owner in one go
   const { data: project } = await (supabase as SupabaseClient)
     .from("projects")
     .select("owner_id")
@@ -69,8 +70,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
   const isOwner = project.owner_id === user.id;
 
+  // If not owner, verify membership
   if (!isOwner) {
-    // Check if user is a member
     const { data: membership } = await (supabase as SupabaseClient)
       .from("project_members")
       .select("id")
@@ -83,40 +84,35 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     }
   }
 
-  // Get project owner profile
-  const { data: ownerProfile } = await (supabase as SupabaseClient)
-    .from("profiles")
-    .select("id, username")
-    .eq("id", project.owner_id)
-    .single();
-
-  // Get project members
+  // Optimized: Single query to get all project members with their profiles
+  // This joins project_members with profiles in one DB round-trip
   const { data: members } = await (supabase as SupabaseClient)
     .from("project_members")
-    .select("user_id")
+    .select("profiles!inner(id, username)")
     .eq("project_id", projectId);
 
-  const memberIds = members?.map((m) => m.user_id) || [];
-  
-  // Collect all user IDs (owner + members)
-  const allUserIds = new Set<string>();
-  if (ownerProfile) {
-    allUserIds.add(ownerProfile.id);
-  }
-  memberIds.forEach((id) => allUserIds.add(id));
-
-  if (allUserIds.size === 0) {
-    return NextResponse.json([], { status: 200 });
+  // Collect all user IDs: owner + members
+  const allUserIds = new Set<string>([project.owner_id]);
+  if (members) {
+    members.forEach((member) => {
+      const profile = member.profiles as unknown as { id: string; username: string };
+      if (profile?.id) {
+        allUserIds.add(profile.id);
+      }
+    });
   }
 
-  // Query profiles for users matching the query
-  // Use ilike for case-insensitive partial matching
-  const { data: matchingProfiles, error } = await (supabase as SupabaseClient)
+  // Query profiles for all project users (owner + members) matching the search query
+  let profilesQuery = (supabase as SupabaseClient)
     .from("profiles")
     .select("id, username")
-    .in("id", Array.from(allUserIds))
-    .ilike("username", `%${query}%`)
-    .limit(5);
+    .in("id", Array.from(allUserIds));
+
+  if (query) {
+    profilesQuery = profilesQuery.ilike("username", `%${query}%`);
+  }
+
+  const { data: matchingProfiles, error } = await profilesQuery.limit(10);
 
   if (error) {
     console.error("Autocomplete query error:", error);

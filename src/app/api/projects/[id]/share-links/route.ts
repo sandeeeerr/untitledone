@@ -185,7 +185,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     url: `${siteUrl}/share/${link.token}`,
     token: link.token,
     created_by: link.created_by,
-    creator_name: link.profiles?.display_name || link.profiles?.username || "Unknown",
+    creator_name: (link.profiles as Array<{ display_name?: string | null; username?: string | null }>)?.[0]?.display_name || (link.profiles as Array<{ display_name?: string | null; username?: string | null }>)?.[0]?.username || "Unknown",
     expires_at: link.expires_at,
     used_by: link.used_by,
     used_at: link.used_at,

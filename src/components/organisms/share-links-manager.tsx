@@ -15,6 +15,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent } from "@/components/ui/card";
+import { Copy } from "lucide-react";
 
 export interface ShareLink {
   id: string;
@@ -196,7 +198,7 @@ export function ShareLinksManager({
             </>
           ) : links.length === 0 ? (
             <EmptyState
-              icon={LinkIcon}
+              icon={<LinkIcon className="h-12 w-12" />}
               title={t("no_links")}
               description={t("no_links_description")}
             />
@@ -221,7 +223,7 @@ export function ShareLinksManager({
 
       {/* Success dialog for new link */}
       <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>{t("link_generated")}</DialogTitle>
             <DialogDescription>
@@ -229,8 +231,8 @@ export function ShareLinksManager({
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="rounded-lg border bg-muted p-3">
-              <p className="text-sm font-mono break-all">{newLinkUrl}</p>
+            <div className="rounded-lg border bg-muted p-3 max-w-full">
+              <p className="text-sm font-mono break-all overflow-hidden">{newLinkUrl}</p>
             </div>
             <div className="flex items-center gap-2">
               <Button onClick={handleCopyNewLink} className="flex-1">

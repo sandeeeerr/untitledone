@@ -18,7 +18,7 @@ interface FileMetadata {
 }
 
 // Type for project file with metadata
-interface ProjectFileWithMetadata {
+interface _ProjectFileWithMetadata {
   id: string;
   filename: string;
   file_type: string;
@@ -143,7 +143,8 @@ export async function GET(
       .single();
 
     // Enrich file data
-    const isDeleted = Boolean((file as any)?.metadata?.deleted_at);
+    const fileWithMetadata = file as { metadata?: { deleted_at?: string } };
+    const isDeleted = Boolean(fileWithMetadata?.metadata?.deleted_at);
     const enrichedFile = {
       id: file.id,
       filename: file.filename,
@@ -160,7 +161,7 @@ export async function GET(
       description: file.metadata?.description || null,
       supersededByFileId: (file.metadata as FileMetadata | null)?.superseded_by ?? null,
       supersedesFileId: (file.metadata as FileMetadata | null)?.supersedes ?? null,
-      deletedAt: isDeleted ? (file as any).metadata?.deleted_at ?? null : null,
+      deletedAt: isDeleted ? fileWithMetadata.metadata?.deleted_at ?? null : null,
       version: versionMeta ? {
         id: versionMeta.id,
         name: versionMeta.version_name,
@@ -235,15 +236,16 @@ export async function POST(
 
     if (action === "download") {
       // Block download if file is soft-deleted
-      const isDeleted = Boolean((file as any)?.metadata?.deleted_at);
+      const fileWithMeta = file as { metadata?: { deleted_at?: string }; storage_provider?: string; external_file_id?: string };
+      const isDeleted = Boolean(fileWithMeta?.metadata?.deleted_at);
       if (isDeleted) return NextResponse.json({ error: "File deleted" }, { status: 410 });
       if (!project.downloads_enabled) return NextResponse.json({ error: "Downloads disabled" }, { status: 403 });
       
       try {
         // Get storage provider using UPLOADER's userId (ownership proxying)
-        const storageProvider = ((file as any).storage_provider || 'local') as StorageProviderType;
+        const storageProvider = (fileWithMeta.storage_provider || 'local') as StorageProviderType;
         const uploadedByUserId = file.uploaded_by;
-        const fileIdentifier = (file as any).external_file_id || file.file_path;
+        const fileIdentifier = fileWithMeta.external_file_id || file.file_path;
         
         const adapter = await getStorageProvider(storageProvider, uploadedByUserId);
         const signedUrl = await adapter.getDownloadUrl(fileIdentifier, uploadedByUserId, 60 * 5);
@@ -299,7 +301,8 @@ export async function POST(
         /\.(wav|mp3|flac|aac|aiff|ogg|m4a|opus|mid|midi|syx|als|flp|logicx|band|cpr|ptx|rpp|song|bwproject|reason|nki|adg|fst|fxp|fxb|nmsv|h2p|zip|rar|7z|tar|gz|txt|md|doc|docx|pdf|png|jpg|jpeg|gif|webp|svg|mp4|mov|mkv|json|xml)$/i,
       ];
       const name = newFile.name || file.filename || "file";
-      const type = newFile.type || (file as any).file_type || "application/octet-stream";
+      const fileWithType = file as { file_type?: string };
+      const type = newFile.type || fileWithType.file_type || "application/octet-stream";
       const size = Number(newFile.size || 0);
       const maxBytes = getMaxUploadFileBytes();
       const allowed = allowMimeOrExt.some((re) => re.test(type) || re.test(name));

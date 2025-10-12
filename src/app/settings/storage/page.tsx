@@ -95,97 +95,102 @@ export default function StoragePage() {
         </p>
       </div>
       <Separator />
-        {/* External Storage Providers Section */}
-        <div className="space-y-4">
-          <div>
-            <h2 className="text-lg font-medium">External Storage</h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Connect external storage to upload files without using your platform quota
-            </p>
-          </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <StorageProviderCard
-              provider="dropbox"
-              connection={dropboxConnection}
-              onConnect={() => handleConnect('dropbox')}
-              onDisconnect={() => handleDisconnectClick('dropbox')}
-              isConnecting={connectingProvider === 'dropbox'}
-            />
-            <StorageProviderCard
-              provider="google_drive"
-              connection={driveConnection}
-              onConnect={() => handleConnect('google_drive')}
-              onDisconnect={() => handleDisconnectClick('google_drive')}
-              isConnecting={connectingProvider === 'google_drive'}
-            />
-          </div>
-
-          {/* Info about external storage */}
-          <div className="rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950 p-4">
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                📦 How External Storage Works
-              </p>
-              <ul className="text-sm text-blue-900 dark:text-blue-100 space-y-1 list-disc list-inside">
-                <li>Files uploaded to Dropbox or Google Drive <strong>don&apos;t count</strong> against your 50 MB platform quota</li>
-                <li>Storage limits are determined by your <strong>own Dropbox or Google Drive account</strong></li>
-                <li>You can select which storage to use when uploading files</li>
-                <li>Collaborators can access your files without needing their own external storage</li>
-              </ul>
-            </div>
-          </div>
+      {/* Local Storage Usage Section */}
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-lg font-medium">Local Storage</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Your current platform storage usage
+          </p>
         </div>
 
-
-        {/* Local Storage Usage Section - Show First */}
-        <div className="space-y-4">
-          <div>
-            <h2 className="text-lg font-medium">Local Storage</h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Your current platform storage usage
-            </p>
-          </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Platform Storage</CardTitle>
-              <CardDescription>
-                Files uploaded to local storage count against your quota
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {loadingUsage ? (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Loading usage...
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Platform Storage</CardTitle>
+            <CardDescription>
+              Files uploaded to local storage count against your quota
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loadingUsage ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Loading usage...
+              </div>
+            ) : storageUsage ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Used</span>
+                  <span className="font-medium">
+                    {storageUsage.mbUsed.toFixed(1)} MB / {storageUsage.mbMax} MB
+                  </span>
                 </div>
-              ) : storageUsage ? (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Used</span>
-                    <span className="font-medium">
-                      {storageUsage.mbUsed.toFixed(1)} MB / {storageUsage.mbMax} MB
-                    </span>
+                <div className="space-y-2">
+                  <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                    <div 
+                      className="h-full bg-primary transition-all" 
+                      style={{ width: `${Math.min(100, storageUsage.percentUsed)}%` }}
+                    />
                   </div>
-                  <div className="space-y-2">
-                    <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-                      <div 
-                        className="h-full bg-primary transition-all" 
-                        style={{ width: `${Math.min(100, storageUsage.percentUsed)}%` }}
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {storageUsage.mbRemaining.toFixed(1)} MB remaining ({storageUsage.percentUsed.toFixed(1)}% used)
-                    </p>
-                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {storageUsage.mbRemaining.toFixed(1)} MB remaining ({storageUsage.percentUsed.toFixed(1)}% used)
+                  </p>
                 </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">Unable to load storage usage</p>
-              )}
-            </CardContent>
-          </Card>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">Unable to load storage usage</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <Separator />
+
+      {/* External Storage Providers Section */}
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-lg font-medium">External Storage</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Connect external storage to upload files without using your platform quota
+          </p>
         </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <StorageProviderCard
+            provider="dropbox"
+            connection={dropboxConnection}
+            onConnect={() => handleConnect('dropbox')}
+            onDisconnect={() => handleDisconnectClick('dropbox')}
+            isConnecting={connectingProvider === 'dropbox'}
+          />
+          <StorageProviderCard
+            provider="google_drive"
+            connection={driveConnection}
+            onConnect={() => handleConnect('google_drive')}
+            onDisconnect={() => handleDisconnectClick('google_drive')}
+            isConnecting={connectingProvider === 'google_drive'}
+          />
+        </div>
+
+        {/* Info about external storage */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">How External Storage Works</CardTitle>
+            <CardDescription>
+              Understanding external storage benefits
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul className="text-sm space-y-2 list-disc list-inside">
+              <li>Files uploaded to Dropbox or Google Drive <strong>don&apos;t count</strong> against your 50 MB platform quota</li>
+              <li>Storage limits are determined by your <strong>own Dropbox or Google Drive account</strong></li>
+              <li>You can select which storage to use when uploading files</li>
+              <li>Collaborators can access your files without needing their own external storage</li>
+            </ul>
+          </CardContent>
+        </Card>
+      </div>
 
 
       {/* Disconnect confirmation dialog */}

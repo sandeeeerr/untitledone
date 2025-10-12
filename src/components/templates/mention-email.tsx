@@ -65,7 +65,7 @@ export function MentionEmail({
           {/* Comment excerpt */}
           <Section style={commentBox}>
             <Text style={comment}>
-              "{commentExcerpt}"
+              &ldquo;{commentExcerpt}&rdquo;
             </Text>
           </Section>
 

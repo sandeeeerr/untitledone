@@ -50,7 +50,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const bodyValidation = updateBodySchema.safeParse(body);
   if (!bodyValidation.success) {
     return NextResponse.json(
-      { error: bodyValidation.error.errors[0]?.message || "Invalid payload" },
+      { error: bodyValidation.error.issues[0]?.message || "Invalid payload" },
       { status: 400 }
     );
   }

@@ -37,7 +37,7 @@ export default function AcceptInvitationPage({ params, searchParams }: { params:
                 else router.replace('/projects')
             },
         })
-    }, [ready, token, currentUser, mutation.isPending, mutation.isSuccess, mutation, router])
+    }, [ready, token, currentUser, mutation.isPending, mutation.isSuccess, mutation, router, invitationId])
 
     if (!token) {
         return (

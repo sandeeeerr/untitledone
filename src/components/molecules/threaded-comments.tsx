@@ -1,18 +1,19 @@
 "use client";
 
-import React from "react";
+import React, { useTransition, useOptimistic, useEffect, useMemo, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import UserAvatar from "@/components/atoms/user-avatar";
-import { useCreateProjectComment, useUpdateProjectComment, useDeleteProjectComment } from "@/lib/api/queries";
+import { useCreateProjectComment, useUpdateProjectComment, useDeleteProjectComment, useProfile } from "@/lib/api/queries";
 import { type ProjectComment } from "@/lib/api/comments";
 import { buildCommentTree, type CommentTreeNode } from "@/lib/utils/comments";
 import { CornerUpRight, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { useMentionAutocomplete, MentionSuggestion } from "@/hooks/use-mention-autocomplete";
-import { MentionAutocomplete } from "@/components/molecules/mention-autocomplete";
+import { CommentMentionInput } from "@/components/molecules/comment-mention-input";
+import { HighlightedText } from "@/lib/utils/highlight-mentions";
+import createClient from "@/lib/supabase/client";
+import { useProjectMemberUsernames } from "@/hooks/use-project-member-usernames";
 
 export interface ThreadedCommentsProps {
   projectId: string;
@@ -24,101 +25,194 @@ export interface ThreadedCommentsProps {
   highlightedCommentId?: string | null;
 }
 
-export default function ThreadedComments({ projectId, context, comments, isLoading, getTimestampMs, onSeekToTimestamp, highlightedCommentId }: ThreadedCommentsProps) {
+export default function ThreadedComments({ 
+  projectId, 
+  context, 
+  comments: initialComments, 
+  isLoading, 
+  getTimestampMs, 
+  onSeekToTimestamp, 
+  highlightedCommentId
+}: ThreadedCommentsProps) {
   const t = useTranslations("comments");
   const create = useCreateProjectComment();
-  const update = useUpdateProjectComment();
-  useDeleteProjectComment(projectId); // ensure hook remains mounted; delete is used per-thread
-  const [newComment, setNewComment] = React.useState("");
-  const [newError, setNewError] = React.useState<string | null>(null);
-  const newCommentRef = React.useRef<HTMLTextAreaElement>(null);
+  const { data: currentProfile } = useProfile();
+  const { validUsernames } = useProjectMemberUsernames(projectId);
   
-  // Autocomplete state
-  const [showAutocomplete, setShowAutocomplete] = React.useState(false);
-  const [autocompletePosition, setAutocompletePosition] = React.useState({ top: 0, left: 0 });
-  const [autocompleteQuery, setAutocompleteQuery] = React.useState("");
+  // Local state with realtime updates
+  const [comments, setComments] = React.useState(initialComments);
+  const [newComment, setNewComment] = React.useState("");
+  const [error, setError] = React.useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+  
+  // Optimistic updates for instant UI feedback
+  const [optimisticComments, addOptimisticComment] = useOptimistic<ProjectComment[], ProjectComment>(
+    comments,
+    (state, newComment) => [newComment, ...state]
+  );
 
-  const { setQuery, suggestions, isLoading: isLoadingAutocomplete } = useMentionAutocomplete({
-    projectId,
-    enabled: showAutocomplete,
-  });
+  // Sync initialComments with local state
+  useEffect(() => {
+    setComments(initialComments);
+  }, [initialComments]);
 
-  const tree = React.useMemo<CommentTreeNode[]>(() => buildCommentTree(comments || []), [comments]);
+  // Supabase Realtime subscription for live updates
+  useEffect(() => {
+    const supabase = createClient();
+    
+    const contextFilter = 
+      context.activityChangeId ? `activity_change_id=eq.${context.activityChangeId}` :
+      context.versionId ? `version_id=eq.${context.versionId}` :
+      context.fileId ? `file_id=eq.${context.fileId}` : null;
 
-  const handleNewCommentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const value = e.target.value;
-    setNewComment(value);
-    
-    // Detect @ mentions for autocomplete
-    const cursorPos = e.target.selectionStart;
-    const textBeforeCursor = value.slice(0, cursorPos);
-    const match = textBeforeCursor.match(/@([a-zA-Z0-9_-]*)$/);
-    
-    if (match) {
-      // @ detected, show autocomplete
-      const query = match[1];
-      setAutocompleteQuery(query);
-      setQuery(query);
-      setShowAutocomplete(true);
-      
-      // Calculate position below textarea
-      const rect = e.target.getBoundingClientRect();
-      setAutocompletePosition({
-        top: rect.bottom + window.scrollY + 4,
-        left: rect.left + window.scrollX,
-      });
-    } else {
-      setShowAutocomplete(false);
-    }
-  };
+    if (!contextFilter) return;
 
-  const handleSelectMention = (suggestion: MentionSuggestion) => {
-    if (!newCommentRef.current) return;
-    
-    const textarea = newCommentRef.current;
-    const value = textarea.value;
-    const cursorPos = textarea.selectionStart;
-    
-    // Find the @ symbol position
-    const textBeforeCursor = value.slice(0, cursorPos);
-    const atMatch = textBeforeCursor.match(/@([a-zA-Z0-9_-]*)$/);
-    
-    if (atMatch) {
-      const atPos = cursorPos - atMatch[0].length;
-      const newValue = 
-        value.slice(0, atPos) + 
-        `@${suggestion.username} ` + 
-        value.slice(cursorPos);
-      
-      setNewComment(newValue);
-      setShowAutocomplete(false);
-      
-      // Set cursor after inserted mention
-      setTimeout(() => {
-        const newCursorPos = atPos + suggestion.username.length + 2;
-        textarea.setSelectionRange(newCursorPos, newCursorPos);
-        textarea.focus();
-      }, 0);
-    }
-  };
+    const channel = supabase
+      .channel(`project-comments-${projectId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'project_comments',
+          filter: contextFilter,
+        },
+        (payload) => {
+          const newComment = payload.new as ProjectComment;
+          // Only add if not from current user (optimistic update already added it)
+          if (newComment.user_id !== currentProfile?.id) {
+            setComments((prev) => [newComment, ...prev]);
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'project_comments',
+          filter: contextFilter,
+        },
+        (payload) => {
+          const updated = payload.new as ProjectComment;
+          setComments((prev) => 
+            prev.map((c) => (String(c.id) === String(updated.id) ? updated : c))
+          );
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'project_comments',
+          filter: contextFilter,
+        },
+        (payload) => {
+          const deleted = payload.old as Pick<ProjectComment, 'id'>;
+          setComments((prev) => prev.filter((c) => String(c.id) !== String(deleted.id)));
+        }
+      )
+      .subscribe();
 
-  const handlePost = async () => {
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [projectId, context, currentProfile?.id]);
+
+  // Memoized comment tree
+  const tree = useMemo<CommentTreeNode[]>(
+    () => buildCommentTree(optimisticComments || []), 
+    [optimisticComments]
+  );
+
+  // Submit handler with proper error handling and state management
+  const handlePost = useCallback(async () => {
     const text = newComment.trim();
-    if (!text) { setNewError(t("emptyComment", { defaultValue: "Comment cannot be empty" })); return; }
-    const ts = getTimestampMs ? getTimestampMs() : null;
-    await create.mutateAsync({ projectId, comment: text, ...(ts !== null ? { timestampMs: ts } : {}), ...context });
-    setNewComment("");
-    setNewError(null);
-    setShowAutocomplete(false);
-  };
+    
+    // Validation
+    if (!text) {
+      setError(t("emptyComment", { defaultValue: "Comment cannot be empty" }));
+      return;
+    }
 
-  const toggleResolved = async (c: ProjectComment) => {
-    await update.mutateAsync({ projectId, commentId: String(c.id), resolved: !c.resolved });
-  };
+    // Clear error and input immediately for instant feedback
+    setError(null);
+    setNewComment(""); // Clear input immediately
+    
+    // Optimistic update
+    startTransition(() => {
+      if (!currentProfile) return;
 
-  const handleReply = async (parent: ProjectComment, text: string) => {
-    await create.mutateAsync({ projectId, comment: text, parentId: String(parent.id), ...context });
-  };
+      const optimistic: ProjectComment = {
+        id: `optimistic-${Date.now()}` as unknown as ProjectComment["id"],
+        project_id: projectId,
+        parent_id: null,
+        activity_change_id: context.activityChangeId ?? null,
+        version_id: context.versionId ?? null,
+        file_id: context.fileId ?? null,
+        user_id: currentProfile.id as unknown as ProjectComment["user_id"],
+        comment: text,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        edited: false,
+        resolved: false,
+        timestamp_ms: getTimestampMs ? getTimestampMs() : null,
+        profiles: {
+          id: currentProfile.id,
+          display_name: currentProfile.display_name,
+          username: currentProfile.username,
+          avatar_url: currentProfile.avatar_url,
+        },
+      } as ProjectComment;
+
+      addOptimisticComment(optimistic);
+    });
+
+    // Actual mutation
+    try {
+      const ts = getTimestampMs ? getTimestampMs() : null;
+      const created = await create.mutateAsync({ 
+        projectId, 
+        comment: text, 
+        ...(ts !== null ? { timestampMs: ts } : {}), 
+        ...context 
+      });
+      
+      // Update local state with server response (replace optimistic with real)
+      setComments((prev) => [created, ...prev.filter(c => !String(c.id).startsWith('optimistic-'))]);
+    } catch (err) {
+      // On error: remove optimistic update and restore the input text
+      setComments((prev) => prev.filter(c => !String(c.id).startsWith('optimistic-')));
+      setNewComment(text); // Restore text on error
+      setError(err instanceof Error ? err.message : t("failedToPost", { defaultValue: "Failed to post comment" }));
+    }
+  }, [newComment, projectId, context, getTimestampMs, currentProfile, create, t, addOptimisticComment]);
+
+  const toggleResolved = useCallback(async (c: ProjectComment) => {
+    // Optimistic update
+    setComments((prev) => 
+      prev.map((comment) => 
+        String(comment.id) === String(c.id) 
+          ? { ...comment, resolved: !c.resolved } 
+          : comment
+      )
+    );
+  }, []);
+
+  const handleReply = useCallback(async (parent: ProjectComment, text: string) => {
+    try {
+      const created = await create.mutateAsync({ 
+        projectId, 
+        comment: text, 
+        parentId: String(parent.id), 
+        ...context 
+      });
+      setComments((prev) => [created, ...prev]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("failedToReply", { defaultValue: "Failed to reply" }));
+    }
+  }, [projectId, context, create, t]);
 
   return (
     <div className="w-full space-y-3">
@@ -127,41 +221,65 @@ export default function ThreadedComments({ projectId, context, comments, isLoadi
       ) : tree.length === 0 ? (
         <div className="text-sm text-muted-foreground">{t("noCommentsYet")}</div>
       ) : (
-        tree.map((node) => <Thread key={String(node.comment.id)} node={node} depth={0} onReply={handleReply} onToggleResolved={toggleResolved} projectId={projectId} onSeekToTimestamp={onSeekToTimestamp} highlightedCommentId={highlightedCommentId ?? null} />)
+        tree.map((node) => (
+          <Thread 
+            key={String(node.comment.id)} 
+            node={node} 
+            depth={0} 
+            onReply={handleReply} 
+            onToggleResolved={toggleResolved} 
+            projectId={projectId} 
+            onSeekToTimestamp={onSeekToTimestamp} 
+            highlightedCommentId={highlightedCommentId ?? null}
+            validMemberUsernames={validUsernames}
+          />
+        ))
       )}
 
-      <div className="relative">
-        <div className="flex gap-2">
-          <Textarea
-            ref={newCommentRef}
-            placeholder={t("addComment")}
-            value={newComment}
-            onChange={handleNewCommentChange}
-            className="text-sm min-h-[60px] resize-none bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
-            rows={2}
-          />
-          <Button size="sm" onClick={handlePost} disabled={create.isPending} className="self-end">
-            {create.isPending ? t("posting") : t("post")}
-          </Button>
-        </div>
-        
-        {/* Autocomplete dropdown */}
-        {showAutocomplete && (
-          <MentionAutocomplete
-            suggestions={suggestions}
-            isLoading={isLoadingAutocomplete}
-            onSelect={handleSelectMention}
-            onClose={() => setShowAutocomplete(false)}
-            position={autocompletePosition}
-          />
-        )}
+      <div className="flex gap-2">
+        <CommentMentionInput
+          projectId={projectId}
+          value={newComment}
+          onChange={setNewComment}
+          placeholder={t("addComment")}
+          rows={2}
+          disabled={isPending || create.isPending}
+        />
+        <Button 
+          size="sm" 
+          onClick={handlePost} 
+          disabled={isPending || create.isPending || !newComment.trim()}
+          className="self-end"
+        >
+          {(isPending || create.isPending) ? t("posting") : t("post")}
+        </Button>
       </div>
-      {newError && <div className="text-xs text-red-600">{newError}</div>}
+      {error && <div className="text-xs text-red-600" role="alert">{error}</div>}
     </div>
   );
 }
 
-function Thread({ node, depth, onReply, onToggleResolved, projectId, onSeekToTimestamp, highlightedCommentId }: { node: CommentTreeNode; depth: number; onReply: (parent: ProjectComment, text: string) => Promise<void>; onToggleResolved: (c: ProjectComment) => Promise<void>; projectId: string; onSeekToTimestamp?: (ms: number) => void; highlightedCommentId: string | null }) {
+interface ThreadProps {
+  node: CommentTreeNode;
+  depth: number;
+  onReply: (parent: ProjectComment, text: string) => Promise<void>;
+  onToggleResolved: (c: ProjectComment) => Promise<void>;
+  projectId: string;
+  onSeekToTimestamp?: (ms: number) => void;
+  highlightedCommentId: string | null;
+  validMemberUsernames?: Set<string>;
+}
+
+function Thread({ 
+  node, 
+  depth, 
+  onReply, 
+  onToggleResolved, 
+  projectId, 
+  onSeekToTimestamp, 
+  highlightedCommentId,
+  validMemberUsernames
+}: ThreadProps) {
   const t = useTranslations("comments");
   const update = useUpdateProjectComment();
   const del = useDeleteProjectComment(projectId);
@@ -169,145 +287,72 @@ function Thread({ node, depth, onReply, onToggleResolved, projectId, onSeekToTim
   const [replyText, setReplyText] = React.useState("");
   const [isEditing, setIsEditing] = React.useState(false);
   const [draft, setDraft] = React.useState(node.comment.comment);
+  const [isPending, startTransition] = useTransition();
+  
   const maxIndent = Math.min(depth, 6);
   const hasManyReplies = node.children.length > 3;
   const [showAllReplies, setShowAllReplies] = React.useState(!node.comment.resolved && !hasManyReplies);
   const isHighlighted = highlightedCommentId && String(node.comment.id) === highlightedCommentId;
-  
-  const replyRef = React.useRef<HTMLTextAreaElement>(null);
-  const editRef = React.useRef<HTMLTextAreaElement>(null);
-  
-  // Autocomplete state for reply
-  const [showReplyAutocomplete, setShowReplyAutocomplete] = React.useState(false);
-  const [replyAutocompletePosition, setReplyAutocompletePosition] = React.useState({ top: 0, left: 0 });
-  
-  const { setQuery: setReplyQuery, suggestions: replySuggestions, isLoading: isLoadingReplyAutocomplete } = useMentionAutocomplete({
-    projectId,
-    enabled: showReplyAutocomplete,
-  });
-  
-  // Autocomplete state for edit
-  const [showEditAutocomplete, setShowEditAutocomplete] = React.useState(false);
-  const [editAutocompletePosition, setEditAutocompletePosition] = React.useState({ top: 0, left: 0 });
-  
-  const { setQuery: setEditQuery, suggestions: editSuggestions, isLoading: isLoadingEditAutocomplete } = useMentionAutocomplete({
-    projectId,
-    enabled: showEditAutocomplete,
-  });
 
-  const formatMs = (ms: number) => {
+  const formatMs = useCallback((ms: number) => {
     const total = Math.max(0, Math.floor(ms / 1000));
     const mm = Math.floor(total / 60).toString().padStart(2, '0');
     const ss = (total % 60).toString().padStart(2, '0');
     return `${mm}:${ss}`;
-  };
+  }, []);
 
-  // Reply autocomplete handlers
-  const handleReplyChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const value = e.target.value;
-    setReplyText(value);
-    
-    const cursorPos = e.target.selectionStart;
-    const textBeforeCursor = value.slice(0, cursorPos);
-    const match = textBeforeCursor.match(/@([a-zA-Z0-9_-]*)$/);
-    
-    if (match) {
-      setReplyQuery(match[1]);
-      setShowReplyAutocomplete(true);
-      const rect = e.target.getBoundingClientRect();
-      setReplyAutocompletePosition({
-        top: rect.bottom + window.scrollY + 4,
-        left: rect.left + window.scrollX,
-      });
-    } else {
-      setShowReplyAutocomplete(false);
-    }
-  };
+  const commentRef = useRef<HTMLDivElement>(null);
 
-  const handleSelectReplyMention = (suggestion: MentionSuggestion) => {
-    if (!replyRef.current) return;
-    const textarea = replyRef.current;
-    const value = textarea.value;
-    const cursorPos = textarea.selectionStart;
-    const textBeforeCursor = value.slice(0, cursorPos);
-    const atMatch = textBeforeCursor.match(/@([a-zA-Z0-9_-]*)$/);
-    
-    if (atMatch) {
-      const atPos = cursorPos - atMatch[0].length;
-      const newValue = 
-        value.slice(0, atPos) + 
-        `@${suggestion.username} ` + 
-        value.slice(cursorPos);
-      
-      setReplyText(newValue);
-      setShowReplyAutocomplete(false);
-      
-      setTimeout(() => {
-        const newCursorPos = atPos + suggestion.username.length + 2;
-        textarea.setSelectionRange(newCursorPos, newCursorPos);
-        textarea.focus();
-      }, 0);
-    }
-  };
-
-  // Edit autocomplete handlers
-  const handleEditChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const value = e.target.value;
-    setDraft(value);
-    
-    const cursorPos = e.target.selectionStart;
-    const textBeforeCursor = value.slice(0, cursorPos);
-    const match = textBeforeCursor.match(/@([a-zA-Z0-9_-]*)$/);
-    
-    if (match) {
-      setEditQuery(match[1]);
-      setShowEditAutocomplete(true);
-      const rect = e.target.getBoundingClientRect();
-      setEditAutocompletePosition({
-        top: rect.bottom + window.scrollY + 4,
-        left: rect.left + window.scrollX,
-      });
-    } else {
-      setShowEditAutocomplete(false);
-    }
-  };
-
-  const handleSelectEditMention = (suggestion: MentionSuggestion) => {
-    if (!editRef.current) return;
-    const textarea = editRef.current;
-    const value = textarea.value;
-    const cursorPos = textarea.selectionStart;
-    const textBeforeCursor = value.slice(0, cursorPos);
-    const atMatch = textBeforeCursor.match(/@([a-zA-Z0-9_-]*)$/);
-    
-    if (atMatch) {
-      const atPos = cursorPos - atMatch[0].length;
-      const newValue = 
-        value.slice(0, atPos) + 
-        `@${suggestion.username} ` + 
-        value.slice(cursorPos);
-      
-      setDraft(newValue);
-      setShowEditAutocomplete(false);
-      
-      setTimeout(() => {
-        const newCursorPos = atPos + suggestion.username.length + 2;
-        textarea.setSelectionRange(newCursorPos, newCursorPos);
-        textarea.focus();
-      }, 0);
-    }
-  };
-
-  const commentRef = React.useRef<HTMLDivElement>(null);
-
-  // Scroll to comment if highlighted
-  React.useEffect(() => {
+  // Scroll to highlighted comment
+  useEffect(() => {
     if (isHighlighted && commentRef.current) {
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         commentRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-      }, 300); // Small delay to ensure render is complete
+      }, 300);
+      return () => clearTimeout(timer);
     }
   }, [isHighlighted]);
+
+  const handleSaveEdit = useCallback(async () => {
+    const trimmed = draft.trim();
+    if (!trimmed || trimmed === node.comment.comment) {
+      setIsEditing(false);
+      return;
+    }
+    
+    startTransition(async () => {
+      try {
+        await update.mutateAsync({ 
+          projectId, 
+          commentId: String(node.comment.id), 
+          comment: trimmed 
+        });
+        setIsEditing(false);
+      } catch (err) {
+        console.error("Failed to update comment:", err);
+      }
+    });
+  }, [draft, node.comment.comment, node.comment.id, projectId, update]);
+
+  const handleReplySubmit = useCallback(async () => {
+    const trimmed = replyText.trim();
+    if (!trimmed) return;
+    
+    // Clear input immediately for instant feedback
+    const savedText = trimmed;
+    setReplyText("");
+    
+    startTransition(async () => {
+      try {
+        await onReply(node.comment, savedText);
+        setIsReplying(false);
+      } catch (err) {
+        // On error: restore the text
+        setReplyText(savedText);
+        console.error("Failed to reply:", err);
+      }
+    });
+  }, [replyText, node.comment, onReply]);
 
   return (
     <div 
@@ -359,30 +404,43 @@ function Thread({ node, depth, onReply, onToggleResolved, projectId, onSeekToTim
           </div>
         </div>
         {isEditing ? (
-          <div className="mt-1 relative">
-            <div className="flex items-end gap-2">
-              <Textarea 
-                ref={editRef}
-                rows={3} 
-                className="text-sm" 
-                value={draft} 
-                onChange={handleEditChange} 
-              />
-              <Button size="sm" variant="secondary" onClick={async () => { const next = draft.trim(); if (next && next !== node.comment.comment) { await update.mutateAsync({ projectId, commentId: String(node.comment.id), comment: next }); } setIsEditing(false); setShowEditAutocomplete(false); }}>{t("save")}</Button>
-              <Button size="sm" variant="ghost" onClick={() => { setDraft(node.comment.comment); setIsEditing(false); setShowEditAutocomplete(false); }}>{t("cancel")}</Button>
-            </div>
-            {showEditAutocomplete && (
-              <MentionAutocomplete
-                suggestions={editSuggestions}
-                isLoading={isLoadingEditAutocomplete}
-                onSelect={handleSelectEditMention}
-                onClose={() => setShowEditAutocomplete(false)}
-                position={editAutocompletePosition}
-              />
-            )}
+          <div className="mt-1 flex items-end gap-2">
+            <CommentMentionInput
+              projectId={projectId}
+              value={draft}
+              onChange={setDraft}
+              placeholder=""
+              rows={3}
+              className="text-sm"
+              disabled={isPending}
+            />
+            <Button 
+              size="sm" 
+              variant="secondary" 
+              onClick={handleSaveEdit}
+              disabled={isPending || !draft.trim()}
+            >
+              {isPending ? t("saving") : t("save")}
+            </Button>
+            <Button 
+              size="sm" 
+              variant="ghost" 
+              onClick={() => { 
+                setDraft(node.comment.comment); 
+                setIsEditing(false); 
+              }}
+              disabled={isPending}
+            >
+              {t("cancel")}
+            </Button>
           </div>
         ) : (
-          <p className="mt-1 break-words">{node.comment.comment}</p>
+          <p className="mt-1 break-words">
+            <HighlightedText 
+              text={node.comment.comment} 
+              validUsernames={validMemberUsernames}
+            />
+          </p>
         )}
         <div className="mt-1 flex items-center gap-2">
           <button type="button" onClick={() => setIsReplying((v) => !v)} className="text-xs text-muted-foreground hover:underline inline-flex items-center gap-1">
@@ -390,38 +448,47 @@ function Thread({ node, depth, onReply, onToggleResolved, projectId, onSeekToTim
           </button>
         </div>
         {isReplying && (
-          <div className="mt-2 relative">
-            <div className="flex gap-2">
-              <Textarea
-                ref={replyRef}
-                placeholder={t("addReply")}
-                value={replyText}
-                onChange={handleReplyChange}
-                className="text-sm min-h-[60px] resize-none bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
-                rows={2}
-              />
-              <Button size="sm" onClick={async () => { if (replyText.trim()) { await onReply(node.comment, replyText.trim()); setReplyText(""); setIsReplying(false); setShowReplyAutocomplete(false); } }} disabled={!replyText.trim()} className="self-end">
-                {t("post")}
-              </Button>
-            </div>
-            {showReplyAutocomplete && (
-              <MentionAutocomplete
-                suggestions={replySuggestions}
-                isLoading={isLoadingReplyAutocomplete}
-                onSelect={handleSelectReplyMention}
-                onClose={() => setShowReplyAutocomplete(false)}
-                position={replyAutocompletePosition}
-              />
-            )}
+          <div className="mt-2 flex gap-2">
+            <CommentMentionInput
+              projectId={projectId}
+              value={replyText}
+              onChange={setReplyText}
+              placeholder={t("addReply")}
+              rows={2}
+              disabled={isPending}
+            />
+            <Button 
+              size="sm" 
+              onClick={handleReplySubmit}
+              disabled={isPending || !replyText.trim()} 
+              className="self-end"
+            >
+              {isPending ? t("posting") : t("post")}
+            </Button>
           </div>
         )}
         {node.children.length > 0 && (
           <div role="group" className="mt-2 space-y-2">
             {(showAllReplies ? node.children : node.children.slice(0, 3)).map((child) => (
-              <Thread key={String(child.comment.id)} node={child} depth={depth + 1} onReply={onReply} onToggleResolved={onToggleResolved} projectId={projectId} onSeekToTimestamp={onSeekToTimestamp} highlightedCommentId={highlightedCommentId} />
+              <Thread 
+                key={String(child.comment.id)} 
+                node={child} 
+                depth={depth + 1} 
+                onReply={onReply} 
+                onToggleResolved={onToggleResolved} 
+                projectId={projectId} 
+                onSeekToTimestamp={onSeekToTimestamp} 
+                highlightedCommentId={highlightedCommentId}
+                validMemberUsernames={validMemberUsernames}
+              />
             ))}
             {node.children.length > 3 && (
-              <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => setShowAllReplies((v) => !v)}>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-7 px-2 text-xs" 
+                onClick={() => setShowAllReplies((v) => !v)}
+              >
                 {showAllReplies ? t("hideThread") : t("viewThread")}
               </Button>
             )}

@@ -85,9 +85,10 @@ export async function GET(
     }
 
     // Get storage provider using uploader's credentials (ownership proxying)
-    const storageProvider = ((file as any).storage_provider || 'local') as StorageProviderType;
+    const fileWithProvider = file as { storage_provider?: string; external_file_id?: string };
+    const storageProvider = (fileWithProvider.storage_provider || 'local') as StorageProviderType;
     const uploadedByUserId = file.uploaded_by;
-    const fileIdentifier = (file as any).external_file_id || file.file_path;
+    const fileIdentifier = fileWithProvider.external_file_id || file.file_path;
 
     // For local storage (Supabase), get signed URL and redirect
     if (storageProvider === 'local') {
@@ -107,7 +108,7 @@ export async function GET(
         
         const drive = google.drive({ version: 'v3', auth: oauth2Client });
         
-        console.log('[Content Proxy] Fetching Google Drive file:', fileIdentifier);
+        console.warn('[Content Proxy] Fetching Google Drive file:', fileIdentifier);
         
         // Download file content using Drive API
         const response = await drive.files.get(
@@ -115,7 +116,7 @@ export async function GET(
           { responseType: 'arraybuffer' } // Get as ArrayBuffer for easier handling
         );
 
-        console.log('[Content Proxy] Google Drive file fetched successfully');
+        console.warn('[Content Proxy] Google Drive file fetched successfully');
 
         // Convert to buffer
         const buffer = Buffer.from(response.data as ArrayBuffer);
@@ -131,11 +132,11 @@ export async function GET(
             'Accept-Ranges': 'bytes',
           },
         });
-      } catch (driveError: any) {
+      } catch (driveError: unknown) {
         console.error('[Content Proxy] Google Drive error:', driveError);
         
         // Check if it's a 401 (token expired)
-        if (driveError?.code === 401) {
+        if (driveError && typeof driveError === 'object' && 'code' in driveError && driveError.code === 401) {
           return NextResponse.json(
             { error: 'File owner needs to reconnect their Google Drive account', code: 'PROVIDER_TOKEN_EXPIRED' },
             { status: 401 }

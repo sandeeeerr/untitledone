@@ -35,12 +35,13 @@ import UploadDialog from "@/components/molecules/upload-dialog"
 import CreateVersionDialog from "@/components/molecules/create-version-dialog"
 import InviteDialog from "@/components/molecules/invite-dialog"
 import InvitationsSheet from "@/components/organisms/invitations-sheet"
+import MentionsSheet from "@/components/organisms/mentions-sheet"
 import { cn } from "@/lib/utils"
 
 export default function MainSidebar() {
   const pathname = usePathname()
   const t = useTranslations()
-  const { toast } = useToast()
+  const { toast: _toast } = useToast()
   const { data: profile } = useProfile()
   const { data: allProjects = [] } = useProjects()
   const { data: pins = [] } = usePinnedProjects()
@@ -199,12 +200,16 @@ export default function MainSidebar() {
                 <SidebarMenuBadge>{pendingInvitations.length}</SidebarMenuBadge>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild className={pathname === "/dashboard/mentions" ? "bg-accent" : ""}>
-                  <Link href="/dashboard/mentions">
-                    <AtSign className="h-4 w-4" />
-                    <span>{t("navigation.mentions")}</span>
-                  </Link>
-                </SidebarMenuButton>
+                <MentionsSheet
+                  trigger={
+                    <SidebarMenuButton className="justify-between">
+                      <div className="flex items-center gap-2">
+                        <AtSign className="h-4 w-4" />
+                        <span>{t("navigation.mentions")}</span>
+                      </div>
+                    </SidebarMenuButton>
+                  }
+                />
                 {unreadCount > 0 && <SidebarMenuBadge>{unreadCount}</SidebarMenuBadge>}
               </SidebarMenuItem>
             </SidebarMenu>

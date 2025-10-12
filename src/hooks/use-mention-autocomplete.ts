@@ -13,7 +13,7 @@ export interface MentionSuggestion {
 
 interface UseMentionAutocompleteOptions {
   projectId: string;
-  /** Debounce delay in milliseconds (default: 300ms) */
+  /** Debounce delay in milliseconds (default: 0ms for instant results) */
   debounceMs?: number;
   /** Enable/disable the query */
   enabled?: boolean;
@@ -21,32 +21,37 @@ interface UseMentionAutocompleteOptions {
 
 /**
  * Hook for fetching mention autocomplete suggestions
- * Automatically debounces queries and caches results
- * 
+ * Shows all members when query is empty, filters as user types
+ * Instant results with optional debouncing
+ *
  * @example
  * const { query, setQuery, suggestions, isLoading } = useMentionAutocomplete({
  *   projectId: "uuid",
- *   debounceMs: 300
+ *   debounceMs: 0  // Instant results
  * });
  */
 export function useMentionAutocomplete({
   projectId,
-  debounceMs = 300,
+  debounceMs = 0,
   enabled = true,
 }: UseMentionAutocompleteOptions) {
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
-  // Debounce query
+  // Debounce query (instant if debounceMs is 0)
   useEffect(() => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
 
-    timeoutRef.current = setTimeout(() => {
+    if (debounceMs === 0) {
       setDebouncedQuery(query);
-    }, debounceMs);
+    } else {
+      timeoutRef.current = setTimeout(() => {
+        setDebouncedQuery(query);
+      }, debounceMs);
+    }
 
     return () => {
       if (timeoutRef.current) {
@@ -55,7 +60,7 @@ export function useMentionAutocomplete({
     };
   }, [query, debounceMs]);
 
-  // Fetch suggestions using TanStack Query
+  // Fetch suggestions using TanStack Query with optimized settings
   const {
     data: suggestions = [],
     isLoading,
@@ -63,12 +68,10 @@ export function useMentionAutocomplete({
   } = useQuery<MentionSuggestion[]>({
     queryKey: ["mention-autocomplete", projectId, debouncedQuery],
     queryFn: async () => {
-      if (!debouncedQuery || debouncedQuery.length === 0) {
-        return [];
-      }
-
+      // Build URL with optional query parameter
+      const queryParam = debouncedQuery ? `?q=${encodeURIComponent(debouncedQuery)}` : "";
       const response = await fetch(
-        `/api/projects/${projectId}/members/autocomplete?q=${encodeURIComponent(debouncedQuery)}`
+        `/api/projects/${projectId}/members/autocomplete${queryParam}`
       );
 
       if (!response.ok) {
@@ -77,9 +80,11 @@ export function useMentionAutocomplete({
 
       return response.json();
     },
-    enabled: enabled && debouncedQuery.length > 0,
+    enabled: enabled && Boolean(projectId), // Ensure projectId exists
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
     retry: 1,
+    refetchOnWindowFocus: false, // Prevent unnecessary refetches
   });
 
   return {

@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { formatDistanceToNow } from "date-fns";
 import { MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NotificationDot } from "@/components/atoms/notification-dot";
@@ -127,9 +126,8 @@ export function NotificationItem({
         {/* Avatar */}
         <UserAvatar
           name={commenterName}
-          avatarUrl={commenterAvatar}
-          size="sm"
-          className="mt-0.5"
+          src={commenterAvatar}
+          className="mt-0.5 h-6 w-6"
         />
         
         {/* Content */}

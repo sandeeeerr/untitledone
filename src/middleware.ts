@@ -148,6 +148,8 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
+    // Use Node.js runtime to support Supabase (fixes Edge Runtime warnings)
+    runtime: 'nodejs',
     matcher: [
         /*
          * Match all request paths except for the ones starting with:

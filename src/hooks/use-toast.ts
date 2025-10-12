@@ -20,7 +20,7 @@ const TOAST_DURATION = {
 
 const TOAST_REMOVE_DELAY = 200 // Animation delay before removal
 
-type ToastVariant = keyof typeof TOAST_DURATION
+type _ToastVariant = keyof typeof TOAST_DURATION
 
 type ToasterToast = ToastProps & {
   id: string
@@ -30,7 +30,7 @@ type ToasterToast = ToastProps & {
   duration?: number
 }
 
-const actionTypes = {
+const _actionTypes = {
   ADD_TOAST: "ADD_TOAST",
   UPDATE_TOAST: "UPDATE_TOAST",
   DISMISS_TOAST: "DISMISS_TOAST",
@@ -44,7 +44,7 @@ function genId() {
   return count.toString()
 }
 
-type ActionType = typeof actionTypes
+type ActionType = typeof _actionTypes
 
 type Action =
   | {

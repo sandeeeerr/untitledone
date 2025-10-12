@@ -5,6 +5,30 @@ import { SupabaseClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
 
+type NotificationWithRelations = {
+  id: string;
+  user_id: string;
+  type: string;
+  comment_id: string | null;
+  project_id: string | null;
+  is_read: boolean;
+  created_at: string;
+  updated_at: string;
+  project_comments: {
+    id: string;
+    comment: string;
+    user_id: string;
+    project_id: string;
+    file_id: string | null;
+    version_id: string | null;
+    timestamp_ms: number | null;
+  }[];
+  projects: {
+    id: string;
+    name: string;
+  }[];
+};
+
 const querySchema = z.object({
   filter: z.enum(["unread", "all"]).optional().default("all"),
   limit: z.coerce.number().int().positive().max(100).optional().default(20),
@@ -45,7 +69,7 @@ export async function GET(req: Request) {
 
   if (!queryValidation.success) {
     return NextResponse.json(
-      { error: queryValidation.error.errors[0]?.message || "Invalid query" },
+      { error: queryValidation.error.issues[0]?.message || "Invalid query" },
       { status: 400 }
     );
   }
@@ -92,20 +116,22 @@ export async function GET(req: Request) {
     query = query.lt("created_at", cursor);
   }
 
-  const { data: notifications, error } = await query;
+  const { data, error } = await query;
 
   if (error) {
     console.error("Failed to fetch notifications:", error);
     return NextResponse.json({ error: "Failed to fetch notifications" }, { status: 500 });
   }
 
+  const notifications = data as NotificationWithRelations[] | null;
+
   // Fetch commenter profiles separately (can't do nested join through comment)
   const commenterIds = (notifications || [])
-    .map((n) => n.project_comments?.user_id)
+    .map((n) => n.project_comments[0]?.user_id)
     .filter((id): id is string => !!id);
 
   const uniqueCommenterIds = [...new Set(commenterIds)];
-  let commentersMap = new Map<string, {
+  const commentersMap = new Map<string, {
     id: string;
     username: string | null;
     display_name: string | null;
@@ -128,8 +154,8 @@ export async function GET(req: Request) {
   // Enrich notifications with commenter data
   const enrichedNotifications = (notifications || []).map((n) => ({
     ...n,
-    commenter: n.project_comments?.user_id 
-      ? commentersMap.get(n.project_comments.user_id) || null
+    commenter: n.project_comments[0]?.user_id 
+      ? commentersMap.get(n.project_comments[0].user_id) || null
       : null,
   }));
 

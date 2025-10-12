@@ -5,7 +5,7 @@
  */
 
 import createServerClient from "@/lib/supabase/server";
-import { Database } from "@/types/database";
+import { Database as _Database } from "@/types/database";
 
 export type NotificationType = "mention" | "comment" | "invitation";
 
@@ -126,7 +126,7 @@ export async function getNotifications(
     .map((n) => n.project_comments?.user_id)
     .filter((id): id is string => !!id);
 
-  let commentersMap = new Map<string, {
+  const commentersMap = new Map<string, {
     id: string;
     username: string | null;
     display_name: string | null;

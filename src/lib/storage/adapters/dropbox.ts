@@ -25,7 +25,7 @@ export class DropboxAdapter implements StorageProvider {
     } catch (error) {
       // Check if it's a 401 (unauthorized/expired token)
       if (this.is401Error(error)) {
-        console.log(`Dropbox token expired for user ${userId}, attempting refresh...`);
+        console.warn(`Dropbox token expired for user ${userId}, attempting refresh...`);
         const refreshed = await this.refreshTokens(userId);
         
         if (!refreshed) {
@@ -56,7 +56,7 @@ export class DropboxAdapter implements StorageProvider {
     
     const dbx = new Dropbox({ 
       accessToken,
-      fetch: fetch as any, // Provide fetch for server-side usage
+      fetch: fetch as typeof globalThis.fetch, // Provide fetch for server-side usage
     });
     
     // Convert File to ArrayBuffer then Buffer
@@ -97,13 +97,13 @@ export class DropboxAdapter implements StorageProvider {
   async getDownloadUrl(
     fileId: string,
     userId: string,
-    expiresIn: number = 600
+    _expiresIn: number = 600
   ): Promise<string> {
     try {
       return await this.getDownloadUrlInternal(fileId, userId);
     } catch (error) {
       if (this.is401Error(error)) {
-        console.log(`Dropbox token expired for user ${userId}, attempting refresh...`);
+        console.warn(`Dropbox token expired for user ${userId}, attempting refresh...`);
         const refreshed = await this.refreshTokens(userId);
         
         if (!refreshed) {
@@ -133,7 +133,7 @@ export class DropboxAdapter implements StorageProvider {
     
     const dbx = new Dropbox({ 
       accessToken,
-      fetch: fetch as any,
+      fetch: fetch as typeof globalThis.fetch,
     });
     
     // Get temporary link (valid for 4 hours)
@@ -156,7 +156,7 @@ export class DropboxAdapter implements StorageProvider {
       await this.deleteInternal(fileId, userId);
     } catch (error) {
       if (this.is401Error(error)) {
-        console.log(`Dropbox token expired for user ${userId}, attempting refresh...`);
+        console.warn(`Dropbox token expired for user ${userId}, attempting refresh...`);
         const refreshed = await this.refreshTokens(userId);
         
         if (!refreshed) {
@@ -184,7 +184,7 @@ export class DropboxAdapter implements StorageProvider {
     
     const dbx = new Dropbox({ 
       accessToken,
-      fetch: fetch as any,
+      fetch: fetch as typeof globalThis.fetch,
     });
     
     await dbx.filesDeleteV2({ path: fileId });
@@ -262,7 +262,7 @@ export class DropboxAdapter implements StorageProvider {
         last_used_at: new Date().toISOString(),
       });
 
-      console.log(`✓ Dropbox token refreshed successfully for user ${userId}`);
+      console.warn(`✓ Dropbox token refreshed successfully for user ${userId}`);
       return true;
 
     } catch (error) {

@@ -65,18 +65,20 @@ export function MentionAutocomplete({
       if (suggestions.length === 0) return;
 
       switch (e.key) {
-        case "ArrowDown":
+        case "ArrowDown": {
           e.preventDefault();
           const nextIndex = (localSelectedIndex + 1) % suggestions.length;
           setLocalSelectedIndex(nextIndex);
           onSelectedIndexChange?.(nextIndex);
           break;
-        case "ArrowUp":
+        }
+        case "ArrowUp": {
           e.preventDefault();
           const prevIndex = localSelectedIndex === 0 ? suggestions.length - 1 : localSelectedIndex - 1;
           setLocalSelectedIndex(prevIndex);
           onSelectedIndexChange?.(prevIndex);
           break;
+        }
         case "Enter":
           e.preventDefault();
           if (suggestions[localSelectedIndex]) {

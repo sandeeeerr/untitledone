@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import EmptyState from "@/components/atoms/empty-state";
 import { NotificationItem, NotificationItemProps } from "@/components/molecules/notification-item";
-import { cn } from "@/lib/utils";
+import { cn as _cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
 type FilterType = "unread" | "all";
@@ -91,7 +91,7 @@ export function MentionsDashboard({
     setIsLoadingMore(true);
     try {
       // Use the last notification's created_at as cursor
-      const cursor = notifications[notifications.length - 1].timeAgo; // This should be ISO timestamp
+      const _cursor = notifications[notifications.length - 1].timeAgo; // This should be ISO timestamp
       // Need to fetch from original data, not formatted timeAgo
       // For now, we'll fetch more without cursor (simplified)
       const params = new URLSearchParams({
@@ -238,7 +238,7 @@ export function MentionsDashboard({
         ) : filteredNotifications.length === 0 ? (
           // Empty state
           <EmptyState
-            icon={Bell}
+            icon={<Bell className="h-12 w-12" />}
             title={t("no_mentions")}
             description={
               filter === "unread"

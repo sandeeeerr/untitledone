@@ -25,7 +25,7 @@ export default function InviteDialog({ projectId, trigger }: InviteDialogProps) 
 	const createInvite = useCreateProjectInvitation(projectId)
 
 	// Fetch share links
-	const { data: shareLinks = [], isLoading: isLoadingLinks, refetch: refetchLinks } = useQuery<ShareLink[]>({
+	const { data: shareLinks = [], isLoading: isLoadingLinks, refetch: _refetchLinks } = useQuery<ShareLink[]>({
 		queryKey: ["share-links", projectId],
 		queryFn: async () => {
 			const response = await fetch(`/api/projects/${projectId}/share-links`);
