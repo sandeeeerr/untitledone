@@ -298,8 +298,27 @@ function Thread({ node, depth, onReply, onToggleResolved, projectId, onSeekToTim
     }
   };
 
+  const commentRef = React.useRef<HTMLDivElement>(null);
+
+  // Scroll to comment if highlighted
+  React.useEffect(() => {
+    if (isHighlighted && commentRef.current) {
+      setTimeout(() => {
+        commentRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 300); // Small delay to ensure render is complete
+    }
+  }, [isHighlighted]);
+
   return (
-    <div role="treeitem" aria-level={depth + 1} aria-selected={isHighlighted ? 'true' : 'false'} className={`flex gap-3 text-sm rounded-md py-2 ${isHighlighted ? 'bg-muted/60' : ''}`} style={{ paddingLeft: 0 + maxIndent * 6 }}>
+    <div 
+      ref={commentRef}
+      data-comment-id={node.comment.id}
+      role="treeitem" 
+      aria-level={depth + 1} 
+      aria-selected={isHighlighted ? 'true' : 'false'} 
+      className={`flex gap-3 text-sm rounded-md py-2 transition-colors ${isHighlighted ? 'bg-blue-50 dark:bg-blue-950/20' : ''}`} 
+      style={{ paddingLeft: 0 + maxIndent * 6 }}
+    >
       <UserAvatar
         className="h-6 w-6 mt-0.5 shrink-0"
         name={node.comment.profiles?.display_name || node.comment.profiles?.username || "User"}

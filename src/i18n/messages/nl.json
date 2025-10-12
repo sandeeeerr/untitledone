@@ -589,7 +589,9 @@
     "mark_all_read": "Markeer alles als gelezen",
     "no_mentions": "Nog geen vermeldingen",
     "filter_unread": "Ongelezen",
-    "filter_all": "Alle"
+    "filter_all": "Alle",
+    "load_more": "Meer laden",
+    "loading_more": "Laden..."
   },
   "notifications": {
     "settings_title": "Notificatie voorkeuren",

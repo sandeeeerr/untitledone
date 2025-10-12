@@ -593,7 +593,9 @@
     "mark_all_read": "Mark all as read",
     "no_mentions": "No mentions yet",
     "filter_unread": "Unread",
-    "filter_all": "All"
+    "filter_all": "All",
+    "load_more": "Load more",
+    "loading_more": "Loading..."
   },
   "notifications": {
     "settings_title": "Notification Preferences",

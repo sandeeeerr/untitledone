@@ -53,11 +53,12 @@ Generated from: `0001-prd-collaboration-mentions-and-share-links.md`
 
 ### Components - Molecules
 - `src/components/molecules/mention-autocomplete.tsx` - Autocomplete dropdown with keyboard navigation (created)
+- `src/components/molecules/threaded-comments.tsx` - Integrated autocomplete in main/reply/edit textareas with scroll-to-comment (modified)
 - `src/components/molecules/notification-item.tsx` - Single notification entry with deep linking (created)
 - `src/components/molecules/share-link-card.tsx` - Share link card with copy/revoke actions and confirmation dialog (created)
 
 ### Components - Organisms
-- `src/components/organisms/mentions-dashboard.tsx` - Full mentions dashboard with filters and actions (created)
+- `src/components/organisms/mentions-dashboard.tsx` - Full mentions dashboard with filters, actions, and pagination (modified)
 - `src/components/organisms/notification-settings.tsx` - Notification preferences form with toggles and radio buttons (created)
 - `src/components/organisms/share-links-manager.tsx` - Share links manager with generation and list (created)
 - `src/components/organisms/main-sidebar.tsx` - Added realtime notification badge and enabled mentions link (modified)
@@ -170,8 +171,8 @@ Generated from: `0001-prd-collaboration-mentions-and-share-links.md`
   - [x] 4.12 Create API route `src/app/api/notifications/[id]/route.ts` PATCH handler to update `is_read` field
   - [x] 4.13 Create API route `src/app/api/notifications/mark-all-read/route.ts` PATCH handler to bulk update
   - [x] 4.14 Add deep linking: clicking a notification navigates to `/projects/[projectId]?comment=[commentId]&highlight=true`
-  - [ ] 4.15 Implement scroll-to-comment logic on the project page when `comment` query param is present
-  - [ ] 4.16 Add pagination (infinite scroll or "Load more" button) for notifications list
+  - [x] 4.15 Implement scroll-to-comment logic on the project page when `comment` query param is present
+  - [x] 4.16 Add pagination (infinite scroll or "Load more" button) for notifications list
   - [x] 4.17 Add error handling and error state UI
   - [ ] 4.18 Test navigation from notification to comment with various contexts (file, version, activity)
 

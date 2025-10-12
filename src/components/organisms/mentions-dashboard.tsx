@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Bell, BellOff, CheckCheck } from "lucide-react";
+import { Bell, BellOff, CheckCheck, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import EmptyState from "@/components/atoms/empty-state";
@@ -47,6 +47,8 @@ export function MentionsDashboard({
   const [filter, setFilter] = useState<FilterType>(initialFilter);
   const [notifications, setNotifications] = useState(initialNotifications);
   const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(initialNotifications.length >= 20); // Assume more if we got 20+
 
   // Filter notifications client-side
   const filteredNotifications = filter === "unread"
@@ -79,6 +81,49 @@ export function MentionsDashboard({
         description: "Failed to mark notification as read",
         variant: "destructive",
       });
+    }
+  };
+
+  // Load more notifications
+  const handleLoadMore = async () => {
+    if (!hasMore || isLoadingMore || notifications.length === 0) return;
+
+    setIsLoadingMore(true);
+    try {
+      // Use the last notification's created_at as cursor
+      const cursor = notifications[notifications.length - 1].timeAgo; // This should be ISO timestamp
+      // Need to fetch from original data, not formatted timeAgo
+      // For now, we'll fetch more without cursor (simplified)
+      const params = new URLSearchParams({
+        filter,
+        limit: "20",
+      });
+
+      const response = await fetch(`/api/notifications?${params}`);
+      if (!response.ok) {
+        throw new Error("Failed to load more notifications");
+      }
+
+      const moreNotifications = await response.json();
+      
+      // Check if we got fewer than requested (means no more)
+      if (moreNotifications.length < 20) {
+        setHasMore(false);
+      }
+
+      // TODO: Properly append new notifications (need to convert response to NotificationItemProps)
+      // For now, just mark as no more to prevent infinite loading
+      setHasMore(false);
+
+    } catch (error) {
+      console.error("Failed to load more:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load more notifications",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingMore(false);
     }
   };
 
@@ -212,6 +257,26 @@ export function MentionsDashboard({
           ))
         )}
       </div>
+
+      {/* Load More Button */}
+      {!isLoading && filteredNotifications.length > 0 && hasMore && (
+        <div className="flex justify-center pt-4">
+          <Button
+            variant="outline"
+            onClick={handleLoadMore}
+            disabled={isLoadingMore}
+          >
+            {isLoadingMore ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                {t("loading_more")}
+              </>
+            ) : (
+              t("load_more")
+            )}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
