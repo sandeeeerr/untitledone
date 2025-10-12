@@ -10,6 +10,8 @@ import { useToast } from '@/hooks/use-toast'
 import { Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useCurrentUser } from '@/hooks/use-current-user'
+import { ShareLinksManager, ShareLink } from '@/components/organisms/share-links-manager'
+import { useQuery } from '@tanstack/react-query'
 // Removed InviteDialog usage on edit page per request
 
 export default function EditProjectPage({ params }: { params: Promise<{ id: string }> }) {
@@ -22,6 +24,19 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
 	const { data: currentUser } = useCurrentUser()
 
 	const { id } = use(params)
+
+	// Fetch share links for this project
+	const { data: shareLinks = [], isLoading: isLoadingLinks } = useQuery<ShareLink[]>({
+		queryKey: ["share-links", id],
+		queryFn: async () => {
+			const response = await fetch(`/api/projects/${id}/share-links`);
+			if (!response.ok) {
+				throw new Error("Failed to fetch share links");
+			}
+			return response.json();
+		},
+		enabled: Boolean(id),
+	});
 
 	useEffect(() => {
 		async function fetchProject() {
@@ -150,7 +165,7 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
 				</button>
 			}
 		>
-			<div>
+			<div className="space-y-6">
 				<Card>
 					<CardContent className="pt-6">
 						<ProjectForm 
@@ -159,6 +174,17 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
 							submittingLabel={t('actions.saving')}
 							cancelLabel={t('actions.cancel')}
 							onSubmit={onSubmit}
+						/>
+					</CardContent>
+				</Card>
+
+				{/* Share Links Manager */}
+				<Card>
+					<CardContent className="pt-6">
+						<ShareLinksManager
+							projectId={id}
+							initialLinks={shareLinks}
+							isLoading={isLoadingLinks}
 						/>
 					</CardContent>
 				</Card>

@@ -185,28 +185,20 @@ export function WidgetGrid({ items, options, onLayoutChange, editable = false, d
         <div
           key={item.id}
           className="grid-stack-item"
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
           gs-id={item.id}
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
           gs-x={item.x}
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
           gs-y={item.y}
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
           gs-w={item.w}
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
           gs-h={item.h}
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
           gs-min-w={item.minW}
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
           gs-min-h={item.minH}
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
           gs-locked={item.locked ? 'true' : undefined}
           data-widget-type={item.widgetType}

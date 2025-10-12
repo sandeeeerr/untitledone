@@ -18,7 +18,6 @@ const sidebarNavItems = [
   {
     title: "Notifications",
     href: "/settings/notifications",
-    disabled: true,
   },
 ];
 

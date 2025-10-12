@@ -25,6 +25,8 @@ import * as React from "react"
 import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { useProfile, useProjects, usePinnedProjects, usePinProject, useUnpinProject, usePendingInvitations } from "@/lib/api/queries"
+import { useRealtimeNotifications } from "@/hooks/use-realtime-notifications"
+import { useToast } from "@/hooks/use-toast"
 import { getProjectActivity } from "@/lib/api/projects"
 import { useQueries } from "@tanstack/react-query"
 import NavUser from "@/components/molecules/nav-user"
@@ -33,17 +35,33 @@ import UploadDialog from "@/components/molecules/upload-dialog"
 import CreateVersionDialog from "@/components/molecules/create-version-dialog"
 import InviteDialog from "@/components/molecules/invite-dialog"
 import InvitationsSheet from "@/components/organisms/invitations-sheet"
+import MentionsSheet from "@/components/organisms/mentions-sheet"
 import { cn } from "@/lib/utils"
 
 export default function MainSidebar() {
   const pathname = usePathname()
   const t = useTranslations()
+  const { toast: _toast } = useToast()
   const { data: profile } = useProfile()
   const { data: allProjects = [] } = useProjects()
   const { data: pins = [] } = usePinnedProjects()
   const { data: pendingInvitations = [] } = usePendingInvitations()
   const pinMut = usePinProject()
   const unpinMut = useUnpinProject()
+  
+  // Realtime notifications subscription
+  const { unreadCount } = useRealtimeNotifications({
+    userId: profile?.id || "",
+    enabled: Boolean(profile?.id),
+    onNotificationCreated: () => {
+      // Optional toast notification for new mentions
+      // Uncomment to enable:
+      // toast({
+      //   title: t("mentions.new_mention"),
+      //   description: t("mentions.new_mention_description"),
+      // });
+    },
+  })
   const isProjectRoute = pathname?.startsWith("/projects/") && !pathname?.startsWith("/projects/new")
   const projectId = isProjectRoute ? pathname.split("/")[2] : null
   const [openMap, setOpenMap] = React.useState<Record<string, boolean>>({})
@@ -182,10 +200,17 @@ export default function MainSidebar() {
                 <SidebarMenuBadge>{pendingInvitations.length}</SidebarMenuBadge>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Coming soon" disabled>
-                  <AtSign className="h-4 w-4" />
-                  <span>{t("navigation.mentions")}</span>
-                </SidebarMenuButton>
+                <MentionsSheet
+                  trigger={
+                    <SidebarMenuButton className="justify-between">
+                      <div className="flex items-center gap-2">
+                        <AtSign className="h-4 w-4" />
+                        <span>{t("navigation.mentions")}</span>
+                      </div>
+                    </SidebarMenuButton>
+                  }
+                />
+                {unreadCount > 0 && <SidebarMenuBadge>{unreadCount}</SidebarMenuBadge>}
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>

@@ -2,12 +2,27 @@ import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
 const nextConfig: NextConfig = {
+  eslint: {
+    // Use the flat config
+    dirs: ['src'],
+    // Suppress the warning about flat config not being detected (known Next.js 15 issue)
+    ignoreDuringBuilds: false,
+  },
   webpack: (config) => {
+    // Suppress Supabase "Critical dependency" warnings (safe to ignore)
     config.ignoreWarnings = [
-      (warning: any) =>
+      (warning: unknown) =>
+        typeof warning === 'object' &&
+        warning !== null &&
+        'message' in warning &&
         typeof warning.message === "string" &&
-        warning.message.includes("Critical dependency: the request of a dependency is an expression") &&
-        warning.module?.resource?.includes("@supabase/realtime-js"),
+        warning.message.includes("Critical dependency") &&
+        'module' in warning &&
+        typeof warning.module === 'object' &&
+        warning.module !== null &&
+        'resource' in warning.module &&
+        typeof warning.module.resource === 'string' &&
+        warning.module.resource.includes("@supabase"),
     ];
     return config;
   },

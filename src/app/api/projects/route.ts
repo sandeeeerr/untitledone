@@ -324,7 +324,7 @@ export async function POST(req: Request) {
 		owner_id: string;
 		is_private: boolean;
 		downloads_enabled: boolean;
-		daw_info: Record<string, string> | {};
+		daw_info: Record<string, string> | Record<string, never>;
 		plugins_used: Array<{ name: string; version?: string }>;
 		status: string;
 	};

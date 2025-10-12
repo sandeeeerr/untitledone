@@ -564,6 +564,8 @@ export function useCommentsCount(params: Omit<ListCommentsParams, "limit" | "cur
 export function useCreateProjectComment() {
     const queryClient = useQueryClient();
     const { toast } = useToast();
+    const { data: currentProfile } = useProfile();
+
     return useMutation({
         mutationFn: (input: CreateCommentInput) => createComment(input),
         onMutate: async (input) => {
@@ -579,14 +581,19 @@ export function useCreateProjectComment() {
                 activity_change_id: activityChangeId ?? null,
                 version_id: versionId ?? null,
                 file_id: fileId ?? null,
-                user_id: "me" as unknown as ProjectComment["user_id"],
+                user_id: (currentProfile?.id ?? "temp-user-id") as unknown as ProjectComment["user_id"],
                 comment: input.comment,
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString(),
                 edited: false,
                 resolved: false,
                 timestamp_ms: input.timestampMs ?? null,
-                profiles: null,
+                profiles: currentProfile ? {
+                    id: currentProfile.id,
+                    display_name: currentProfile.display_name,
+                    username: currentProfile.username,
+                    avatar_url: currentProfile.avatar_url,
+                } : null,
             } as ProjectComment;
             queryClient.setQueryData<ProjectComment[]>(queryKey, [optimistic, ...previous]);
             return { previous, queryKey } as const;
@@ -602,7 +609,6 @@ export function useCreateProjectComment() {
             // Replace optimistic with fresh fetch
             queryClient.invalidateQueries({ queryKey: ["project", created.project_id, "comments"] });
             queryClient.invalidateQueries({ queryKey: ["project", created.project_id, "activity"] });
-            toast({ title: "Comment posted", description: "Your comment has been posted." });
         },
     });
 }
@@ -677,7 +683,7 @@ export function useStorageConnections() {
 }
 
 export function useConnectStorageProvider() {
-    const queryClient = useQueryClient();
+    const _queryClient = useQueryClient();
     const { toast } = useToast();
     
     return useMutation({

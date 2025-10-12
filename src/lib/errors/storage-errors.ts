@@ -113,7 +113,7 @@ export function getStorageErrorCode(error: unknown): StorageErrorCode | null {
   
   // Check if error message contains error code
   if (error instanceof Error) {
-    for (const [key, code] of Object.entries(STORAGE_ERROR_CODES)) {
+    for (const [_key, code] of Object.entries(STORAGE_ERROR_CODES)) {
       if (error.message.includes(code)) {
         return code as StorageErrorCode;
       }

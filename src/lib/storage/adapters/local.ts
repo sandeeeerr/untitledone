@@ -18,7 +18,7 @@ export class LocalStorageAdapter implements StorageProvider {
    * Upload a file to Supabase Storage.
    * Wraps the existing uploadProjectObject function.
    */
-  async upload(file: File, path: string, userId: string): Promise<StorageUploadResult> {
+  async upload(file: File, path: string, _userId: string): Promise<StorageUploadResult> {
     // Extract projectId from path if present (format: projectId/filename)
     const pathParts = path.split('/');
     const projectId = pathParts.length > 1 ? pathParts[0] : '';
@@ -45,7 +45,7 @@ export class LocalStorageAdapter implements StorageProvider {
    * Generate a signed download URL for a file in Supabase Storage.
    * Wraps the existing getSignedDownloadUrl function.
    */
-  async getDownloadUrl(fileId: string, userId: string, expiresIn: number = 600): Promise<string> {
+  async getDownloadUrl(fileId: string, _userId: string, expiresIn: number = 600): Promise<string> {
     // For local storage, fileId is the storage path/key
     const signedUrl = await getSignedDownloadUrl(fileId, expiresIn);
     return signedUrl;
@@ -55,7 +55,7 @@ export class LocalStorageAdapter implements StorageProvider {
    * Delete a file from Supabase Storage.
    * Wraps the existing removeObject function.
    */
-  async delete(fileId: string, userId: string): Promise<void> {
+  async delete(fileId: string, _userId: string): Promise<void> {
     // For local storage, fileId is the storage path/key
     await removeObject(fileId);
   }
@@ -64,7 +64,7 @@ export class LocalStorageAdapter implements StorageProvider {
    * Validate connection to local storage.
    * Local storage is always available, so always returns true.
    */
-  async validateConnection(userId: string): Promise<boolean> {
+  async validateConnection(_userId: string): Promise<boolean> {
     return true;
   }
 
@@ -72,7 +72,7 @@ export class LocalStorageAdapter implements StorageProvider {
    * Refresh tokens for local storage.
    * Local storage doesn't use tokens, so always returns true.
    */
-  async refreshTokens(userId: string): Promise<boolean> {
+  async refreshTokens(_userId: string): Promise<boolean> {
     return true;
   }
 }

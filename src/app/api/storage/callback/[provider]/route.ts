@@ -47,7 +47,7 @@ export async function GET(
 
     // Validate state token from database
     const serviceClient = createServiceClient();
-    const [stateToken, userId] = state.split('.');
+    const [_stateToken, userId] = state.split('.');
     
     if (!userId) {
       return errorPage('Invalid state format');
@@ -99,7 +99,7 @@ export async function GET(
       expiresIn = tokenData.expires_in || null;
 
       // Fetch account info
-      const dbx = new Dropbox({ accessToken, fetch: fetch as any });
+      const dbx = new Dropbox({ accessToken, fetch: fetch as typeof globalThis.fetch });
       const accountInfo = await dbx.usersGetCurrentAccount();
       accountId = accountInfo.result.account_id;
       accountName = accountInfo.result.email;

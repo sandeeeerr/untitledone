@@ -10,7 +10,13 @@
     "description": "Lorem ipsum dolor, sit amet consectetur adipisicing elit. Dignissimos atque nisi necessitatibus neque voluptates libero aperiam nam repellat quam, ab perferendis cum animi repellendus ratione eius dolores et iure rerum!"
   },
   "common": {
-    "logo": "Logo"
+    "logo": "Logo",
+    "user": "Utilisateur",
+    "userMenu": "Menu utilisateur",
+    "home": "Accueil",
+    "error": "Erreur",
+    "success": "Succès",
+    "just_now": "à l'instant"
   },
   "navigation": {
     "home": "Accueil",
@@ -361,8 +367,10 @@
     "noCommentsYet": "Pas encore de commentaires",
     "startConversation": "Commencez la conversation avec des retours et des notes.",
     "addComment": "Ajouter un commentaire...",
+    "addReply": "Ajouter une réponse...",
     "post": "Publier",
     "posting": "Publication...",
+    "saving": "Enregistrement...",
     "edited": "modifié",
     "viewThread": "Voir le fil",
     "hideThread": "Masquer le fil",
@@ -370,6 +378,13 @@
     "viewMore": "Voir plus",
     "edit": "Modifier",
     "save": "Enregistrer",
+    "emptyComment": "Le commentaire ne peut pas être vide",
+    "failedToPost": "Échec de la publication du commentaire",
+    "failedToReply": "Échec de la réponse",
+    "seekToTime": "Aller au temps",
+    "reply": "Répondre",
+    "markResolved": "Marquer comme résolu",
+    "markUnresolved": "Marquer comme non résolu",
     "cancel": "Annuler",
     "delete": "Supprimer",
     "resolve": "Marquer résolu",
@@ -396,6 +411,27 @@
     "invitationIgnored": "L'invitation a été ignorée",
     "expiresIn": "Expire dans",
     "from": "De"
+  },
+  "mentions": {
+    "dashboard_title": "Mentions",
+    "new": "nouveau",
+    "description": "Voir toutes vos mentions en un seul endroit",
+    "unread": "Non lu",
+    "all": "Tout",
+    "mark_all_read": "Tout marquer comme lu",
+    "mark_as_read": "Marquer comme lu",
+    "all_marked_read": "Toutes les mentions marquées comme lues",
+    "no_mentions": "Pas encore de mentions",
+    "no_mentions_description": "Lorsque quelqu'un vous mentionne dans un commentaire, il apparaîtra ici",
+    "no_unread": "Aucune mention non lue",
+    "no_unread_description": "Tout est à jour ! Vous n'avez aucune mention non lue",
+    "error_loading": "Impossible de charger les mentions",
+    "error_mark_read": "Impossible de marquer comme lu",
+    "error_mark_all_read": "Impossible de tout marquer comme lu",
+    "filter_unread": "Non lu",
+    "filter_all": "Tout",
+    "load_more": "Charger plus",
+    "loading_more": "Chargement..."
   },
   "alerts": {
     "verifyEmailTitle": "Vérifiez votre e-mail pour activer votre compte",

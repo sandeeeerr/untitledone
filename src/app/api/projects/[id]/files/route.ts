@@ -15,7 +15,7 @@ interface FileMetadata {
 }
 
 // Type for project file with metadata
-interface ProjectFileWithMetadata {
+interface _ProjectFileWithMetadata {
   id: string;
   filename: string;
   file_type: string;
@@ -279,8 +279,9 @@ export async function GET(
     const enrichedFiles = (files || [])
       .filter((f) => {
         try {
-          const meta = (f as any)?.metadata;
-          return !(meta && typeof meta === 'object' && (meta as FileMetadata).deleted_at);
+          const fileWithMeta = f as { metadata?: FileMetadata };
+          const meta = fileWithMeta?.metadata;
+          return !(meta && typeof meta === 'object' && meta.deleted_at);
         } catch {
           return true;
         }
@@ -296,7 +297,7 @@ export async function GET(
         uploadedBy: profileMap.get(file.uploaded_by) || { name: "Unknown", avatar: null },
         description: file.metadata?.description || null,
         versionName: vid ? versionNameById.get(vid) || null : null,
-        storageProvider: (file as any).storage_provider || 'local',
+        storageProvider: (file as { storage_provider?: string }).storage_provider || 'local',
       };
     });
 

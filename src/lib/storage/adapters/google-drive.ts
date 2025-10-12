@@ -26,7 +26,7 @@ export class GoogleDriveAdapter implements StorageProvider {
     } catch (error) {
       // Check if it's a 401 (unauthorized/expired token)
       if (this.is401Error(error)) {
-        console.log(`Google Drive token expired for user ${userId}, attempting refresh...`);
+        console.warn(`Google Drive token expired for user ${userId}, attempting refresh...`);
         const refreshed = await this.refreshTokens(userId);
         
         if (!refreshed) {
@@ -108,13 +108,13 @@ export class GoogleDriveAdapter implements StorageProvider {
   async getDownloadUrl(
     fileId: string,
     userId: string,
-    expiresIn: number = 600
+    _expiresIn: number = 600
   ): Promise<string> {
     try {
       return await this.getDownloadUrlInternal(fileId, userId);
     } catch (error) {
       if (this.is401Error(error)) {
-        console.log(`Google Drive token expired for user ${userId}, attempting refresh...`);
+        console.warn(`Google Drive token expired for user ${userId}, attempting refresh...`);
         const refreshed = await this.refreshTokens(userId);
         
         if (!refreshed) {
@@ -160,7 +160,7 @@ export class GoogleDriveAdapter implements StorageProvider {
       await this.deleteInternal(fileId, userId);
     } catch (error) {
       if (this.is401Error(error)) {
-        console.log(`Google Drive token expired for user ${userId}, attempting refresh...`);
+        console.warn(`Google Drive token expired for user ${userId}, attempting refresh...`);
         const refreshed = await this.refreshTokens(userId);
         
         if (!refreshed) {
@@ -255,7 +255,7 @@ export class GoogleDriveAdapter implements StorageProvider {
         last_used_at: new Date().toISOString(),
       });
 
-      console.log(`✓ Google Drive token refreshed successfully for user ${userId}`);
+      console.warn(`✓ Google Drive token refreshed successfully for user ${userId}`);
       return true;
 
     } catch (error) {
@@ -286,7 +286,7 @@ export class GoogleDriveAdapter implements StorageProvider {
    * Get or create the UntitledOne app folder in Google Drive.
    * Returns the folder ID.
    */
-  private async getOrCreateAppFolder(drive: any): Promise<string> {
+  private async getOrCreateAppFolder(drive: ReturnType<typeof google.drive>): Promise<string> {
     // Search for existing UntitledOne folder
     const searchResult = await drive.files.list({
       q: "name='UntitledOne' and mimeType='application/vnd.google-apps.folder' and trashed=false",
@@ -295,7 +295,11 @@ export class GoogleDriveAdapter implements StorageProvider {
     });
 
     if (searchResult.data.files && searchResult.data.files.length > 0) {
-      return searchResult.data.files[0].id;
+      const folderId = searchResult.data.files[0].id;
+      if (!folderId) {
+        throw new Error('Failed to get folder ID from Google Drive');
+      }
+      return folderId;
     }
 
     // Create folder if it doesn't exist
@@ -307,7 +311,11 @@ export class GoogleDriveAdapter implements StorageProvider {
       fields: 'id',
     });
 
-    return createResult.data.id;
+    const folderId = createResult.data.id;
+    if (!folderId) {
+      throw new Error('Failed to create folder in Google Drive');
+    }
+    return folderId;
   }
 }
 

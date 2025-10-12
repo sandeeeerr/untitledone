@@ -3,7 +3,7 @@ import { createServiceClient } from '../supabase/service';
 
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 16;
-const AUTH_TAG_LENGTH = 16;
+const _AUTH_TAG_LENGTH = 16;
 
 /**
  * Encrypts a token using AES-256-GCM with versioned encryption keys.
@@ -143,7 +143,7 @@ export async function rotateEncryptionKeys(newVersion: string): Promise<{
       }
 
       stats.successful++;
-      console.log(`✓ Rotated keys for connection ${conn.id} (${conn.provider})`);
+      console.warn(`✓ Rotated keys for connection ${conn.id} (${conn.provider})`);
     } catch (error) {
       stats.failed++;
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';

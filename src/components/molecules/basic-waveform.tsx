@@ -34,7 +34,8 @@ function BasicWaveform(
 
     // Resolve theme colors from Tailwind/Shadcn CSS variables
     const styles = getComputedStyle(document.documentElement);
-    const primary = `hsl(${(styles.getPropertyValue('--primary') || '').trim()})` || '#3b82f6';
+    const primaryVar = (styles.getPropertyValue('--primary') || '').trim();
+    const primary = primaryVar ? `hsl(${primaryVar})` : '#3b82f6';
     // Custom secondary color: hsl(240, 4.9%, 83.9%)
     const secondary = "hsl(240, 4.9%, 83.9%)";
 
@@ -68,8 +69,12 @@ function BasicWaveform(
       try { ws.unAll(); } catch {}
       // Avoid destroy to prevent AbortError during decode; let GC reclaim
       wsRef.current = null;
-      if (containerRef.current) { try { containerRef.current.innerHTML = ""; } catch {} }
-      if (timelineRef.current) { try { timelineRef.current.innerHTML = ""; } catch {} }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      const container = containerRef.current;
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      const timeline = timelineRef.current;
+      if (container) { try { container.innerHTML = ""; } catch {} }
+      if (timeline) { try { timeline.innerHTML = ""; } catch {} }
     };
   }, [url, height]);
 

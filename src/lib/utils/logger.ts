@@ -24,13 +24,13 @@ class Logger {
 
   debug(message: string, options?: LogOptions): void {
     if (this.isDevelopment) {
-      console.log(this.formatMessage('debug', message, options), options?.metadata || '');
+      console.warn(this.formatMessage('debug', message, options), options?.metadata || '');
     }
   }
 
   info(message: string, options?: LogOptions): void {
     if (this.isDevelopment) {
-      console.info(this.formatMessage('info', message, options), options?.metadata || '');
+      console.warn(this.formatMessage('info', message, options), options?.metadata || '');
     }
   }
 

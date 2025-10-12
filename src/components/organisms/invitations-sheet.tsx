@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { UserPlus, Check, X, Clock, ExternalLink } from "lucide-react";
+import { UserPlus, Check, X, Clock, ExternalLink as _ExternalLink } from "lucide-react";
 import {
 	Sheet,
 	SheetContent,
@@ -85,7 +85,7 @@ export default function InvitationsSheet({
 		}
 	};
 
-	const handleDecline = async (invitationId: string) => {
+	const handleDecline = async (_invitationId: string) => {
 		// For now, we can delete by accepting with a decline endpoint (future implementation)
 		// Or simply ignore it and let it expire
 		toast({
