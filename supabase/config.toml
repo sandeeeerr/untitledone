@@ -349,3 +349,11 @@ s3_region = "env(S3_REGION)"
 s3_access_key = "env(S3_ACCESS_KEY)"
 # Configures AWS_SECRET_ACCESS_KEY for S3 bucket
 s3_secret_key = "env(S3_SECRET_KEY)"
+
+# Edge Functions
+[functions.send-mention-digest]
+verify_jwt = false
+
+# Cron schedule for daily mention digest (runs at 9 AM UTC daily)
+# Note: Supabase cron requires pg_cron extension or external scheduler
+# Alternative: Use a service like cron-job.org to POST to the function URL daily

@@ -3,6 +3,8 @@ import { z } from "zod";
 import { SupabaseClient } from "@supabase/supabase-js";
 import createServerClient from "@/lib/supabase/server";
 import { parseMentions, validateMentions, createMentionNotifications } from "@/lib/utils/mentions";
+import { sendMentionEmail } from "@/lib/api/emails";
+import { env } from "@/lib/env";
 
 export const runtime = "nodejs";
 
@@ -196,6 +198,19 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             paramValidation.data.id,
             supabase as SupabaseClient
           );
+
+          // Send instant emails to users with instant email preference enabled (non-blocking)
+          // Don't await - fire and forget to not slow down comment creation
+          sendInstantMentionEmails(
+            mentionedUserIds,
+            user.id,
+            paramValidation.data.id,
+            created.id,
+            sanitizedComment,
+            supabase as SupabaseClient
+          ).catch((err) => {
+            console.error("Failed to send instant mention emails:", err);
+          });
         }
       }
     }
@@ -258,6 +273,112 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   }
 
   return NextResponse.json(created, { status: 201 });
+}
+
+/**
+ * Helper function to send instant mention emails
+ * Checks user preferences and sends emails to users with instant email enabled
+ */
+async function sendInstantMentionEmails(
+  mentionedUserIds: string[],
+  authorId: string,
+  projectId: string,
+  commentId: string,
+  commentText: string,
+  supabase: SupabaseClient
+): Promise<void> {
+  try {
+    // Filter out author from recipients
+    const recipientIds = mentionedUserIds.filter((id) => id !== authorId);
+    
+    if (recipientIds.length === 0) {
+      return;
+    }
+
+    // Fetch user preferences for mentioned users
+    const { data: preferences } = await supabase
+      .from("notification_preferences")
+      .select("user_id, email_mentions_enabled, email_frequency")
+      .in("user_id", recipientIds);
+
+    // Filter to only users with instant email enabled
+    const instantEmailUserIds = (preferences || [])
+      .filter((pref) => pref.email_mentions_enabled && pref.email_frequency === "instant")
+      .map((pref) => pref.user_id);
+
+    if (instantEmailUserIds.length === 0) {
+      return;
+    }
+
+    // Fetch recipient profiles (email, username, display_name)
+    const { data: recipients } = await supabase
+      .from("profiles")
+      .select("id, username, display_name")
+      .in("id", instantEmailUserIds);
+
+    // Fetch user emails from auth.users (need service role for this)
+    const { data: authUsers } = await supabase.auth.admin.listUsers();
+    const emailMap = new Map<string, string>();
+    authUsers.users.forEach((authUser) => {
+      if (authUser.email) {
+        emailMap.set(authUser.id, authUser.email);
+      }
+    });
+
+    // Fetch project info
+    const { data: project } = await supabase
+      .from("projects")
+      .select("name")
+      .eq("id", projectId)
+      .single();
+
+    // Fetch commenter info (author)
+    const { data: commenter } = await supabase
+      .from("profiles")
+      .select("username, display_name")
+      .eq("id", authorId)
+      .single();
+
+    if (!project || !commenter) {
+      console.error("Missing project or commenter data for email");
+      return;
+    }
+
+    const commenterName = commenter.display_name || commenter.username || "Someone";
+    const siteUrl = env().NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    const linkUrl = `${siteUrl}/projects/${projectId}?comment=${commentId}&highlight=true`;
+
+    // Send email to each recipient
+    const emailPromises = (recipients || []).map(async (recipient) => {
+      const recipientEmail = emailMap.get(recipient.id);
+      if (!recipientEmail) {
+        console.warn(`No email found for user ${recipient.id}`);
+        return;
+      }
+
+      const recipientName = recipient.display_name || recipient.username || "there";
+
+      try {
+        await sendMentionEmail(
+          recipientEmail,
+          recipientName,
+          project.name,
+          commentText,
+          linkUrl,
+          commenterName
+        );
+      } catch (emailError) {
+        console.error(`Failed to send email to ${recipientEmail}:`, emailError);
+        // Continue with other emails even if one fails
+      }
+    });
+
+    // Wait for all emails (with individual error handling)
+    await Promise.allSettled(emailPromises);
+  } catch (error) {
+    console.error("Error in sendInstantMentionEmails:", error);
+    // Don't throw - this is best-effort
+  }
 }
 
 

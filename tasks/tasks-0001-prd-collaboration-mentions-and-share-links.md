@@ -63,10 +63,11 @@ Generated from: `0001-prd-collaboration-mentions-and-share-links.md`
 - `src/components/organisms/layout-sidebar.tsx` - Add notification badge (existing, modify)
 
 ### Components - Templates
-- `src/components/templates/mention-email.tsx` - Email template (new)
+- `src/components/templates/mention-email.tsx` - React Email template for mention notifications (created)
 
 ### API Library & Queries
 - `src/lib/api/notifications.ts` - Notification API functions (getNotifications, getUnreadCount) (created)
+- `src/lib/api/emails.ts` - Email sending utilities (sendMentionEmail, sendMentionDigest) with Resend integration (created)
 - `src/lib/api/share-links.ts` - Share link API functions (new)
 - `src/lib/api/queries.ts` - Add TanStack Query hooks (existing, extend)
 - `src/lib/api/comments.ts` - May need mention helpers (existing, possibly extend)
@@ -84,8 +85,9 @@ Generated from: `0001-prd-collaboration-mentions-and-share-links.md`
 - `src/i18n/messages/fr.json` - Add translations (existing, extend)
 - `src/i18n/messages/nl.json` - Add translations (existing, extend)
 
-### Edge Functions (Optional)
-- `supabase/functions/send-mention-digest/index.ts` - Daily digest cron (new)
+### Edge Functions
+- `supabase/functions/send-mention-digest/index.ts` - Daily digest cron job (9 AM UTC) (created)
+- `supabase/config.toml` - Edge Function configuration with cron schedule notes (modified)
 
 ### Notes
 - Files marked "existing, modify" require careful updates to maintain existing functionality
@@ -192,22 +194,22 @@ Generated from: `0001-prd-collaboration-mentions-and-share-links.md`
 
 ### Phase 4: Email Notifications (Week 5)
 
-- [ ] **6.0 Build Email Notification System**
-  - [ ] 6.1 Install React Email library: `npm install @react-email/components @react-email/render`
-  - [ ] 6.2 Create `src/components/templates/mention-email.tsx` TSX email template component
-  - [ ] 6.3 Template should include: greeting, "You were mentioned in [projectName]", comment excerpt (160 chars), context info (file/version/timestamp), "View Comment" button with deep link
-  - [ ] 6.4 Style email using inline styles (email-safe CSS)
+- [x] **6.0 Build Email Notification System**
+  - [x] 6.1 Install React Email library: `npm install @react-email/components @react-email/render`
+  - [x] 6.2 Create `src/components/templates/mention-email.tsx` TSX email template component
+  - [x] 6.3 Template should include: greeting, "You were mentioned in [projectName]", comment excerpt (160 chars), context info (file/version/timestamp), "View Comment" button with deep link
+  - [x] 6.4 Style email using inline styles (email-safe CSS)
   - [ ] 6.5 Test email rendering locally using React Email preview: `npx email dev`
-  - [ ] 6.6 Create `src/lib/api/emails.ts` with `sendMentionEmail(to: string, userName: string, projectName: string, commentExcerpt: string, linkUrl: string, context?: string)` function
-  - [ ] 6.7 Use `render` from `@react-email/render` to convert TSX to HTML
-  - [ ] 6.8 Integrate with Resend: POST to Resend API with rendered HTML (ensure `RESEND_API_KEY` is in env)
-  - [ ] 6.9 Add instant email trigger: in mention notification creation logic (task 2.8), check user preferences; if `email_frequency = 'instant'` and `email_mentions_enabled = true`, send email immediately
-  - [ ] 6.10 Create Supabase Edge Function `supabase/functions/send-mention-digest/index.ts` for daily digest
-  - [ ] 6.11 Edge Function should query `notifications` WHERE `type = 'mention'` AND `is_read = false` AND user has `email_frequency = 'daily'` AND `email_mentions_enabled = true`
-  - [ ] 6.12 Group notifications by user, aggregate into digest email (list all unread mentions)
-  - [ ] 6.13 Send one email per user with all their unread mentions
-  - [ ] 6.14 Schedule Edge Function via Supabase cron: daily at 9 AM UTC (add to `supabase/config.toml` or use external scheduler)
-  - [ ] 6.15 Add error handling and retry logic for failed email sends (log errors, exponential backoff)
+  - [x] 6.6 Create `src/lib/api/emails.ts` with `sendMentionEmail(to: string, userName: string, projectName: string, commentExcerpt: string, linkUrl: string, context?: string)` function
+  - [x] 6.7 Use `render` from `@react-email/render` to convert TSX to HTML
+  - [x] 6.8 Integrate with Resend: POST to Resend API with rendered HTML (ensure `RESEND_API_KEY` is in env)
+  - [x] 6.9 Add instant email trigger: in mention notification creation logic (task 2.8), check user preferences; if `email_frequency = 'instant'` and `email_mentions_enabled = true`, send email immediately
+  - [x] 6.10 Create Supabase Edge Function `supabase/functions/send-mention-digest/index.ts` for daily digest
+  - [x] 6.11 Edge Function should query `notifications` WHERE `type = 'mention'` AND `is_read = false` AND user has `email_frequency = 'daily'` AND `email_mentions_enabled = true`
+  - [x] 6.12 Group notifications by user, aggregate into digest email (list all unread mentions)
+  - [x] 6.13 Send one email per user with all their unread mentions
+  - [x] 6.14 Schedule Edge Function via Supabase cron: daily at 9 AM UTC (add to `supabase/config.toml` or use external scheduler)
+  - [x] 6.15 Add error handling and retry logic for failed email sends (log errors, exponential backoff)
   - [ ] 6.16 Test instant email flow end-to-end (create mention, verify email received)
   - [ ] 6.17 Test digest email flow (set preference to daily, create mentions throughout the day, verify digest arrives at scheduled time)
   - [ ] 6.18 Verify email renders correctly in Gmail, Outlook, and Apple Mail
