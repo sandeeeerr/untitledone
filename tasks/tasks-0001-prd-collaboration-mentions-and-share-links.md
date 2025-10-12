@@ -30,7 +30,7 @@ Generated from: `0001-prd-collaboration-mentions-and-share-links.md`
 ### API Routes
 - `src/app/api/projects/[id]/comments/route.ts` - Extended with mention parsing and notification creation (modified)
 - `src/app/api/projects/[id]/comments/[commentId]/route.ts` - Extended PUT handler to detect new mentions on edit (modified)
-- `src/app/api/projects/[id]/members/autocomplete/route.ts` - Autocomplete endpoint (new)
+- `src/app/api/projects/[id]/members/autocomplete/route.ts` - Autocomplete endpoint for @mention suggestions (created)
 - `src/app/api/notifications/route.ts` - List notifications (new)
 - `src/app/api/notifications/[id]/route.ts` - Update notification (new)
 - `src/app/api/notifications/mark-all-read/route.ts` - Bulk update (new)
@@ -51,7 +51,7 @@ Generated from: `0001-prd-collaboration-mentions-and-share-links.md`
 - `src/components/atoms/link-status-badge.tsx` - Link status badge (new)
 
 ### Components - Molecules
-- `src/components/molecules/mention-autocomplete.tsx` - Autocomplete dropdown (new)
+- `src/components/molecules/mention-autocomplete.tsx` - Autocomplete dropdown with keyboard navigation (created)
 - `src/components/molecules/notification-item.tsx` - Single notification entry (new)
 - `src/components/molecules/share-link-card.tsx` - Share link display card (new)
 
@@ -75,7 +75,7 @@ Generated from: `0001-prd-collaboration-mentions-and-share-links.md`
 - `src/lib/utils/share-links.ts` - Token generation/validation (new)
 
 ### Hooks
-- `src/hooks/use-mention-autocomplete.ts` - Autocomplete hook (new)
+- `src/hooks/use-mention-autocomplete.ts` - Autocomplete hook with debouncing and caching (created)
 - `src/hooks/use-realtime-notifications.ts` - Realtime subscription hook (new)
 
 ### i18n
@@ -133,21 +133,21 @@ Generated from: `0001-prd-collaboration-mentions-and-share-links.md`
   - [x] 2.12 Test mention parsing with various edge cases (multiple mentions, mentions at start/middle/end, invalid usernames)
 
 - [ ] **3.0 Build Autocomplete API & Frontend**
-  - [ ] 3.1 Create `src/app/api/projects/[id]/members/autocomplete/route.ts` with GET handler
-  - [ ] 3.2 Add Zod schema to validate query parameter `q` (string, min 1 char, max 50 chars)
-  - [ ] 3.3 Query `profiles` joined with `project_members` WHERE `project_id = [id]` AND `username ILIKE '%[q]%'` LIMIT 5
-  - [ ] 3.4 Return array of `{ id, username }` objects
-  - [ ] 3.5 Add RLS check: only authenticated project members can access this endpoint
-  - [ ] 3.6 Create `src/hooks/use-mention-autocomplete.ts` hook using TanStack Query with debouncing (300ms)
-  - [ ] 3.7 Create `src/components/molecules/mention-autocomplete.tsx` dropdown component
-  - [ ] 3.8 Add keyboard navigation: ArrowUp/ArrowDown to select, Enter to insert, Escape to close
-  - [ ] 3.9 Add mouse hover states and click handlers
-  - [ ] 3.10 Position dropdown below cursor/@ symbol using absolute positioning or floating-ui
+  - [x] 3.1 Create `src/app/api/projects/[id]/members/autocomplete/route.ts` with GET handler
+  - [x] 3.2 Add Zod schema to validate query parameter `q` (string, min 1 char, max 50 chars)
+  - [x] 3.3 Query `profiles` joined with `project_members` WHERE `project_id = [id]` AND `username ILIKE '%[q]%'` LIMIT 5
+  - [x] 3.4 Return array of `{ id, username }` objects
+  - [x] 3.5 Add RLS check: only authenticated project members can access this endpoint
+  - [x] 3.6 Create `src/hooks/use-mention-autocomplete.ts` hook using TanStack Query with debouncing (300ms)
+  - [x] 3.7 Create `src/components/molecules/mention-autocomplete.tsx` dropdown component
+  - [x] 3.8 Add keyboard navigation: ArrowUp/ArrowDown to select, Enter to insert, Escape to close
+  - [x] 3.9 Add mouse hover states and click handlers
+  - [x] 3.10 Position dropdown below cursor/@ symbol using absolute positioning or floating-ui
   - [ ] 3.11 Trigger autocomplete when user types `@` followed by any character in a textarea/input
   - [ ] 3.12 Insert `@username` at cursor position when suggestion is selected
   - [ ] 3.13 Integrate autocomplete into existing comment forms (find all comment textareas in the app)
-  - [ ] 3.14 Add loading state (spinner) while fetching suggestions
-  - [ ] 3.15 Add empty state when no members match the query
+  - [x] 3.14 Add loading state (spinner) while fetching suggestions
+  - [x] 3.15 Add empty state when no members match the query
   - [ ] 3.16 Test autocomplete with keyboard-only navigation (accessibility)
 
 ### Phase 3: Notifications & Dashboard (Week 3-4)
