@@ -587,5 +587,12 @@
     "invitationIgnored": "The invitation has been ignored",
     "expiresIn": "Expires in",
     "from": "From"
+  },
+  "mentions": {
+    "dashboard_title": "Mentions",
+    "mark_all_read": "Mark all as read",
+    "no_mentions": "No mentions yet",
+    "filter_unread": "Unread",
+    "filter_all": "All"
   }
 }

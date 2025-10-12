@@ -31,32 +31,32 @@ Generated from: `0001-prd-collaboration-mentions-and-share-links.md`
 - `src/app/api/projects/[id]/comments/route.ts` - Extended with mention parsing and notification creation (modified)
 - `src/app/api/projects/[id]/comments/[commentId]/route.ts` - Extended PUT handler to detect new mentions on edit (modified)
 - `src/app/api/projects/[id]/members/autocomplete/route.ts` - Autocomplete endpoint for @mention suggestions (created)
-- `src/app/api/notifications/route.ts` - List notifications (new)
-- `src/app/api/notifications/[id]/route.ts` - Update notification (new)
-- `src/app/api/notifications/mark-all-read/route.ts` - Bulk update (new)
+- `src/app/api/notifications/route.ts` - List notifications with filtering and pagination (created)
+- `src/app/api/notifications/[id]/route.ts` - Update individual notification (mark as read/unread) (created)
+- `src/app/api/notifications/mark-all-read/route.ts` - Bulk update all notifications to read (created)
 - `src/app/api/notifications/preferences/route.ts` - Get/update preferences (new)
 - `src/app/api/projects/[id]/share-links/route.ts` - Generate/list links (new)
 - `src/app/api/projects/[id]/share-links/[linkId]/route.ts` - Revoke link (new)
 - `src/app/api/share/[token]/route.ts` - Redeem share link (new)
 
 ### Pages & Routes
-- `src/app/dashboard/mentions/page.tsx` - Mentions dashboard (new)
+- `src/app/dashboard/mentions/page.tsx` - Mentions dashboard Server Component (created)
 - `src/app/settings/notifications/page.tsx` - Notification settings (new)
 - `src/app/share/[token]/page.tsx` - Share link redemption page (new)
 - `src/app/share/[token]/error/page.tsx` - Share link error page (new)
 
 ### Components - Atoms
 - `src/components/atoms/mention-badge.tsx` - Display @username (new)
-- `src/components/atoms/notification-dot.tsx` - Unread indicator (new)
+- `src/components/atoms/notification-dot.tsx` - Unread indicator dot (created)
 - `src/components/atoms/link-status-badge.tsx` - Link status badge (new)
 
 ### Components - Molecules
 - `src/components/molecules/mention-autocomplete.tsx` - Autocomplete dropdown with keyboard navigation (created)
-- `src/components/molecules/notification-item.tsx` - Single notification entry (new)
+- `src/components/molecules/notification-item.tsx` - Single notification entry with deep linking (created)
 - `src/components/molecules/share-link-card.tsx` - Share link display card (new)
 
 ### Components - Organisms
-- `src/components/organisms/mentions-dashboard.tsx` - Full mentions list (new)
+- `src/components/organisms/mentions-dashboard.tsx` - Full mentions dashboard with filters and actions (created)
 - `src/components/organisms/notification-settings.tsx` - Settings form (new)
 - `src/components/organisms/share-links-manager.tsx` - Share links manager (new)
 - `src/components/organisms/layout-sidebar.tsx` - Add notification badge (existing, modify)
@@ -65,7 +65,7 @@ Generated from: `0001-prd-collaboration-mentions-and-share-links.md`
 - `src/components/templates/mention-email.tsx` - Email template (new)
 
 ### API Library & Queries
-- `src/lib/api/notifications.ts` - Notification API functions (new)
+- `src/lib/api/notifications.ts` - Notification API functions (getNotifications, getUnreadCount) (created)
 - `src/lib/api/share-links.ts` - Share link API functions (new)
 - `src/lib/api/queries.ts` - Add TanStack Query hooks (existing, extend)
 - `src/lib/api/comments.ts` - May need mention helpers (existing, possibly extend)
@@ -79,7 +79,7 @@ Generated from: `0001-prd-collaboration-mentions-and-share-links.md`
 - `src/hooks/use-realtime-notifications.ts` - Realtime subscription hook (new)
 
 ### i18n
-- `src/i18n/messages/en.json` - Add mention/notification/share link keys (existing, extend)
+- `src/i18n/messages/en.json` - Added mention keys (dashboard_title, mark_all_read, no_mentions, filters) (modified)
 - `src/i18n/messages/fr.json` - Add translations (existing, extend)
 - `src/i18n/messages/nl.json` - Add translations (existing, extend)
 
@@ -152,24 +152,24 @@ Generated from: `0001-prd-collaboration-mentions-and-share-links.md`
 
 ### Phase 3: Notifications & Dashboard (Week 3-4)
 
-- [ ] **4.0 Build Notifications Dashboard**
-  - [ ] 4.1 Create `src/app/dashboard/mentions/page.tsx` as Server Component
-  - [ ] 4.2 Create `src/lib/api/notifications.ts` with `getNotifications(filter?: 'unread' | 'all', limit?: number, offset?: number)` function
-  - [ ] 4.3 Create API route `src/app/api/notifications/route.ts` GET handler with pagination and filtering
-  - [ ] 4.4 Add Zod schema for query params: `filter` (enum), `limit` (number, max 100), `cursor` (timestamp for pagination)
-  - [ ] 4.5 Query `notifications` joined with `project_comments`, `profiles` (commenter), and `projects` for full context
-  - [ ] 4.6 Create `src/components/atoms/notification-dot.tsx` - small blue dot for unread indicator
-  - [ ] 4.7 Create `src/components/molecules/notification-item.tsx` displaying: project name, comment excerpt (100 chars), commenter name, time ago, read/unread indicator, context label
-  - [ ] 4.8 Create `src/components/organisms/mentions-dashboard.tsx` with filter buttons (Unread/All) and "Mark all as read" button
-  - [ ] 4.9 Add loading state using skeleton loaders
-  - [ ] 4.10 Add empty state with illustration and message "No mentions yet"
-  - [ ] 4.11 Implement "Mark as read" action for individual notifications via API call
-  - [ ] 4.12 Create API route `src/app/api/notifications/[id]/route.ts` PATCH handler to update `is_read` field
-  - [ ] 4.13 Create API route `src/app/api/notifications/mark-all-read/route.ts` PATCH handler to bulk update
-  - [ ] 4.14 Add deep linking: clicking a notification navigates to `/projects/[projectId]?comment=[commentId]&highlight=true`
+- [x] **4.0 Build Notifications Dashboard**
+  - [x] 4.1 Create `src/app/dashboard/mentions/page.tsx` as Server Component
+  - [x] 4.2 Create `src/lib/api/notifications.ts` with `getNotifications(filter?: 'unread' | 'all', limit?: number, offset?: number)` function
+  - [x] 4.3 Create API route `src/app/api/notifications/route.ts` GET handler with pagination and filtering
+  - [x] 4.4 Add Zod schema for query params: `filter` (enum), `limit` (number, max 100), `cursor` (timestamp for pagination)
+  - [x] 4.5 Query `notifications` joined with `project_comments`, `profiles` (commenter), and `projects` for full context
+  - [x] 4.6 Create `src/components/atoms/notification-dot.tsx` - small blue dot for unread indicator
+  - [x] 4.7 Create `src/components/molecules/notification-item.tsx` displaying: project name, comment excerpt (100 chars), commenter name, time ago, read/unread indicator, context label
+  - [x] 4.8 Create `src/components/organisms/mentions-dashboard.tsx` with filter buttons (Unread/All) and "Mark all as read" button
+  - [x] 4.9 Add loading state using skeleton loaders
+  - [x] 4.10 Add empty state with illustration and message "No mentions yet"
+  - [x] 4.11 Implement "Mark as read" action for individual notifications via API call
+  - [x] 4.12 Create API route `src/app/api/notifications/[id]/route.ts` PATCH handler to update `is_read` field
+  - [x] 4.13 Create API route `src/app/api/notifications/mark-all-read/route.ts` PATCH handler to bulk update
+  - [x] 4.14 Add deep linking: clicking a notification navigates to `/projects/[projectId]?comment=[commentId]&highlight=true`
   - [ ] 4.15 Implement scroll-to-comment logic on the project page when `comment` query param is present
   - [ ] 4.16 Add pagination (infinite scroll or "Load more" button) for notifications list
-  - [ ] 4.17 Add error handling and error state UI
+  - [x] 4.17 Add error handling and error state UI
   - [ ] 4.18 Test navigation from notification to comment with various contexts (file, version, activity)
 
 - [ ] **5.0 Implement Notification Preferences**
