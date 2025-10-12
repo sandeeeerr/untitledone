@@ -34,14 +34,15 @@ Generated from: `0001-prd-collaboration-mentions-and-share-links.md`
 - `src/app/api/notifications/route.ts` - List notifications with filtering and pagination (created)
 - `src/app/api/notifications/[id]/route.ts` - Update individual notification (mark as read/unread) (created)
 - `src/app/api/notifications/mark-all-read/route.ts` - Bulk update all notifications to read (created)
-- `src/app/api/notifications/preferences/route.ts` - Get/update preferences (new)
+- `src/app/api/notifications/preferences/route.ts` - Get/update notification preferences (GET/PUT with defaults) (created)
 - `src/app/api/projects/[id]/share-links/route.ts` - Generate/list links (new)
 - `src/app/api/projects/[id]/share-links/[linkId]/route.ts` - Revoke link (new)
 - `src/app/api/share/[token]/route.ts` - Redeem share link (new)
 
 ### Pages & Routes
 - `src/app/dashboard/mentions/page.tsx` - Mentions dashboard Server Component (created)
-- `src/app/settings/notifications/page.tsx` - Notification settings (new)
+- `src/app/settings/notifications/page.tsx` - Notification preferences page (created)
+- `src/app/settings/layout.tsx` - Updated to enable Notifications nav item (modified)
 - `src/app/share/[token]/page.tsx` - Share link redemption page (new)
 - `src/app/share/[token]/error/page.tsx` - Share link error page (new)
 
@@ -57,7 +58,7 @@ Generated from: `0001-prd-collaboration-mentions-and-share-links.md`
 
 ### Components - Organisms
 - `src/components/organisms/mentions-dashboard.tsx` - Full mentions dashboard with filters and actions (created)
-- `src/components/organisms/notification-settings.tsx` - Settings form (new)
+- `src/components/organisms/notification-settings.tsx` - Notification preferences form with toggles and radio buttons (created)
 - `src/components/organisms/share-links-manager.tsx` - Share links manager (new)
 - `src/components/organisms/layout-sidebar.tsx` - Add notification badge (existing, modify)
 
@@ -172,22 +173,22 @@ Generated from: `0001-prd-collaboration-mentions-and-share-links.md`
   - [x] 4.17 Add error handling and error state UI
   - [ ] 4.18 Test navigation from notification to comment with various contexts (file, version, activity)
 
-- [ ] **5.0 Implement Notification Preferences**
-  - [ ] 5.1 Create `src/app/settings/notifications/page.tsx` (Client Component with `"use client"`)
-  - [ ] 5.2 Update `src/app/settings/layout.tsx` to enable "Notifications" nav item (remove `disabled: true`)
-  - [ ] 5.3 Create API route `src/app/api/notifications/preferences/route.ts` with GET and PUT handlers
-  - [ ] 5.4 GET handler: fetch preferences from `notification_preferences` table, or return defaults if none exist
-  - [ ] 5.5 PUT handler: upsert preferences with Zod validation (`email_mentions_enabled`, `in_app_mentions_enabled`, `email_frequency`)
-  - [ ] 5.6 Create `src/components/organisms/notification-settings.tsx` form component
-  - [ ] 5.7 Add toggle switches (shadcn/ui `Switch`) for email notifications and in-app notifications
-  - [ ] 5.8 Add radio buttons for email frequency ("Instant" / "Daily digest")
-  - [ ] 5.9 Add "Save preferences" button with loading state
-  - [ ] 5.10 Show success toast on save, error toast on failure
-  - [ ] 5.11 Use TanStack Query mutation for preferences update with optimistic updates
-  - [ ] 5.12 Add database trigger or default insertion: when a new user is created, insert default preferences (email: daily, in-app: true)
-  - [ ] 5.13 Modify user creation function/trigger (`handle_new_user` in baseline migration) to create default preferences
-  - [ ] 5.14 Test preferences persistence (save, reload page, verify settings are retained)
-  - [ ] 5.15 Add form validation and disable save button if no changes
+- [x] **5.0 Implement Notification Preferences**
+  - [x] 5.1 Create `src/app/settings/notifications/page.tsx` (Client Component with `"use client"`)
+  - [x] 5.2 Update `src/app/settings/layout.tsx` to enable "Notifications" nav item (remove `disabled: true`)
+  - [x] 5.3 Create API route `src/app/api/notifications/preferences/route.ts` with GET and PUT handlers
+  - [x] 5.4 GET handler: fetch preferences from `notification_preferences` table, or return defaults if none exist
+  - [x] 5.5 PUT handler: upsert preferences with Zod validation (`email_mentions_enabled`, `in_app_mentions_enabled`, `email_frequency`)
+  - [x] 5.6 Create `src/components/organisms/notification-settings.tsx` form component
+  - [x] 5.7 Add toggle switches (shadcn/ui `Switch`) for email notifications and in-app notifications
+  - [x] 5.8 Add radio buttons for email frequency ("Instant" / "Daily digest")
+  - [x] 5.9 Add "Save preferences" button with loading state
+  - [x] 5.10 Show success toast on save, error toast on failure
+  - [x] 5.11 Use TanStack Query mutation for preferences update with optimistic updates
+  - [x] 5.12 Add database trigger or default insertion: when a new user is created, insert default preferences (email: daily, in-app: true)
+  - [x] 5.13 Modify user creation function/trigger (`handle_new_user` in baseline migration) to create default preferences
+  - [x] 5.14 Test preferences persistence (save, reload page, verify settings are retained)
+  - [x] 5.15 Add form validation and disable save button if no changes
 
 ### Phase 4: Email Notifications (Week 5)
 

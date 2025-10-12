@@ -594,5 +594,26 @@
     "no_mentions": "No mentions yet",
     "filter_unread": "Unread",
     "filter_all": "All"
+  },
+  "notifications": {
+    "settings_title": "Notification Preferences",
+    "settings_description": "Manage how and when you receive notifications for @mentions",
+    "email_enabled": "Email notifications for mentions",
+    "email_enabled_description": "Receive email notifications when someone mentions you in a comment",
+    "in_app_enabled": "In-app notifications",
+    "in_app_enabled_description": "Show mention notifications in the app sidebar and dashboard",
+    "email_frequency_label": "Email frequency",
+    "email_frequency_description": "Choose how often you receive mention emails",
+    "email_frequency_instant": "Instant",
+    "email_frequency_instant_description": "Send an email immediately when you're mentioned",
+    "email_frequency_daily": "Daily digest",
+    "email_frequency_daily_description": "Send a summary of all mentions once per day at 9 AM UTC",
+    "save_preferences": "Save preferences",
+    "saving": "Saving...",
+    "save_success": "Preferences saved",
+    "save_success_description": "Your notification preferences have been updated",
+    "save_error": "Failed to save",
+    "save_error_description": "Could not update your preferences. Please try again.",
+    "load_error": "Failed to load notification preferences"
   }
 }
