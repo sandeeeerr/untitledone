@@ -37,14 +37,13 @@ Generated from: `0001-prd-collaboration-mentions-and-share-links.md`
 - `src/app/api/notifications/preferences/route.ts` - Get/update notification preferences (GET/PUT with defaults) (created)
 - `src/app/api/projects/[id]/share-links/route.ts` - Generate/list share links (POST/GET with 3-link limit) (created)
 - `src/app/api/projects/[id]/share-links/[linkId]/route.ts` - Revoke share link (DELETE) (created)
-- `src/app/api/share/[token]/route.ts` - Redeem share link (new)
 
 ### Pages & Routes
 - `src/app/dashboard/mentions/page.tsx` - Mentions dashboard Server Component (created)
 - `src/app/settings/notifications/page.tsx` - Notification preferences page (created)
 - `src/app/settings/layout.tsx` - Updated to enable Notifications nav item (modified)
-- `src/app/share/[token]/page.tsx` - Share link redemption page (new)
-- `src/app/share/[token]/error/page.tsx` - Share link error page (new)
+- `src/app/share/[token]/page.tsx` - Share link redemption Server Component with full validation (created)
+- `src/app/share/[token]/error/page.tsx` - Share link error page with 6 error states (created)
 
 ### Components - Atoms
 - `src/components/atoms/mention-badge.tsx` - Display @username (new)
@@ -263,22 +262,22 @@ Generated from: `0001-prd-collaboration-mentions-and-share-links.md`
   - [ ] 8.21 Test link generation, listing, and revocation end-to-end
   - [ ] 8.22 Test max limit enforcement (try to create 4th link, verify error)
 
-- [ ] **9.0 Implement Link Redemption Flow**
-  - [ ] 9.1 Create `src/app/share/[token]/page.tsx` Server Component
-  - [ ] 9.2 Create API route `src/app/api/share/[token]/route.ts` with GET handler
-  - [ ] 9.3 GET: check if user is authenticated; if not, redirect to `/auth/login?redirect=/share/[token]`
-  - [ ] 9.4 GET: fetch link from `project_share_links` WHERE `token = [token]`
-  - [ ] 9.5 GET: validate link exists; if not, return 404 error
-  - [ ] 9.6 GET: validate link is not expired (`expires_at > now()`); if expired, return 410 error
-  - [ ] 9.7 GET: validate link is not used (`used_by IS NULL`); if used, return 410 error
-  - [ ] 9.8 GET: validate link is not revoked (`revoked = false`); if revoked, return 403 error
-  - [ ] 9.9 GET: fetch project to ensure it exists and is not deleted
-  - [ ] 9.10 GET: check if user is already a project member; if so, skip adding them and redirect to project
-  - [ ] 9.11 GET: insert into `project_members` table: `{ project_id, user_id: current user, role: 'viewer', added_by: link creator }`
-  - [ ] 9.12 GET: update link: `used_by = current user`, `used_at = now()`
-  - [ ] 9.13 GET: redirect to `/projects/[projectId]` with success message
-  - [ ] 9.14 Create `src/app/share/[token]/error/page.tsx` for error states
-  - [ ] 9.15 Error page should display different messages based on error type (expired, used, revoked, not found)
+- [x] **9.0 Implement Link Redemption Flow**
+  - [x] 9.1 Create `src/app/share/[token]/page.tsx` Server Component
+  - [x] 9.2 Implement redemption logic in page.tsx (Server Component pattern, no separate API route needed)
+  - [x] 9.3 Check if user is authenticated; if not, redirect to `/auth/login?redirect=/share/[token]`
+  - [x] 9.4 Fetch link from `project_share_links` WHERE `token = [token]`
+  - [x] 9.5 Validate link exists; if not, redirect to error page
+  - [x] 9.6 Validate link is not expired (`expires_at > now()`); if expired, redirect to error page
+  - [x] 9.7 Validate link is not used (`used_by IS NULL`); if used, redirect to error page (or project if same user)
+  - [x] 9.8 Validate link is not revoked (`revoked = false`); if revoked, redirect to error page
+  - [x] 9.9 Fetch project to ensure it exists and is not deleted
+  - [x] 9.10 Check if user is already a project member; if so, skip adding them and redirect to project
+  - [x] 9.11 Insert into `project_members` table: `{ project_id, user_id: current user, role: 'viewer', added_by: link creator }`
+  - [x] 9.12 Update link: `used_by = current user`, `used_at = now()`
+  - [x] 9.13 Redirect to `/projects/[projectId]?share_link_redeemed=true` with success indicator
+  - [x] 9.14 Create `src/app/share/[token]/error/page.tsx` for error states
+  - [x] 9.15 Error page should display different messages based on error type (expired, used, revoked, not found, project not found, failed to add member)
   - [ ] 9.16 Add countdown timer on share link page showing "This link expires in X minutes"
   - [ ] 9.17 Test redemption happy path (click link, log in, gain access, redirect to project)
   - [ ] 9.18 Test expired link (wait 1 hour or manually set expiry to past, try to redeem, verify error page)

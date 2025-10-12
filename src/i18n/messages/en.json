@@ -650,6 +650,27 @@
     "revoke_confirm_title": "Revoke share link?",
     "revoke_confirm_description": "This link will no longer be usable. This action cannot be undone.",
     "cancel": "Cancel",
-    "revoke": "Revoke"
+    "revoke": "Revoke",
+    "errors": {
+      "expired_title": "Link Expired",
+      "expired_description": "This share link has expired. Share links are only valid for 1 hour after creation.",
+      "expired_suggestion": "Please ask the project owner to generate a new share link.",
+      "used_title": "Link Already Used",
+      "used_description": "This share link has already been used by another user. Each link can only be used once.",
+      "used_suggestion": "Please ask the project owner to generate a new share link.",
+      "revoked_title": "Link Revoked",
+      "revoked_description": "This share link has been revoked by the project owner or link creator.",
+      "revoked_suggestion": "Please contact the project owner if you need access.",
+      "not_found_title": "Link Not Found",
+      "not_found_description": "This share link does not exist or has been deleted.",
+      "project_not_found_title": "Project Not Found",
+      "project_not_found_description": "The project associated with this link no longer exists.",
+      "failed_title": "Access Error",
+      "failed_description": "We couldn't grant you access to this project. Please try again or contact support.",
+      "unknown_title": "Invalid Link",
+      "unknown_description": "This share link is invalid or has encountered an error.",
+      "go_to_dashboard": "Go to Dashboard",
+      "browse_projects": "Browse Projects"
+    }
   }
 }
