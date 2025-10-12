@@ -81,9 +81,9 @@ Generated from: `0001-prd-collaboration-mentions-and-share-links.md`
 - `src/hooks/use-realtime-notifications.ts` - Realtime subscription hook with unread count tracking (created)
 
 ### i18n
-- `src/i18n/messages/en.json` - Added mention keys (dashboard_title, mark_all_read, no_mentions, filters) (modified)
-- `src/i18n/messages/fr.json` - Add translations (existing, extend)
-- `src/i18n/messages/nl.json` - Add translations (existing, extend)
+- `src/i18n/messages/en.json` - Added complete EN translations for mentions, notifications, and share_links (modified)
+- `src/i18n/messages/fr.json` - Add translations (pending)
+- `src/i18n/messages/nl.json` - Added complete NL translations for mentions, notifications, and share_links (modified)
 
 ### Edge Functions
 - `supabase/functions/send-mention-digest/index.ts` - Daily digest cron job (9 AM UTC) (created)
@@ -290,10 +290,10 @@ Generated from: `0001-prd-collaboration-mentions-and-share-links.md`
 ### Phase 7: Testing & Polish (Week 9)
 
 - [ ] **10.0 Testing, i18n & Documentation**
-  - [ ] 10.1 Add translation keys to `src/i18n/messages/en.json` for all new UI text (mentions, notifications, share links)
+  - [x] 10.1 Add translation keys to `src/i18n/messages/en.json` for all new UI text (mentions, notifications, share links)
   - [ ] 10.2 Add translations to `src/i18n/messages/fr.json`
-  - [ ] 10.3 Add translations to `src/i18n/messages/nl.json`
-  - [ ] 10.4 Review all components to ensure no hardcoded strings remain (use `next-intl` `useTranslations` hook)
+  - [x] 10.3 Add translations to `src/i18n/messages/nl.json`
+  - [x] 10.4 Review all components to ensure no hardcoded strings remain (use `next-intl` `useTranslations` hook)
   - [ ] 10.5 Write Cypress E2E test: mention flow (create comment with @mention, verify notification appears)
   - [ ] 10.6 Write Cypress E2E test: notification dashboard (view mentions, mark as read, navigate to comment)
   - [ ] 10.7 Write Cypress E2E test: share link flow (generate link, revoke link, redeem link)
