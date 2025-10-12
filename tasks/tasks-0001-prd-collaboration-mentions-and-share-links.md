@@ -42,6 +42,7 @@ Generated from: `0001-prd-collaboration-mentions-and-share-links.md`
 - `src/app/dashboard/mentions/page.tsx` - Mentions dashboard Server Component (created)
 - `src/app/settings/notifications/page.tsx` - Notification preferences page (created)
 - `src/app/settings/layout.tsx` - Updated to enable Notifications nav item (modified)
+- `src/app/projects/[id]/edit/page.tsx` - Integrated ShareLinksManager into project edit/settings page (modified)
 - `src/app/share/[token]/page.tsx` - Share link redemption Server Component with full validation (created)
 - `src/app/share/[token]/error/page.tsx` - Share link error page with 6 error states (created)
 
@@ -255,7 +256,7 @@ Generated from: `0001-prd-collaboration-mentions-and-share-links.md`
   - [x] 8.14 Add copy-to-clipboard functionality using `navigator.clipboard.writeText()` with success feedback
   - [x] 8.15 Create `src/components/organisms/share-links-manager.tsx` with "Generate new link" button and list of existing links
   - [x] 8.16 Add modal/dialog to generate new link (show success message with copy button)
-  - [ ] 8.17 Integrate share links manager into project settings page (add new tab or section)
+  - [x] 8.17 Integrate share links manager into project settings page (add new tab or section)
   - [x] 8.18 Display count of active links: "2/3 active links"
   - [x] 8.19 Disable "Generate" button if 3 active links already exist
   - [x] 8.20 Add confirmation dialog for revoke action: "Are you sure you want to revoke this link?"
