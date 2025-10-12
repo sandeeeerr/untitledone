@@ -146,37 +146,13 @@ export async function POST(
       );
     }
 
-    // Find the user by email using our custom function
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: userIdData, error: userLookupError } = await supabase
-      .rpc('find_user_by_email' as any, { user_email: email });
-
-    if (userLookupError) {
-      console.error('Failed to lookup user by email:', userLookupError);
-      return NextResponse.json(
-        { error: 'Failed to lookup user' },
-        { status: 500 }
-      );
-    }
-
-    const invitedUserId = userIdData;
-
-    // Check if user is already a member (only if user exists)
-    if (invitedUserId) {
-      const { data: existingMember } = await supabase
-        .from('project_members')
-        .select('user_id')
-        .eq('project_id', projectId)
-        .eq('user_id', invitedUserId)
-        .maybeSingle();
-
-      if (existingMember) {
-        return NextResponse.json(
-          { error: 'User is already a member of this project' },
-          { status: 400 }
-        );
-      }
-    }
+    // For now, we'll create the invitation without checking if the user exists
+    // The invitation acceptance process will handle user creation if needed
+    // This allows inviting both existing and new users
+    
+    // Note: We can't easily check if user exists without a database function
+    // since we can't directly query auth.users from the API
+    // The invitation system will work for both existing and new users
 
     // Check for existing pending invitation
     const { data: existingInvite } = await supabase
