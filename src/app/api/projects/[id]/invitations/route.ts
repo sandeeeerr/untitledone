@@ -146,33 +146,35 @@ export async function POST(
       );
     }
 
-    // Get invited user's profile
-    const { data: invitedProfile } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('email', email)
-      .maybeSingle();
+    // Find the user by email using our custom function
+    const { data: userIdData, error: userLookupError } = await supabase
+      .rpc('find_user_by_email', { user_email: email });
 
-    if (!invitedProfile) {
+    if (userLookupError) {
+      console.error('Failed to lookup user by email:', userLookupError);
       return NextResponse.json(
-        { error: 'User not found with that email' },
-        { status: 404 }
+        { error: 'Failed to lookup user' },
+        { status: 500 }
       );
     }
 
-    // Check if user is already a member
-    const { data: existingMember } = await supabase
-      .from('project_members')
-      .select('user_id')
-      .eq('project_id', projectId)
-      .eq('user_id', invitedProfile.id)
-      .maybeSingle();
+    const invitedUserId = userIdData;
 
-    if (existingMember) {
-      return NextResponse.json(
-        { error: 'User is already a member of this project' },
-        { status: 400 }
-      );
+    // Check if user is already a member (only if user exists)
+    if (invitedUserId) {
+      const { data: existingMember } = await supabase
+        .from('project_members')
+        .select('user_id')
+        .eq('project_id', projectId)
+        .eq('user_id', invitedUserId)
+        .maybeSingle();
+
+      if (existingMember) {
+        return NextResponse.json(
+          { error: 'User is already a member of this project' },
+          { status: 400 }
+        );
+      }
     }
 
     // Check for existing pending invitation

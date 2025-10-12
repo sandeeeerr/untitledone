@@ -223,7 +223,7 @@ export function ShareLinksManager({
 
       {/* Success dialog for new link */}
       <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md w-[calc(100%-1.5rem)] max-w-[95vw]">
           <DialogHeader>
             <DialogTitle>{t("link_generated")}</DialogTitle>
             <DialogDescription>
@@ -231,8 +231,8 @@ export function ShareLinksManager({
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="rounded-lg border bg-muted p-3 max-w-full">
-              <p className="text-sm font-mono break-all overflow-hidden">{newLinkUrl}</p>
+            <div className="rounded-lg border bg-muted p-3 max-w-full overflow-hidden">
+              <p className="text-sm font-mono break-all">{newLinkUrl}</p>
             </div>
             <div className="flex items-center gap-2">
               <Button onClick={handleCopyNewLink} className="flex-1">

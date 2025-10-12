@@ -111,7 +111,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   }
 
   // Build full URL
-  const siteUrl = env().NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const siteUrl = env().NEXT_PUBLIC_SITE_URL || (process.env.NODE_ENV === 'production' ? 'https://untitledone.nl' : 'http://localhost:3000');
   const fullUrl = `${siteUrl}/share/${link.token}`;
 
   return NextResponse.json({
@@ -178,7 +178,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   }
 
   // Enrich with full URLs and creator info
-  const siteUrl = env().NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const siteUrl = env().NEXT_PUBLIC_SITE_URL || (process.env.NODE_ENV === 'production' ? 'https://untitledone.nl' : 'http://localhost:3000');
   
   const enriched = (links || []).map((link) => ({
     id: link.id,

@@ -51,16 +51,16 @@ export default function InviteDialog({ projectId, trigger }: InviteDialogProps) 
 			<DialogTrigger asChild>
 				{trigger ?? <Button size="sm">Invite</Button>}
 			</DialogTrigger>
-			<DialogContent className="sm:max-w-2xl w-[calc(100%-1.5rem)]">
+			<DialogContent className="sm:max-w-2xl w-[calc(100%-1.5rem)] max-w-[95vw]">
 				<DialogHeader>
 					<DialogTitle>Invite to project</DialogTitle>
 					<DialogDescription>Invite collaborators via email or generate a temporary share link</DialogDescription>
 				</DialogHeader>
 				
 				<Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-					<TabsList className="grid w-full grid-cols-2">
-						<TabsTrigger value="email">Email Invitation</TabsTrigger>
-						<TabsTrigger value="link">Share Link</TabsTrigger>
+					<TabsList className="grid w-full grid-cols-2 max-w-full">
+						<TabsTrigger value="email" className="text-sm">Email Invitation</TabsTrigger>
+						<TabsTrigger value="link" className="text-sm">Share Link</TabsTrigger>
 					</TabsList>
 					
 					<TabsContent value="email" className="space-y-4 mt-4">

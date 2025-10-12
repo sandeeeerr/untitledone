@@ -32,7 +32,7 @@ export const reloadEnv = () => {
         SUPABASE_SERVICE_ROLE_KEY: String(process.env.SUPABASE_SERVICE_ROLE_KEY || ""),
         RESEND_API_KEY: String(process.env.RESEND_API_KEY || ""),
         MAIL_FROM: String(process.env.MAIL_FROM || ""),
-        NEXT_PUBLIC_SITE_URL: String(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
+        NEXT_PUBLIC_SITE_URL: String(process.env.NEXT_PUBLIC_SITE_URL || (process.env.NODE_ENV === 'production' ? 'https://untitledone.nl' : 'http://localhost:3000')),
         MAX_USER_STORAGE_MB: Number(process.env.MAX_USER_STORAGE_MB || 50),
         MAX_UPLOAD_FILE_MB: Number(process.env.MAX_UPLOAD_FILE_MB || 200),
         // External storage providers (Dropbox)
