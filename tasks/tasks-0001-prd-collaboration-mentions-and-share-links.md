@@ -35,8 +35,8 @@ Generated from: `0001-prd-collaboration-mentions-and-share-links.md`
 - `src/app/api/notifications/[id]/route.ts` - Update individual notification (mark as read/unread) (created)
 - `src/app/api/notifications/mark-all-read/route.ts` - Bulk update all notifications to read (created)
 - `src/app/api/notifications/preferences/route.ts` - Get/update notification preferences (GET/PUT with defaults) (created)
-- `src/app/api/projects/[id]/share-links/route.ts` - Generate/list links (new)
-- `src/app/api/projects/[id]/share-links/[linkId]/route.ts` - Revoke link (new)
+- `src/app/api/projects/[id]/share-links/route.ts` - Generate/list share links (POST/GET with 3-link limit) (created)
+- `src/app/api/projects/[id]/share-links/[linkId]/route.ts` - Revoke share link (DELETE) (created)
 - `src/app/api/share/[token]/route.ts` - Redeem share link (new)
 
 ### Pages & Routes
@@ -49,17 +49,17 @@ Generated from: `0001-prd-collaboration-mentions-and-share-links.md`
 ### Components - Atoms
 - `src/components/atoms/mention-badge.tsx` - Display @username (new)
 - `src/components/atoms/notification-dot.tsx` - Unread indicator dot (created)
-- `src/components/atoms/link-status-badge.tsx` - Link status badge (new)
+- `src/components/atoms/link-status-badge.tsx` - Link status badge with color coding (created)
 
 ### Components - Molecules
 - `src/components/molecules/mention-autocomplete.tsx` - Autocomplete dropdown with keyboard navigation (created)
 - `src/components/molecules/notification-item.tsx` - Single notification entry with deep linking (created)
-- `src/components/molecules/share-link-card.tsx` - Share link display card (new)
+- `src/components/molecules/share-link-card.tsx` - Share link card with copy/revoke actions and confirmation dialog (created)
 
 ### Components - Organisms
 - `src/components/organisms/mentions-dashboard.tsx` - Full mentions dashboard with filters and actions (created)
 - `src/components/organisms/notification-settings.tsx` - Notification preferences form with toggles and radio buttons (created)
-- `src/components/organisms/share-links-manager.tsx` - Share links manager (new)
+- `src/components/organisms/share-links-manager.tsx` - Share links manager with generation and list (created)
 - `src/components/organisms/main-sidebar.tsx` - Added realtime notification badge and enabled mentions link (modified)
 
 ### Components - Templates
@@ -74,7 +74,7 @@ Generated from: `0001-prd-collaboration-mentions-and-share-links.md`
 
 ### Utils & Helpers
 - `src/lib/utils/mentions.ts` - Mention parsing, validation, and notification creation utilities (created)
-- `src/lib/utils/share-links.ts` - Token generation/validation (new)
+- `src/lib/utils/share-links.ts` - Token generation, expiry calculation, and link status utilities (created)
 
 ### Hooks
 - `src/hooks/use-mention-autocomplete.ts` - Autocomplete hook with debouncing and caching (created)
@@ -239,27 +239,27 @@ Generated from: `0001-prd-collaboration-mentions-and-share-links.md`
 
 ### Phase 6: Share Links (Week 7-8)
 
-- [ ] **8.0 Build Share Link Generation & Management**
-  - [ ] 8.1 Create `src/lib/utils/share-links.ts` with `generateSecureToken()` function using `crypto.randomUUID()`
-  - [ ] 8.2 Add `calculateExpiry(hours: number = 1): Date` helper function returning timestamp 1 hour in the future
-  - [ ] 8.3 Create API route `src/app/api/projects/[id]/share-links/route.ts` with POST handler
-  - [ ] 8.4 POST: validate user is project owner or member via RLS
-  - [ ] 8.5 POST: check count of active links (not expired, not used, not revoked) for this project; if >= 3, return error "Maximum of 3 active links reached"
-  - [ ] 8.6 POST: generate token, insert into `project_share_links` table with `expires_at = now() + 1 hour`
-  - [ ] 8.7 POST: return link object with full URL: `${NEXT_PUBLIC_SITE_URL}/share/${token}`
-  - [ ] 8.8 Add GET handler to list all share links for a project (no filtering, show all: active, expired, used, revoked)
-  - [ ] 8.9 Create API route `src/app/api/projects/[id]/share-links/[linkId]/route.ts` with DELETE handler
-  - [ ] 8.10 DELETE: validate user is link creator or project owner
-  - [ ] 8.11 DELETE: update `revoked = true` in database
-  - [ ] 8.12 Create `src/components/atoms/link-status-badge.tsx` component showing "Active" (green), "Expired" (gray), "Used" (gray), "Revoked" (red)
-  - [ ] 8.13 Create `src/components/molecules/share-link-card.tsx` displaying: creation date, expiration date, creator name, status badge, copy button, revoke button
-  - [ ] 8.14 Add copy-to-clipboard functionality using `navigator.clipboard.writeText()` with success feedback
-  - [ ] 8.15 Create `src/components/organisms/share-links-manager.tsx` with "Generate new link" button and list of existing links
-  - [ ] 8.16 Add modal/dialog to generate new link (show success message with copy button)
+- [x] **8.0 Build Share Link Generation & Management**
+  - [x] 8.1 Create `src/lib/utils/share-links.ts` with `generateSecureToken()` function using `crypto.randomUUID()`
+  - [x] 8.2 Add `calculateExpiry(hours: number = 1): Date` helper function returning timestamp 1 hour in the future
+  - [x] 8.3 Create API route `src/app/api/projects/[id]/share-links/route.ts` with POST handler
+  - [x] 8.4 POST: validate user is project owner or member via RLS
+  - [x] 8.5 POST: check count of active links (not expired, not used, not revoked) for this project; if >= 3, return error "Maximum of 3 active links reached"
+  - [x] 8.6 POST: generate token, insert into `project_share_links` table with `expires_at = now() + 1 hour`
+  - [x] 8.7 POST: return link object with full URL: `${NEXT_PUBLIC_SITE_URL}/share/${token}`
+  - [x] 8.8 Add GET handler to list all share links for a project (no filtering, show all: active, expired, used, revoked)
+  - [x] 8.9 Create API route `src/app/api/projects/[id]/share-links/[linkId]/route.ts` with DELETE handler
+  - [x] 8.10 DELETE: validate user is link creator or project owner
+  - [x] 8.11 DELETE: update `revoked = true` in database
+  - [x] 8.12 Create `src/components/atoms/link-status-badge.tsx` component showing "Active" (green), "Expired" (gray), "Used" (gray), "Revoked" (red)
+  - [x] 8.13 Create `src/components/molecules/share-link-card.tsx` displaying: creation date, expiration date, creator name, status badge, copy button, revoke button
+  - [x] 8.14 Add copy-to-clipboard functionality using `navigator.clipboard.writeText()` with success feedback
+  - [x] 8.15 Create `src/components/organisms/share-links-manager.tsx` with "Generate new link" button and list of existing links
+  - [x] 8.16 Add modal/dialog to generate new link (show success message with copy button)
   - [ ] 8.17 Integrate share links manager into project settings page (add new tab or section)
-  - [ ] 8.18 Display count of active links: "2/3 active links"
-  - [ ] 8.19 Disable "Generate" button if 3 active links already exist
-  - [ ] 8.20 Add confirmation dialog for revoke action: "Are you sure you want to revoke this link?"
+  - [x] 8.18 Display count of active links: "2/3 active links"
+  - [x] 8.19 Disable "Generate" button if 3 active links already exist
+  - [x] 8.20 Add confirmation dialog for revoke action: "Are you sure you want to revoke this link?"
   - [ ] 8.21 Test link generation, listing, and revocation end-to-end
   - [ ] 8.22 Test max limit enforcement (try to create 4th link, verify error)
 
