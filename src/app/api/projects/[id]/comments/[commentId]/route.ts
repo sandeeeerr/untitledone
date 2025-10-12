@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { SupabaseClient } from "@supabase/supabase-js";
 import createServerClient from "@/lib/supabase/server";
+import { getNewMentions, validateMentions, createMentionNotifications } from "@/lib/utils/mentions";
 
 export const runtime = "nodejs";
 
@@ -56,6 +57,17 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
   }
 
+  // Fetch old comment text if we're updating the comment content (for mention comparison)
+  let oldCommentText: string | null = null;
+  if (updates.comment) {
+    const { data: oldComment } = await (supabase as SupabaseClient)
+      .from("project_comments")
+      .select("comment")
+      .eq("id", paramValidation.data.commentId)
+      .single();
+    oldCommentText = oldComment?.comment || null;
+  }
+
   const { data, error } = await (supabase as SupabaseClient)
     .from("project_comments")
     .update(updates)
@@ -69,6 +81,42 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   if (error) {
     return NextResponse.json({ error: error.message || "Failed to update comment" }, { status: 500 });
   }
+
+  // Process new @mentions if comment text was updated (non-blocking, best-effort)
+  if (oldCommentText && updates.comment && !data.resolved) {
+    try {
+      const newMentionedUsernames = getNewMentions(
+        updates.comment as string,
+        oldCommentText
+      );
+
+      if (newMentionedUsernames.length > 0) {
+        // Validate that mentioned users are project members
+        const validUsers = await validateMentions(
+          newMentionedUsernames,
+          paramValidation.data.id,
+          supabase as SupabaseClient
+        );
+
+        if (validUsers.length > 0) {
+          const mentionedUserIds = validUsers.map((u) => u.id);
+          
+          // Create mention records and notifications for new mentions only
+          await createMentionNotifications(
+            data.id,
+            mentionedUserIds,
+            user.id,
+            paramValidation.data.id,
+            supabase as SupabaseClient
+          );
+        }
+      }
+    } catch (mentionError) {
+      // Log error but don't fail comment update
+      console.error("Failed to process new mentions on edit:", mentionError);
+    }
+  }
+
   return NextResponse.json(data, { status: 200 });
 }
 

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { SupabaseClient } from "@supabase/supabase-js";
 import createServerClient from "@/lib/supabase/server";
+import { parseMentions, validateMentions, createMentionNotifications } from "@/lib/utils/mentions";
 
 export const runtime = "nodejs";
 
@@ -167,6 +168,40 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   if (insertError || !created) {
     return NextResponse.json({ error: insertError?.message || "Failed to create comment" }, { status: 500 });
+  }
+
+  // Process @mentions in the comment (non-blocking, best-effort)
+  try {
+    // Skip mention processing if comment is resolved
+    if (!created.resolved) {
+      // Parse mentions from comment text
+      const mentionedUsernames = parseMentions(sanitizedComment);
+      
+      if (mentionedUsernames.length > 0) {
+        // Validate that mentioned users are project members
+        const validUsers = await validateMentions(
+          mentionedUsernames,
+          paramValidation.data.id,
+          supabase as SupabaseClient
+        );
+
+        if (validUsers.length > 0) {
+          const mentionedUserIds = validUsers.map((u) => u.id);
+          
+          // Create mention records and notifications (filters out self-mentions internally)
+          await createMentionNotifications(
+            created.id,
+            mentionedUserIds,
+            user.id,
+            paramValidation.data.id,
+            supabase as SupabaseClient
+          );
+        }
+      }
+    }
+  } catch (mentionError) {
+    // Log error but don't fail comment creation
+    console.error("Failed to process mentions:", mentionError);
   }
 
   // If this is a head comment on a file (no parent, file context), create an activity change for it
