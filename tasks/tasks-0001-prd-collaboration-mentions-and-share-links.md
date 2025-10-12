@@ -60,7 +60,7 @@ Generated from: `0001-prd-collaboration-mentions-and-share-links.md`
 - `src/components/organisms/mentions-dashboard.tsx` - Full mentions dashboard with filters and actions (created)
 - `src/components/organisms/notification-settings.tsx` - Notification preferences form with toggles and radio buttons (created)
 - `src/components/organisms/share-links-manager.tsx` - Share links manager (new)
-- `src/components/organisms/layout-sidebar.tsx` - Add notification badge (existing, modify)
+- `src/components/organisms/main-sidebar.tsx` - Added realtime notification badge and enabled mentions link (modified)
 
 ### Components - Templates
 - `src/components/templates/mention-email.tsx` - React Email template for mention notifications (created)
@@ -78,7 +78,7 @@ Generated from: `0001-prd-collaboration-mentions-and-share-links.md`
 
 ### Hooks
 - `src/hooks/use-mention-autocomplete.ts` - Autocomplete hook with debouncing and caching (created)
-- `src/hooks/use-realtime-notifications.ts` - Realtime subscription hook (new)
+- `src/hooks/use-realtime-notifications.ts` - Realtime subscription hook with unread count tracking (created)
 
 ### i18n
 - `src/i18n/messages/en.json` - Added mention keys (dashboard_title, mark_all_read, no_mentions, filters) (modified)
@@ -216,26 +216,26 @@ Generated from: `0001-prd-collaboration-mentions-and-share-links.md`
 
 ### Phase 5: Realtime Updates (Week 6)
 
-- [ ] **7.0 Implement Realtime Notifications**
-  - [ ] 7.1 Enable Supabase Realtime for `notifications` table in Supabase dashboard or via migration
-  - [ ] 7.2 Create `src/hooks/use-realtime-notifications.ts` hook to subscribe to notification changes
-  - [ ] 7.3 Subscribe to `postgres_changes` event on `notifications` table filtered by `user_id = current user`
-  - [ ] 7.4 Handle INSERT, UPDATE, and DELETE events
-  - [ ] 7.5 On INSERT: increment unread count, optionally show toast notification
-  - [ ] 7.6 On UPDATE (is_read changed): decrement unread count if marked as read
-  - [ ] 7.7 On DELETE: update UI accordingly
-  - [ ] 7.8 Modify `src/components/organisms/layout-sidebar.tsx` to add notification badge to sidebar/navbar
-  - [ ] 7.9 Create badge component showing unread count (e.g., red circle with number)
-  - [ ] 7.10 Fetch initial unread count on mount via API call
-  - [ ] 7.11 Subscribe to realtime updates using the hook from 7.2
-  - [ ] 7.12 Update badge count in real-time as notifications come in
-  - [ ] 7.13 Add toast notification using `useToast` hook when new mention is received (optional, user preference)
+- [x] **7.0 Implement Realtime Notifications**
+  - [x] 7.1 Enable Supabase Realtime for `notifications` table in Supabase dashboard or via migration
+  - [x] 7.2 Create `src/hooks/use-realtime-notifications.ts` hook to subscribe to notification changes
+  - [x] 7.3 Subscribe to `postgres_changes` event on `notifications` table filtered by `user_id = current user`
+  - [x] 7.4 Handle INSERT, UPDATE, and DELETE events
+  - [x] 7.5 On INSERT: increment unread count, optionally show toast notification
+  - [x] 7.6 On UPDATE (is_read changed): decrement unread count if marked as read
+  - [x] 7.7 On DELETE: update UI accordingly
+  - [x] 7.8 Modify `src/components/organisms/main-sidebar.tsx` to add notification badge to sidebar mentions item
+  - [x] 7.9 Create badge component showing unread count (using SidebarMenuBadge)
+  - [x] 7.10 Fetch initial unread count on mount via API call
+  - [x] 7.11 Subscribe to realtime updates using the hook from 7.2
+  - [x] 7.12 Update badge count in real-time as notifications come in
+  - [x] 7.13 Add toast notification using `useToast` hook when new mention is received (optional, user preference)
   - [ ] 7.14 Toast should display: commenter name, project name, and link to comment
-  - [ ] 7.15 Handle reconnection scenarios: if connection is lost, refetch unread count on reconnect
+  - [x] 7.15 Handle reconnection scenarios: if connection is lost, refetch unread count on reconnect
   - [ ] 7.16 Auto-refresh comment list on project page if user is viewing affected project and a new mention arrives
   - [ ] 7.17 Test realtime updates across multiple browser tabs (badge should sync)
   - [ ] 7.18 Test offline scenario: disconnect internet, create mention from another device, reconnect, verify badge updates
-  - [ ] 7.19 Add unsubscribe logic in cleanup to prevent memory leaks
+  - [x] 7.19 Add unsubscribe logic in cleanup to prevent memory leaks
 
 ### Phase 6: Share Links (Week 7-8)
 
