@@ -147,8 +147,9 @@ export async function POST(
     }
 
     // Find the user by email using our custom function
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: userIdData, error: userLookupError } = await supabase
-      .rpc('find_user_by_email', { user_email: email });
+      .rpc('find_user_by_email' as any, { user_email: email });
 
     if (userLookupError) {
       console.error('Failed to lookup user by email:', userLookupError);
