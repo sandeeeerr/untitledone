@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -24,8 +24,8 @@ export default function InviteDialog({ projectId, trigger }: InviteDialogProps) 
 	const [activeTab, setActiveTab] = useState('email')
 	const createInvite = useCreateProjectInvitation(projectId)
 
-	// Fetch share links
-	const { data: shareLinks = [], isLoading: isLoadingLinks, refetch: _refetchLinks } = useQuery<ShareLink[]>({
+	// Fetch share links - refetch when switching to link tab
+	const { data: shareLinks = [], isLoading: isLoadingLinks, refetch } = useQuery<ShareLink[]>({
 		queryKey: ["share-links", projectId],
 		queryFn: async () => {
 			const response = await fetch(`/api/projects/${projectId}/share-links`);
@@ -36,6 +36,13 @@ export default function InviteDialog({ projectId, trigger }: InviteDialogProps) 
 		},
 		enabled: open && activeTab === 'link',
 	});
+
+	// Refetch when switching to link tab
+	useEffect(() => {
+		if (open && activeTab === 'link') {
+			refetch();
+		}
+	}, [open, activeTab, refetch]);
 
 	async function onSend() {
 		if (!email) return

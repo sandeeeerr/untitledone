@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { SupabaseClient } from "@supabase/supabase-js";
 import createServerClient from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { parseMentions, validateMentions, createMentionNotifications } from "@/lib/utils/mentions";
 import { sendMentionEmail } from "@/lib/api/emails";
 import { env } from "@/lib/env";
@@ -15,7 +16,7 @@ const paramsSchema = z.object({
 const listQuerySchema = z.object({
   activityChangeId: z.string().uuid().optional(),
   versionId: z.string().uuid().optional(),
-  fileId: z.string().uuid().optional(),
+  fileId: z.string().min(1).optional(), // Support both UUIDs and external IDs (Google Drive, Dropbox)
   limit: z.coerce.number().int().positive().max(200).optional(),
   cursor: z.string().datetime().optional(), // ISO timestamp for created_at cursor
   countOnly: z.coerce.boolean().optional(),
@@ -27,7 +28,7 @@ const createBodySchema = z.object({
   parentId: z.string().uuid().optional(),
   activityChangeId: z.string().uuid().optional(),
   versionId: z.string().uuid().optional(),
-  fileId: z.string().uuid().optional(),
+  fileId: z.string().min(1).optional(), // Support both UUIDs and external IDs (Google Drive, Dropbox)
   timestampMs: z.number().nonnegative().optional(),
 });
 
@@ -189,14 +190,16 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
         if (validUsers.length > 0) {
           const mentionedUserIds = validUsers.map((u) => u.id);
-          
+
           // Create mention records and notifications (filters out self-mentions internally)
+          // Use service client to bypass RLS for system-level notification creation
+          const serviceClient = createServiceClient();
           await createMentionNotifications(
             created.id,
             mentionedUserIds,
             user.id,
             paramValidation.data.id,
-            supabase as SupabaseClient
+            serviceClient as SupabaseClient
           );
 
           // Send instant emails to users with instant email preference enabled (non-blocking)

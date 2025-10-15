@@ -8,6 +8,8 @@ const paramsSchema = z.object({
 
 const inviteSchema = z.object({
   email: z.string().email('Invalid email address'),
+  role: z.string().optional(), // Accept role but don't use it yet
+  expiresInHours: z.number().optional(), // Accept expiry but don't use it yet
 });
 
 /**
@@ -126,7 +128,7 @@ export async function POST(
       );
     }
 
-    const { email } = inviteValidation.data;
+    const { email, role = 'member', expiresInHours = 168 } = inviteValidation.data; // Default 7 days (168 hours)
 
     // Check if user is the project owner
     const { data: project } = await supabase
@@ -149,7 +151,7 @@ export async function POST(
     // For now, we'll create the invitation without checking if the user exists
     // The invitation acceptance process will handle user creation if needed
     // This allows inviting both existing and new users
-    
+
     // Note: We can't easily check if user exists without a database function
     // since we can't directly query auth.users from the API
     // The invitation system will work for both existing and new users
@@ -172,7 +174,7 @@ export async function POST(
 
     // Generate token for invitation
     const tokenHash = crypto.randomUUID();
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(); // 7 days
+    const expiresAt = new Date(Date.now() + expiresInHours * 60 * 60 * 1000).toISOString();
 
     // Create invitation
     const { data: invitation, error: inviteError } = await supabase
@@ -181,7 +183,7 @@ export async function POST(
         project_id: projectId,
         invited_by: user.id,
         email: email,
-        role: 'member',
+        role: role,
         token_hash: tokenHash,
         expires_at: expiresAt,
       })

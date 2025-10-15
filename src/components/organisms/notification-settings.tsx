@@ -112,14 +112,6 @@ export function NotificationSettings({ initialPreferences }: NotificationSetting
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold mb-1">{t("settings_title")}</h2>
-        <p className="text-sm text-muted-foreground">
-          {t("settings_description")}
-        </p>
-      </div>
-
-      <div className="space-y-6">
         {/* Email Notifications Toggle */}
         <div className="flex items-center justify-between space-x-2 rounded-lg border p-4">
           <div className="flex-1 space-y-1">
@@ -197,10 +189,9 @@ export function NotificationSettings({ initialPreferences }: NotificationSetting
             onCheckedChange={handleToggleInApp}
           />
         </div>
-      </div>
 
       {/* Save Button */}
-      <div className="flex items-center justify-end gap-4 pt-4 border-t">
+      <div className="flex items-center justify-end gap-4 pt-4">
         <Button
           onClick={handleSave}
           disabled={!hasChanges || isSaving}

@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
 import { NotificationSettings, NotificationPreferences } from "@/components/organisms/notification-settings";
 
 export const runtime = "nodejs";
@@ -34,9 +35,12 @@ export default function NotificationSettingsPage() {
     return (
       <div className="space-y-6">
         <div>
-          <Skeleton className="h-7 w-64 mb-2" />
-          <Skeleton className="h-4 w-96" />
+          <h3 className="text-lg font-medium">Notifications</h3>
+          <p className="text-sm text-muted-foreground">
+            Manage your notification preferences
+          </p>
         </div>
+        <Separator />
         <div className="space-y-4">
           <Skeleton className="h-24 w-full" />
           <Skeleton className="h-24 w-full" />
@@ -48,14 +52,34 @@ export default function NotificationSettingsPage() {
 
   if (error || !preferences) {
     return (
-      <div className="rounded-lg border border-destructive bg-destructive/10 p-4">
-        <p className="text-sm text-destructive">
-          {t("load_error")}
-        </p>
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-lg font-medium">Notifications</h3>
+          <p className="text-sm text-muted-foreground">
+            Manage your notification preferences
+          </p>
+        </div>
+        <Separator />
+        <div className="rounded-lg border border-destructive bg-destructive/10 p-4">
+          <p className="text-sm text-destructive">
+            {t("load_error")}
+          </p>
+        </div>
       </div>
     );
   }
 
-  return <NotificationSettings initialPreferences={preferences} />;
+  return (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-medium">Notifications</h3>
+        <p className="text-sm text-muted-foreground">
+          Manage your notification preferences
+        </p>
+      </div>
+      <Separator />
+      <NotificationSettings initialPreferences={preferences} />
+    </div>
+  );
 }
 

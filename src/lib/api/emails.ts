@@ -68,7 +68,7 @@ export async function sendMentionEmail(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "UntitledOne <notifications@untitledone.com>", // TODO: Update with your verified domain
+      from: "UntitledOne <invites@updates.untitledone.nl>",
       to: [to],
       subject: `${commenterName} mentioned you in ${projectName}`,
       html: emailHtml,
@@ -167,7 +167,7 @@ export async function sendMentionDigest(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "UntitledOne <notifications@untitledone.com>", // TODO: Update with your verified domain
+      from: "UntitledOne <invites@updates.untitledone.nl>",
       to: [to],
       subject: `Daily Mention Digest - ${mentions.length} new mention${mentions.length === 1 ? "" : "s"}`,
       html: digestHtml,

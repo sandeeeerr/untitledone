@@ -81,10 +81,10 @@ export default function LayoutSidebar({
       >
         Skip to main content
       </a>
-      <SidebarProvider open={sidebarOpen}>
-        <MainSidebar />
+      <BreadcrumbProvider value={{ currentPageLabel: breadcrumbLabelOverride, projectLabelOverride: projectBreadcrumbLabelOverride || breadcrumbProject?.name }}>
+        <SidebarProvider open={sidebarOpen}>
+          <MainSidebar />
 
-        <BreadcrumbProvider value={{ currentPageLabel: breadcrumbLabelOverride, projectLabelOverride: projectBreadcrumbLabelOverride || breadcrumbProject?.name }}>
           <main id="main-content" className={cn('flex-1 flex flex-col min-h-svh bg-background', containerClassName)}>
             {/* Fixed header aligned after the sidebar (responsive to sidebar width/icon) */}
             <header
@@ -110,8 +110,8 @@ export default function LayoutSidebar({
               </div>
             </div>
           </main>
-        </BreadcrumbProvider>
-      </SidebarProvider>
+        </SidebarProvider>
+      </BreadcrumbProvider>
     </>
   );
 }

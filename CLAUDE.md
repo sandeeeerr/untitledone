@@ -10,30 +10,30 @@ UntitledOne is an open-source platform for remote collaboration between audio cr
 
 ### Development
 ```bash
-pnpm dev                  # Start dev server on port 3000
-pnpm typecheck            # Run TypeScript type checking
-pnpm lint                 # Run ESLint
-pnpm format               # Format with Prettier (includes Tailwind plugin)
-pnpm gen:types            # Generate Supabase DB types from schema
+npm run dev                  # Start dev server on port 3000
+npm run typecheck            # Run TypeScript type checking
+npm run lint                 # Run ESLint
+npm run format               # Format with Prettier (includes Tailwind plugin)
+npm run gen:types            # Generate Supabase DB types from schema
 ```
 
 ### Testing
 ```bash
-pnpm test                 # Run Vitest unit tests
-pnpm cypress:open         # Open Cypress for E2E tests
-pnpm cypress:run          # Run Cypress tests headless
+npm run test                 # Run Vitest unit tests
+npm run cypress:open         # Open Cypress for E2E tests
+npm run cypress:run          # Run Cypress tests headless
 ```
 
 ### Component Development
 ```bash
-pnpm storybook            # Run Storybook on port 6006
-pnpm build-storybook      # Build static Storybook
+npm run storybook            # Run Storybook on port 6006
+npm run build-storybook      # Build static Storybook
 ```
 
 ### Database
 After any schema changes in Supabase, always regenerate types:
 ```bash
-pnpm gen:types
+npm run gen:types
 ```
 
 Migration files live in `supabase/migrations/` and follow the format: `YYYYMMDDHHmmss_description.sql`

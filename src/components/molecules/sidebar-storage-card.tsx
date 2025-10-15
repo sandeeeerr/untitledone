@@ -10,7 +10,12 @@ import Link from "next/link"
 export function SidebarStorageCard() {
   const t = useTranslations("sidebar.storage")
   const { data: usage } = useMyStorageUsage()
-  const { data: connections } = useStorageConnections()
+  const { data: connections, isLoading: connectionsLoading } = useStorageConnections()
+
+  // Don't show the card while loading connections data
+  if (connectionsLoading) {
+    return null
+  }
 
   // Count active external storage connections
   const activeConnections = connections?.filter(c => c.status === 'active') || []

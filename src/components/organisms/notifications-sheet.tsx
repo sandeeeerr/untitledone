@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { AtSign, Bell, CheckCheck, Loader2, X as _X, MessageSquare } from 'lucide-react';
+import { Bell, CheckCheck, Loader2, MessageSquare } from 'lucide-react';
 import { HighlightedText } from '@/lib/utils/highlight-mentions';
 import {
   Sheet,
@@ -24,7 +24,7 @@ import { useRouter } from 'next/navigation';
 
 type FilterType = 'unread' | 'all';
 
-interface MentionsSheetProps {
+interface NotificationsSheetProps {
   trigger?: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -58,11 +58,11 @@ interface Notification {
   };
 }
 
-export default function MentionsSheet({
+export default function NotificationsSheet({
   trigger,
   open: controlledOpen,
   onOpenChange,
-}: MentionsSheetProps) {
+}: NotificationsSheetProps) {
   const t = useTranslations();
   const { toast } = useToast();
   const router = useRouter();
@@ -94,7 +94,7 @@ export default function MentionsSheet({
       console.error('Failed to fetch notifications:', error);
       toast({
         title: t('common.error'),
-        description: t('mentions.error_loading'),
+        description: t('notifications.error_loading'),
         variant: 'destructive',
       });
     } finally {
@@ -132,7 +132,7 @@ export default function MentionsSheet({
       console.error('Failed to mark notification as read:', error);
       toast({
         title: t('common.error'),
-        description: t('mentions.error_mark_read'),
+        description: t('notifications.error_mark_read'),
         variant: 'destructive',
       });
     }
@@ -156,13 +156,13 @@ export default function MentionsSheet({
 
       toast({
         title: t('common.success'),
-        description: t('mentions.all_marked_read'),
+        description: t('notifications.all_marked_read'),
       });
     } catch (error) {
       console.error('Failed to mark all as read:', error);
       toast({
         title: t('common.error'),
-        description: t('mentions.error_mark_all_read'),
+        description: t('notifications.error_mark_all_read'),
         variant: 'destructive',
       });
     } finally {
@@ -196,9 +196,9 @@ export default function MentionsSheet({
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
 
-    if (diffDays > 0) return `${diffDays}d`;
-    if (diffHours > 0) return `${diffHours}h`;
-    if (diffMins > 0) return `${diffMins}m`;
+    if (diffDays > 0) return `${diffDays}d ago`;
+    if (diffHours > 0) return `${diffHours}h ago`;
+    if (diffMins > 0) return `${diffMins}m ago`;
     return t('common.just_now');
   };
 
@@ -211,17 +211,17 @@ export default function MentionsSheet({
           <div className="flex items-center justify-between">
             <SheetTitle className="flex items-center gap-2.5">
               <div className="rounded-lg bg-blue-500/10 p-2">
-                <AtSign className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <Bell className="h-4 w-4 text-blue-600 dark:text-blue-400" />
               </div>
-              <span>{t('navigation.mentions')}</span>
+              <span>{t('navigation.notifications')}</span>
             </SheetTitle>
             {unreadCount > 0 && (
               <Badge variant="default" className="bg-blue-500 hover:bg-blue-600">
-                {unreadCount} {t('mentions.new')}
+                {unreadCount} {t('notifications.new')}
               </Badge>
             )}
           </div>
-          <SheetDescription className="text-sm">{t('mentions.description')}</SheetDescription>
+          <SheetDescription className="text-sm">{t('notifications.description')}</SheetDescription>
         </SheetHeader>
 
         <div className="mt-6 space-y-4">
@@ -231,11 +231,11 @@ export default function MentionsSheet({
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="unread" className="gap-2">
                   <Bell className="h-3.5 w-3.5" />
-                  {t('mentions.unread')}
+                  {t('notifications.unread')}
                   {unreadCount > 0 && <span className="ml-1 text-xs">({unreadCount})</span>}
                 </TabsTrigger>
                 <TabsTrigger value="all" className="gap-2">
-                  {t('mentions.all')}
+                  {t('notifications.all')}
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -247,7 +247,7 @@ export default function MentionsSheet({
                 onClick={handleMarkAllAsRead}
                 disabled={isMarkingAllRead}
                 className="shrink-0"
-                title={t('mentions.mark_all_read')}
+                title={t('notifications.mark_all_read')}
               >
                 {isMarkingAllRead ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -278,13 +278,14 @@ export default function MentionsSheet({
               </div>
             ) : filteredNotifications.length === 0 ? (
               <EmptyState
-                icon={<Bell className="h-12 w-12" />}
-                title={filter === 'unread' ? t('mentions.no_unread') : t('mentions.no_mentions')}
+                icon={<Bell className="h-12 w-12 text-muted-foreground/50" />}
+                title={filter === 'unread' ? t('notifications.no_unread') : t('notifications.no_notifications')}
                 description={
                   filter === 'unread'
-                    ? t('mentions.no_unread_description')
-                    : t('mentions.no_mentions_description')
+                    ? t('notifications.no_unread_description')
+                    : t('notifications.no_notifications_description')
                 }
+                className="py-12"
               />
             ) : (
               <div className="space-y-2">
@@ -292,20 +293,20 @@ export default function MentionsSheet({
                   <div
                     key={notification.id}
                     onClick={() => handleNotificationClick(notification)}
-                    className="group relative cursor-pointer space-y-2 overflow-hidden rounded-lg border bg-card p-3 transition-all hover:bg-accent/10"
+                    className="group relative cursor-pointer space-y-3 overflow-hidden rounded-lg border bg-card p-4 transition-all hover:bg-accent/10 hover:shadow-sm"
                   >
                     {/* Unread indicator */}
                     {!notification.is_read && (
-                      <div className="absolute left-0 top-0 h-full w-1 bg-blue-500" />
+                      <div className="absolute left-0 top-0 h-full w-1 bg-blue-500 rounded-r-sm" />
                     )}
 
                     {/* Content */}
                     <div className="flex items-start justify-between pl-3">
-                      <div className="min-w-0 flex-1 space-y-2">
+                      <div className="min-w-0 flex-1 space-y-3">
                         {/* Project name and time */}
                         <div className="flex items-center gap-2">
-                          <MessageSquare className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                          <p className="truncate text-xs font-medium text-muted-foreground">
+                          <MessageSquare className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          <p className="truncate text-sm font-medium text-muted-foreground">
                             {notification.projects?.[0]?.name || 'Unknown Project'}
                           </p>
                           <span className="ml-auto text-xs text-muted-foreground/60">
@@ -314,17 +315,24 @@ export default function MentionsSheet({
                         </div>
 
                         {/* Commenter */}
-                        <p className="text-sm font-medium">
-                          {notification.commenter?.display_name || notification.commenter?.username || 'Unknown User'}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <div className="h-6 w-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-xs font-medium text-white">
+                            {(notification.commenter?.display_name || notification.commenter?.username || 'U')[0].toUpperCase()}
+                          </div>
+                          <p className="text-sm font-medium">
+                            {notification.commenter?.display_name || notification.commenter?.username || 'Unknown User'}
+                          </p>
+                        </div>
 
                         {/* Comment with highlighted mentions */}
-                        <p className="line-clamp-2 text-sm text-muted-foreground">
-                          <HighlightedText
-                            text={notification.project_comments?.[0]?.comment || ''}
-                            mentionClassName="font-semibold text-blue-600 dark:text-blue-400"
-                          />
-                        </p>
+                        <div className="rounded-md bg-muted/30 p-3">
+                          <p className="text-sm leading-relaxed">
+                            <HighlightedText
+                              text={notification.project_comments?.[0]?.comment || ''}
+                              mentionClassName="font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30 px-1 py-0.5 rounded"
+                            />
+                          </p>
+                        </div>
                       </div>
 
                       {/* Mark as read button */}
@@ -332,12 +340,12 @@ export default function MentionsSheet({
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-7 w-7 p-0 opacity-0 transition-opacity group-hover:opacity-100"
+                          className="h-8 w-8 p-0 opacity-0 transition-opacity group-hover:opacity-100 shrink-0"
                           onClick={e => {
                             e.stopPropagation();
                             handleMarkAsRead(notification.id);
                           }}
-                          title={t('mentions.mark_as_read')}
+                          title={t('notifications.mark_as_read')}
                         >
                           <CheckCheck className="h-4 w-4" />
                         </Button>

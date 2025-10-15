@@ -624,8 +624,8 @@ export function useUpdateProjectComment() {
             const keys = queryClient.getQueriesData<ProjectComment[]>({ queryKey: ["project", projectId, "comments"] });
             const previous = keys.map(([key, data]) => ({ key, data }));
             previous.forEach(({ key, data }) => {
-                if (!data) return;
-                const updated = data.map((c) => (c.id === input.commentId ? { ...c, comment: input.comment ?? c.comment, resolved: typeof input.resolved === 'boolean' ? input.resolved : c.resolved, edited: true } : c));
+                if (!data || !Array.isArray(data)) return;
+                const updated = data.map((c) => (String(c.id) === String(input.commentId) ? { ...c, comment: input.comment ?? c.comment, resolved: typeof input.resolved === 'boolean' ? input.resolved : c.resolved, edited: true } : c));
                 queryClient.setQueryData(key, updated);
             });
             return { previous } as const;
@@ -651,8 +651,8 @@ export function useDeleteProjectComment(projectId: string) {
             const keys = queryClient.getQueriesData<ProjectComment[]>({ queryKey: ["project", projectId, "comments"] });
             const previous = keys.map(([key, data]) => ({ key, data }));
             previous.forEach(({ key, data }) => {
-                if (!data) return;
-                const filtered = data.filter((c) => c.id !== commentId && c.parent_id !== commentId);
+                if (!data || !Array.isArray(data)) return;
+                const filtered = data.filter((c) => String(c.id) !== String(commentId) && String(c.parent_id) !== String(commentId));
                 queryClient.setQueryData(key, filtered);
             });
             return { previous } as const;

@@ -110,8 +110,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: "Failed to create share link" }, { status: 500 });
   }
 
-  // Build full URL
-  const siteUrl = env().NEXT_PUBLIC_SITE_URL || (process.env.NODE_ENV === 'production' ? 'https://untitledone.nl' : 'http://localhost:3000');
+  // Build full URL - always use production URL in production
+  const siteUrl = process.env.NODE_ENV === 'production'
+    ? 'https://untitledone.nl'
+    : (env().NEXT_PUBLIC_SITE_URL || 'http://localhost:3000');
   const fullUrl = `${siteUrl}/share/${link.token}`;
 
   return NextResponse.json({
@@ -177,9 +179,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     return NextResponse.json({ error: "Failed to fetch share links" }, { status: 500 });
   }
 
-  // Enrich with full URLs and creator info
-  const siteUrl = env().NEXT_PUBLIC_SITE_URL || (process.env.NODE_ENV === 'production' ? 'https://untitledone.nl' : 'http://localhost:3000');
-  
+  // Enrich with full URLs and creator info - always use production URL in production
+  const siteUrl = process.env.NODE_ENV === 'production'
+    ? 'https://untitledone.nl'
+    : (env().NEXT_PUBLIC_SITE_URL || 'http://localhost:3000');
+
   const enriched = (links || []).map((link) => ({
     id: link.id,
     url: `${siteUrl}/share/${link.token}`,

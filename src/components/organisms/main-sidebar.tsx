@@ -19,7 +19,7 @@ import {
   SidebarMenuBadge,
 } from "@/components/ui/sidebar"
 import { Logo } from "@/components/ui/logo"
-import { Home, FolderClosed, Plus, Upload, UserPlus, Bell, ChevronRight, Star, AtSign, Compass } from "lucide-react"
+import { Home, FolderClosed, Plus, Upload, UserPlus, Bell, ChevronRight, Star, Compass } from "lucide-react"
 import Link from "next/link"
 import * as React from "react"
 import { usePathname } from "next/navigation"
@@ -31,11 +31,27 @@ import { getProjectActivity } from "@/lib/api/projects"
 import { useQueries } from "@tanstack/react-query"
 import NavUser from "@/components/molecules/nav-user"
 import SidebarStorageCard from "@/components/molecules/sidebar-storage-card"
-import UploadDialog from "@/components/molecules/upload-dialog"
-import CreateVersionDialog from "@/components/molecules/create-version-dialog"
-import InviteDialog from "@/components/molecules/invite-dialog"
-import InvitationsSheet from "@/components/organisms/invitations-sheet"
-import MentionsSheet from "@/components/organisms/mentions-sheet"
+import dynamic from "next/dynamic"
+
+const UploadDialog = dynamic(() => import("@/components/molecules/upload-dialog"), {
+  ssr: false,
+})
+
+const CreateVersionDialog = dynamic(() => import("@/components/molecules/create-version-dialog"), {
+  ssr: false,
+})
+
+const InviteDialog = dynamic(() => import("@/components/molecules/invite-dialog"), {
+  ssr: false,
+})
+
+const InvitationsSheet = dynamic(() => import("@/components/organisms/invitations-sheet"), {
+  ssr: false,
+})
+
+const NotificationsSheet = dynamic(() => import("@/components/organisms/notifications-sheet"), {
+  ssr: false,
+})
 import { cn } from "@/lib/utils"
 
 export default function MainSidebar() {
@@ -181,12 +197,6 @@ export default function MainSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton className="justify-between" tooltip="Coming soon - activity notifications" disabled>
-                  <div className="flex items-center gap-2"><Bell className="h-4 w-4" /><span>{t("navigation.notifications")}</span></div>
-                </SidebarMenuButton>
-                <SidebarMenuBadge>0</SidebarMenuBadge>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
                 <InvitationsSheet
                   trigger={
                     <SidebarMenuButton className="justify-between">
@@ -200,12 +210,12 @@ export default function MainSidebar() {
                 <SidebarMenuBadge>{pendingInvitations.length}</SidebarMenuBadge>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <MentionsSheet
+                <NotificationsSheet
                   trigger={
                     <SidebarMenuButton className="justify-between">
                       <div className="flex items-center gap-2">
-                        <AtSign className="h-4 w-4" />
-                        <span>{t("navigation.mentions")}</span>
+                        <Bell className="h-4 w-4" />
+                        <span>{t("navigation.notifications")}</span>
                       </div>
                     </SidebarMenuButton>
                   }

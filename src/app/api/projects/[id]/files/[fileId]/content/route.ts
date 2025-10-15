@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { SupabaseClient } from '@supabase/supabase-js';
 import { google } from 'googleapis';
 import createServerClient from '@/lib/supabase/server';
 import { getStorageProvider } from '@/lib/storage/factory';
-import { getStorageConnection } from '@/lib/supabase/service';
-import { decryptToken } from '@/lib/utils/encryption';
+import { getStorageConnection, updateStorageConnection } from '@/lib/supabase/service';
+import { decryptToken, encryptToken } from '@/lib/utils/encryption';
+import { env } from '@/lib/env';
 import type { StorageProviderType } from '@/lib/storage/types';
 
 const paramsSchema = z.object({
   id: z.string().uuid('Invalid project ID'),
-  fileId: z.string().uuid('Invalid file ID'),
+  fileId: z.string().min(1, 'Invalid file ID'), // Support both UUIDs and external IDs (Google Drive, Dropbox)
 });
 
 /**
@@ -47,154 +47,77 @@ export async function GET(
 
     const { id: projectId, fileId: validFileId } = validation.data;
 
-    // Check project access
-    const { data: project } = await (supabase as SupabaseClient)
-      .from('projects')
-      .select('id, owner_id, is_private, downloads_enabled')
-      .eq('id', projectId)
-      .single();
-
-    if (!project) {
-      return NextResponse.json({ error: 'Project not found' }, { status: 404 });
-    }
-
-    // Verify access permissions
-    if (project.is_private && project.owner_id !== user.id) {
-      const { data: membership } = await (supabase as SupabaseClient)
-        .from('project_members')
-        .select('user_id')
-        .eq('project_id', projectId)
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (!membership) {
-        return NextResponse.json({ error: 'Access denied' }, { status: 403 });
-      }
-    }
-
-    // Get file details
-    const { data: file } = await (supabase as SupabaseClient)
+    // Get file details from database
+    const { data: file, error: fileError } = await supabase
       .from('project_files')
-      .select('id, file_path, filename, uploaded_by, file_type, storage_provider, external_file_id')
+      .select(`
+        id,
+        filename,
+        file_type,
+        file_size,
+        storage_provider,
+        uploaded_by,
+        external_file_id
+      `)
       .eq('id', validFileId)
       .eq('project_id', projectId)
       .single();
 
-    if (!file) {
-      return NextResponse.json({ error: 'File not found' }, { status: 404 });
+    if (fileError || !file) {
+      return NextResponse.json(
+        { error: 'File not found' },
+        { status: 404 }
+      );
     }
 
-    // Get storage provider using uploader's credentials (ownership proxying)
-    const fileWithProvider = file as { storage_provider?: string; external_file_id?: string };
-    const storageProvider = (fileWithProvider.storage_provider || 'local') as StorageProviderType;
+    const storageProvider = file.storage_provider as StorageProviderType;
     const uploadedByUserId = file.uploaded_by;
-    const fileIdentifier = fileWithProvider.external_file_id || file.file_path;
+    const fileIdentifier = file.external_file_id || file.id;
 
-    // For local storage (Supabase), get signed URL and redirect
+    // For local storage, redirect to Supabase Storage URL
     if (storageProvider === 'local') {
+      const { data: signedUrl } = await supabase.storage
+        .from('project-files')
+        .createSignedUrl(fileIdentifier, 60 * 60); // 1 hour expiry
+
+      if (!signedUrl) {
+        return NextResponse.json(
+          { error: 'Failed to generate signed URL' },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.redirect(signedUrl.signedUrl);
+    }
+
+    // For Dropbox, get signed URL and redirect
+    if (storageProvider === 'dropbox') {
       const adapter = await getStorageProvider(storageProvider, uploadedByUserId);
       const signedUrl = await adapter.getDownloadUrl(fileIdentifier, uploadedByUserId, 60 * 60);
       return NextResponse.redirect(signedUrl);
     }
 
-    // For Google Drive, use Drive API to download file content directly
+    // For Google Drive, handle token refresh automatically
     if (storageProvider === 'google_drive') {
       try {
-        const connection = await getStorageConnection(uploadedByUserId, 'google_drive');
-        const accessToken = decryptToken(connection.encrypted_access_token);
-        
-        const oauth2Client = new google.auth.OAuth2();
-        oauth2Client.setCredentials({ access_token: accessToken });
-        
-        const drive = google.drive({ version: 'v3', auth: oauth2Client });
-        
-        console.warn('[Content Proxy] Fetching Google Drive file:', fileIdentifier);
-        
-        // Download file content using Drive API
-        const response = await drive.files.get(
-          { fileId: fileIdentifier, alt: 'media' },
-          { responseType: 'arraybuffer' } // Get as ArrayBuffer for easier handling
-        );
-
-        console.warn('[Content Proxy] Google Drive file fetched successfully');
-
-        // Convert to buffer
-        const buffer = Buffer.from(response.data as ArrayBuffer);
-        const contentType = file.file_type || 'application/octet-stream';
-        
-        return new NextResponse(buffer, {
-          status: 200,
-          headers: {
-            'Content-Type': contentType,
-            'Content-Disposition': `inline; filename="${file.filename}"`,
-            'Content-Length': buffer.length.toString(),
-            'Cache-Control': 'private, max-age=3600',
-            'Accept-Ranges': 'bytes',
-          },
-        });
-      } catch (driveError: unknown) {
-        console.error('[Content Proxy] Google Drive error:', driveError);
-        
-        // Check if it's a 401 (token expired)
-        if (driveError && typeof driveError === 'object' && 'code' in driveError && driveError.code === 401) {
-          return NextResponse.json(
-            { error: 'File owner needs to reconnect their Google Drive account', code: 'PROVIDER_TOKEN_EXPIRED' },
-            { status: 401 }
-          );
+        return await fetchGoogleDriveFile(fileIdentifier, uploadedByUserId, file);
+      } catch (error) {
+        // Check if it's a 401 (unauthorized/expired token)
+        if (is401Error(error)) {
+          console.warn(`Google Drive token expired for user ${uploadedByUserId}, attempting refresh...`);
+          const refreshed = await refreshGoogleDriveTokens(uploadedByUserId);
+          
+          if (!refreshed) {
+            return NextResponse.json(
+              { error: 'File owner needs to reconnect their Google Drive account', code: 'PROVIDER_TOKEN_EXPIRED' },
+              { status: 401 }
+            );
+          }
+          
+          // Retry fetch once with fresh token
+          return await fetchGoogleDriveFile(fileIdentifier, uploadedByUserId, file);
         }
-        
-        throw driveError;
-      }
-    }
-
-    // For Dropbox, get signed URL and fetch/stream
-    if (storageProvider === 'dropbox') {
-      const adapter = await getStorageProvider(storageProvider, uploadedByUserId);
-      const signedUrl = await adapter.getDownloadUrl(fileIdentifier, uploadedByUserId, 60 * 60);
-      
-      const response = await fetch(signedUrl);
-
-      if (!response.ok) {
-        console.error('Failed to fetch file from Dropbox:', response.statusText);
-        return NextResponse.json(
-          { error: 'Failed to fetch file from storage provider' },
-          { status: 500 }
-        );
-      }
-
-      const contentType = file.file_type || 'application/octet-stream';
-      
-      return new NextResponse(response.body, {
-        status: 200,
-        headers: {
-          'Content-Type': contentType,
-          'Content-Disposition': `inline; filename="${file.filename}"`,
-          'Cache-Control': 'private, max-age=3600',
-          'Accept-Ranges': 'bytes',
-        },
-      });
-    }
-
-    return NextResponse.json(
-      { error: 'Unsupported storage provider' },
-      { status: 400 }
-    );
-
-  } catch (error) {
-    console.error('Error streaming file content:', error);
-
-    if (error instanceof Error) {
-      if (error.message.includes('PROVIDER_TOKEN_EXPIRED')) {
-        return NextResponse.json(
-          { error: 'File owner needs to reconnect their storage provider', code: 'PROVIDER_TOKEN_EXPIRED' },
-          { status: 401 }
-        );
-      }
-      if (error.message.includes('PROVIDER_NOT_CONNECTED')) {
-        return NextResponse.json(
-          { error: "File owner's storage provider is not connected", code: 'PROVIDER_NOT_CONNECTED' },
-          { status: 400 }
-        );
+        throw error;
       }
     }
 
@@ -202,6 +125,123 @@ export async function GET(
       { error: 'Failed to stream file content' },
       { status: 500 }
     );
+  } catch (error) {
+    console.error('Error in file content proxy:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch file content' },
+      { status: 500 }
+    );
   }
 }
 
+/**
+ * Fetch Google Drive file content using current access token
+ */
+async function fetchGoogleDriveFile(
+  fileIdentifier: string,
+  userId: string,
+  file: { file_type: string; filename: string }
+): Promise<NextResponse> {
+  const connection = await getStorageConnection(userId, 'google_drive');
+  const accessToken = decryptToken(connection.encrypted_access_token);
+  
+  const oauth2Client = new google.auth.OAuth2();
+  oauth2Client.setCredentials({ access_token: accessToken });
+  
+  const drive = google.drive({ version: 'v3', auth: oauth2Client });
+  
+  console.warn('[Content Proxy] Fetching Google Drive file:', fileIdentifier);
+  
+  // Download file content using Drive API
+  const response = await drive.files.get(
+    { fileId: fileIdentifier, alt: 'media' },
+    { responseType: 'arraybuffer' } // Get as ArrayBuffer for easier handling
+  );
+
+  console.warn('[Content Proxy] Google Drive file fetched successfully');
+
+  // Convert to buffer
+  const buffer = Buffer.from(response.data as ArrayBuffer);
+  const contentType = file.file_type || 'application/octet-stream';
+  
+  return new NextResponse(buffer, {
+    status: 200,
+    headers: {
+      'Content-Type': contentType,
+      'Content-Disposition': `inline; filename="${file.filename}"`,
+      'Content-Length': buffer.length.toString(),
+      'Cache-Control': 'private, max-age=3600',
+      'Accept-Ranges': 'bytes',
+    },
+  });
+}
+
+/**
+ * Refresh Google Drive access token using refresh token
+ */
+async function refreshGoogleDriveTokens(userId: string): Promise<boolean> {
+  try {
+    const connection = await getStorageConnection(userId, 'google_drive');
+    
+    if (!connection.encrypted_refresh_token) {
+      console.error('No refresh token available for Google Drive connection');
+      return false;
+    }
+
+    const refreshToken = decryptToken(connection.encrypted_refresh_token);
+    const clientId = env().GOOGLE_DRIVE_CLIENT_ID;
+    const clientSecret = env().GOOGLE_DRIVE_CLIENT_SECRET;
+
+    const oauth2Client = new google.auth.OAuth2(clientId, clientSecret);
+    oauth2Client.setCredentials({ refresh_token: refreshToken });
+
+    // Refresh the access token
+    const { credentials } = await oauth2Client.refreshAccessToken();
+    
+    if (!credentials.access_token) {
+      console.error('No access token in refreshed credentials');
+      await updateStorageConnection(userId, 'google_drive', {
+        status: 'expired',
+      });
+      return false;
+    }
+
+    const newAccessToken = encryptToken(credentials.access_token);
+    const tokenExpiresAt = credentials.expiry_date
+      ? new Date(credentials.expiry_date).toISOString()
+      : null;
+
+    // Update connection with new token
+    await updateStorageConnection(userId, 'google_drive', {
+      encrypted_access_token: newAccessToken,
+      token_expires_at: tokenExpiresAt,
+      status: 'active',
+      last_used_at: new Date().toISOString(),
+    });
+
+    console.warn(`✓ Google Drive token refreshed successfully for user ${userId}`);
+    return true;
+
+  } catch (error) {
+    console.error('Error refreshing Google Drive token:', error);
+    
+    // Update status to error
+    await updateStorageConnection(userId, 'google_drive', {
+      status: 'error',
+    }).catch(() => {});
+    
+    return false;
+  }
+}
+
+/**
+ * Helper to detect 401 errors from Google Drive API
+ */
+function is401Error(error: unknown): boolean {
+  return (
+    error !== null &&
+    typeof error === 'object' &&
+    'code' in error &&
+    (error as { code: unknown }).code === 401
+  );
+}

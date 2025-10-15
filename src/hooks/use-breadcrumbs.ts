@@ -72,9 +72,10 @@ export function useBreadcrumbs(): BreadcrumbItem[] {
 
       // Deeper routes under a project
       // Example: /projects/[id]/files/[fileId]
-      // Project crumb (link)
+      // Project crumb (link) - use override or fallback to project ID
+      const projectLabel = override.projectLabelOverride || projectId.slice(0, 8) + '...';
       breadcrumbs.push({ 
-        label: override.projectLabelOverride || `Project ${projectId}`, 
+        label: projectLabel, 
         href: `/projects/${projectId}` 
       });
 

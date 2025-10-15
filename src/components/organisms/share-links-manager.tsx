@@ -1,22 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { Plus, Link as LinkIcon, Loader2 } from "lucide-react";
+import { Plus, Link as LinkIcon, Loader2, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import EmptyState from "@/components/atoms/empty-state";
 import { ShareLinkCard } from "@/components/molecules/share-link-card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
-import { Copy } from "lucide-react";
+import { ToastAction } from "@/components/ui/toast";
 
 export interface ShareLink {
   id: string;
@@ -61,8 +54,11 @@ export function ShareLinksManager({
   const { toast } = useToast();
   const [links, setLinks] = useState<ShareLink[]>(initialLinks);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
-  const [newLinkUrl, setNewLinkUrl] = useState<string>("");
+
+  // Update local state when initialLinks change
+  useEffect(() => {
+    setLinks(initialLinks);
+  }, [initialLinks]);
 
   // Count active links
   const activeCount = links.filter((link) => {
@@ -95,8 +91,30 @@ export function ShareLinksManager({
         setLinks(updatedLinks);
       }
 
-      setNewLinkUrl(newLink.url);
-      setShowSuccessDialog(true);
+      // Show success toast with copy action
+      toast({
+        title: t("link_generated"),
+        description: t("link_generated_description"),
+        action: (
+          <ToastAction
+            altText={t("copy_link")}
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(newLink.url);
+                toast({
+                  title: t("copy_success"),
+                  description: t("copy_success_description"),
+                });
+              } catch (error) {
+                console.error("Failed to copy:", error);
+              }
+            }}
+          >
+            <Copy className="h-4 w-4 mr-2" />
+            {t("copy_link")}
+          </ToastAction>
+        ),
+      });
     } catch (error) {
       console.error("Failed to generate link:", error);
       const errorMessage = error instanceof Error ? error.message : "Failed to generate link";
@@ -128,82 +146,70 @@ export function ShareLinksManager({
     );
   };
 
-  // Copy new link to clipboard
-  const handleCopyNewLink = async () => {
-    try {
-      await navigator.clipboard.writeText(newLinkUrl);
-      toast({
-        title: t("copy_success"),
-        description: t("copy_success_description"),
-      });
-    } catch (error) {
-      console.error("Failed to copy:", error);
-    }
-  };
-
   return (
-    <>
-      <div className="space-y-6">
-        {/* Header with generate button */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-semibold">{t("title")}</h2>
-            <p className="text-sm text-muted-foreground">
-              {t("description")} ({activeCount}/3 {t("active_links")})
-            </p>
-          </div>
-          <Button
-            onClick={handleGenerate}
-            disabled={!canGenerateMore || isGenerating}
-            size="sm"
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                {t("generating")}
-              </>
-            ) : (
-              <>
-                <Plus className="h-4 w-4 mr-2" />
-                {t("generate_link")}
-              </>
-            )}
-          </Button>
+    <div className="space-y-6">
+      {/* Header with generate button */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold">{t("title")}</h2>
+          <p className="text-sm text-muted-foreground">
+            {t("description")} ({activeCount}/3 {t("active_links")})
+          </p>
         </div>
-
-        {/* Max limit warning */}
-        {!canGenerateMore && (
-          <div className="rounded-lg border border-yellow-200 bg-yellow-50 dark:border-yellow-900 dark:bg-yellow-950/20 p-4">
-            <p className="text-sm text-yellow-800 dark:text-yellow-200">
-              {t("max_links_reached")}
-            </p>
-          </div>
-        )}
-
-        {/* Links list */}
-        <div className="space-y-3">
-          {isLoading ? (
+        <Button
+          onClick={handleGenerate}
+          disabled={!canGenerateMore || isGenerating}
+          size="sm"
+        >
+          {isGenerating ? (
             <>
-              {[...Array(2)].map((_, i) => (
-                <Card key={i}>
-                  <CardContent className="p-4">
-                    <div className="space-y-2">
-                      <Skeleton className="h-5 w-24" />
-                      <Skeleton className="h-4 w-48" />
-                      <Skeleton className="h-3 w-32" />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              {t("generating")}
             </>
-          ) : links.length === 0 ? (
-            <EmptyState
-              icon={<LinkIcon className="h-12 w-12" />}
-              title={t("no_links")}
-              description={t("no_links_description")}
-            />
           ) : (
-            links.map((link) => (
+            <>
+              <Plus className="h-4 w-4 mr-2" />
+              {t("generate_link")}
+            </>
+          )}
+        </Button>
+      </div>
+
+      {/* Max limit warning */}
+      {!canGenerateMore && (
+        <div className="rounded-lg border border-yellow-200 bg-yellow-50 dark:border-yellow-900 dark:bg-yellow-950/20 p-4">
+          <p className="text-sm text-yellow-800 dark:text-yellow-200">
+            {t("max_links_reached")}
+          </p>
+        </div>
+      )}
+
+      {/* Links list - hide revoked links */}
+      <div className="space-y-3">
+        {isLoading ? (
+          <>
+            {[...Array(2)].map((_, i) => (
+              <Card key={i}>
+                <CardContent className="p-4">
+                  <div className="space-y-2">
+                    <Skeleton className="h-5 w-24" />
+                    <Skeleton className="h-4 w-48" />
+                    <Skeleton className="h-3 w-32" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </>
+        ) : links.filter(link => !link.revoked).length === 0 ? (
+          <EmptyState
+            icon={<LinkIcon className="h-12 w-12" />}
+            title={t("no_links")}
+            description={t("no_links_description")}
+          />
+        ) : (
+          links
+            .filter(link => !link.revoked)
+            .map((link) => (
               <ShareLinkCard
                 key={link.id}
                 id={link.id}
@@ -217,39 +223,9 @@ export function ShareLinksManager({
                 onRevoke={handleRevoke}
               />
             ))
-          )}
-        </div>
+        )}
       </div>
-
-      {/* Success dialog for new link */}
-      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-        <DialogContent className="max-w-md w-[calc(100%-1.5rem)] max-w-[95vw]">
-          <DialogHeader>
-            <DialogTitle>{t("link_generated")}</DialogTitle>
-            <DialogDescription>
-              {t("link_generated_description")}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="rounded-lg border bg-muted p-3 max-w-full overflow-hidden">
-              <p className="text-sm font-mono break-all">{newLinkUrl}</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button onClick={handleCopyNewLink} className="flex-1">
-                <Copy className="h-4 w-4 mr-2" />
-                {t("copy_link")}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setShowSuccessDialog(false)}
-              >
-                {t("close")}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
+    </div>
   );
 }
 
