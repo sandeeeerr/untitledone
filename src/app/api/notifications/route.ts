@@ -5,30 +5,6 @@ import { SupabaseClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
 
-type NotificationWithRelations = {
-  id: string;
-  user_id: string;
-  type: string;
-  comment_id: string | null;
-  project_id: string | null;
-  is_read: boolean;
-  created_at: string;
-  updated_at: string;
-  project_comments: {
-    id: string;
-    comment: string;
-    user_id: string;
-    project_id: string;
-    file_id: string | null;
-    version_id: string | null;
-    timestamp_ms: number | null;
-  }[];
-  projects: {
-    id: string;
-    name: string;
-  }[];
-};
-
 const querySchema = z.object({
   filter: z.enum(["unread", "all"]).optional().default("all"),
   limit: z.coerce.number().int().positive().max(100).optional().default(20),

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { SupabaseClient } from '@supabase/supabase-js';
 import { google } from 'googleapis';
 import createServerClient from '@/lib/supabase/server';
 import { getStorageProvider } from '@/lib/storage/factory';
@@ -138,7 +137,11 @@ export async function GET(
 /**
  * Fetch Google Drive file content using current access token
  */
-async function fetchGoogleDriveFile(fileIdentifier: string, userId: string, file: any): Promise<NextResponse> {
+async function fetchGoogleDriveFile(
+  fileIdentifier: string,
+  userId: string,
+  file: { file_type: string; filename: string }
+): Promise<NextResponse> {
   const connection = await getStorageConnection(userId, 'google_drive');
   const accessToken = decryptToken(connection.encrypted_access_token);
   
@@ -235,5 +238,10 @@ async function refreshGoogleDriveTokens(userId: string): Promise<boolean> {
  * Helper to detect 401 errors from Google Drive API
  */
 function is401Error(error: unknown): boolean {
-  return error && typeof error === 'object' && 'code' in error && error.code === 401;
+  return (
+    error !== null &&
+    typeof error === 'object' &&
+    'code' in error &&
+    (error as { code: unknown }).code === 401
+  );
 }

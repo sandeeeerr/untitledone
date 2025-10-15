@@ -98,17 +98,17 @@ function BasicWaveform(
 
     ws.load(url);
 
+    // Capture refs for cleanup
+    const containerForCleanup = containerRef.current;
+    const timelineForCleanup = timelineRef.current;
+
     return () => {
       try { ws.stop(); } catch {}
       try { ws.unAll(); } catch {}
       // Avoid destroy to prevent AbortError during decode; let GC reclaim
       wsRef.current = null;
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      const container = containerRef.current;
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      const timeline = timelineRef.current;
-      if (container) { try { container.innerHTML = ""; } catch {} }
-      if (timeline) { try { timeline.innerHTML = ""; } catch {} }
+      if (containerForCleanup) { try { containerForCleanup.innerHTML = ""; } catch {} }
+      if (timelineForCleanup) { try { timelineForCleanup.innerHTML = ""; } catch {} }
     };
   }, [url, height, containerReady]);
 

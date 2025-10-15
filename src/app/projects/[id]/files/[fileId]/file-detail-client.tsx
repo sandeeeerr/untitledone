@@ -421,11 +421,11 @@ function SimpleWaveWrapper({ projectId, fileId, onTime, forwardRef, onAnalyzed }
         } else {
           setUrlError(null);
         }
-      } catch (err) {
+      } catch {
         setUrlError("Failed to access file");
       }
     };
-    
+
     checkUrl();
   }, [url]);
 
@@ -454,11 +454,11 @@ function SimpleWaveWrapper({ projectId, fileId, onTime, forwardRef, onAnalyzed }
         } else {
           setUrlError(null);
         }
-      } catch (err) {
+      } catch {
         setUrlError("Failed to access file");
       }
     };
-    
+
     checkUrl();
   };
 

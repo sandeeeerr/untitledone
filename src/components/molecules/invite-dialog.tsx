@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useCreateProjectInvitation } from '@/lib/api/queries'
 import { ShareLinksManager } from '@/components/organisms/share-links-manager'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { ShareLink } from '@/components/organisms/share-links-manager'
 
 export type InviteDialogProps = {
@@ -23,7 +23,6 @@ export default function InviteDialog({ projectId, trigger }: InviteDialogProps) 
 	const [role, setRole] = useState('collaborator')
 	const [activeTab, setActiveTab] = useState('email')
 	const createInvite = useCreateProjectInvitation(projectId)
-	const queryClient = useQueryClient()
 
 	// Fetch share links - refetch when switching to link tab
 	const { data: shareLinks = [], isLoading: isLoadingLinks, refetch } = useQuery<ShareLink[]>({

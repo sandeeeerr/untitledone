@@ -90,7 +90,24 @@ export async function getRecentProjects(): Promise<Project[]> {
 		)];
 
 		// Get projects for those IDs (excluding owned projects to avoid duplicates)
-		let activityProjects: any[] = [];
+		type ProjectRow = {
+			id: string;
+			name: string;
+			description: string | null;
+			tags: unknown;
+			genre: string | null;
+			is_private: boolean;
+			downloads_enabled: boolean;
+			daw_info: unknown;
+			plugins_used: unknown;
+			status: string | null;
+			created_at: string;
+			updated_at: string;
+			owner_id: string;
+			likes_count: number | null;
+			profiles: unknown;
+		};
+		let activityProjects: ProjectRow[] = [];
 		if (activityProjectIds.length > 0) {
 			const { data: activityProjectsData, error: activityProjectsError } = await supabase
 				.from('projects')

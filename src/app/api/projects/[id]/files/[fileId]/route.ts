@@ -91,11 +91,23 @@ export async function GET(
     }
 
     // Get file details - check both id and external_file_id for external storage support
-    let file: any = null;
-    let fileError: any = null;
+    type FileRow = {
+      id: string;
+      filename: string;
+      file_path: string;
+      file_size: number;
+      file_type: string;
+      uploaded_at: string;
+      uploaded_by: string;
+      metadata: unknown;
+      storage_provider: string | null;
+      external_file_id: string | null;
+    };
+    let file: FileRow | null = null;
+    let fileError: unknown = null;
 
     // First try by id (UUID)
-    const { data: fileById, error: errorById } = await (supabase as SupabaseClient)
+    const { data: fileById } = await (supabase as SupabaseClient)
       .from("project_files")
       .select("id, filename, file_path, file_size, file_type, uploaded_at, uploaded_by, metadata, storage_provider, external_file_id")
       .eq("id", validFileId)
@@ -162,8 +174,8 @@ export async function GET(
       .single();
 
     // Enrich file data
-    const fileWithMetadata = file as { metadata?: { deleted_at?: string } };
-    const isDeleted = Boolean(fileWithMetadata?.metadata?.deleted_at);
+    const fileMetadata = file.metadata as FileMetadata | null;
+    const isDeleted = Boolean(fileMetadata?.deleted_at);
     const enrichedFile = {
       id: file.id,
       filename: file.filename,
@@ -177,10 +189,10 @@ export async function GET(
         username: uploaderProfile?.username || null,
         avatar: uploaderProfile?.avatar_url || null,
       },
-      description: file.metadata?.description || null,
-      supersededByFileId: (file.metadata as FileMetadata | null)?.superseded_by ?? null,
-      supersedesFileId: (file.metadata as FileMetadata | null)?.supersedes ?? null,
-      deletedAt: isDeleted ? fileWithMetadata.metadata?.deleted_at ?? null : null,
+      description: fileMetadata?.description || null,
+      supersededByFileId: fileMetadata?.superseded_by ?? null,
+      supersedesFileId: fileMetadata?.supersedes ?? null,
+      deletedAt: isDeleted ? fileMetadata?.deleted_at ?? null : null,
       version: versionMeta ? {
         id: versionMeta.id,
         name: versionMeta.version_name,

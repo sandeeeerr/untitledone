@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { AtSign, Bell, CheckCheck, Loader2, X as _X, MessageSquare } from 'lucide-react';
+import { Bell, CheckCheck, Loader2, MessageSquare } from 'lucide-react';
 import { HighlightedText } from '@/lib/utils/highlight-mentions';
 import {
   Sheet,
