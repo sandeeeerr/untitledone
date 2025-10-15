@@ -21,7 +21,8 @@ export type ActivityDigestItem = {
 };
 
 /**
- * Fetch recent projects (sorted by updated_at, limit 5)
+ * Fetch recent projects based on recent activity (not just ownership)
+ * Shows projects where user has recent activity (as owner or member)
  * Server-side function for Server Components
  */
 export async function getRecentProjects(): Promise<Project[]> {
@@ -31,7 +32,11 @@ export async function getRecentProjects(): Promise<Project[]> {
 		const { data: userData } = await supabase.auth.getUser();
 		if (!userData.user) return [];
 
-		const { data, error } = await supabase
+		// Get projects where user has recent activity
+		// This includes projects they own AND projects they're a member of with recent activity
+		
+		// First, get projects owned by the user
+		const { data: ownedProjects, error: ownedError } = await supabase
 			.from('projects')
 			.select(
 				`
@@ -58,42 +63,109 @@ export async function getRecentProjects(): Promise<Project[]> {
       `,
 			)
 			.eq('owner_id', userData.user.id)
-			.order('updated_at', { ascending: false })
-			.limit(5);
+			.order('updated_at', { ascending: false });
 
-		if (error) throw error;
+		if (ownedError) throw ownedError;
 
-		return (
-			data?.map((p) => ({
-				id: p.id,
-				name: p.name,
-				description: p.description,
-				tags: (p.tags as string[]) || [],
-				genre: p.genre,
-				is_private: p.is_private,
-				downloads_enabled: p.downloads_enabled,
-				daw_info: (p.daw_info as Record<string, string>) || {},
-				plugins_used:
-					(p.plugins_used as Array<{ name: string; version?: string }>) || [],
-				status: p.status,
-				created_at: p.created_at,
-				updated_at: p.updated_at,
-				owner_id: p.owner_id,
-				likes_count: p.likes_count || 0,
-				file_count: 0, // Would need separate query
-				collaborators_count: 1, // Would need separate query
-				creator: p.profiles
-					? {
-							id: (p.profiles as { id: string }).id,
-							name:
-								(p.profiles as { display_name?: string }).display_name ||
-								(p.profiles as { username?: string }).username ||
-								'Unknown',
-							avatar: (p.profiles as { avatar_url?: string | null }).avatar_url || undefined,
-						}
-					: undefined,
-			})) || []
+		// Then, get projects where user has recent activity (as member)
+		// First get the project IDs from recent activity
+		const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+		
+		const { data: recentActivity, error: activityError } = await supabase
+			.from('activity_changes')
+			.select(`
+				version_id,
+				project_versions!inner(project_id)
+			`)
+			.eq('author_id', userData.user.id)
+			.gte('created_at', thirtyDaysAgo);
+
+		if (activityError) throw activityError;
+
+		// Extract unique project IDs from recent activity
+		const activityProjectIds = [...new Set(
+			recentActivity?.map(activity => 
+				(activity.project_versions as { project_id: string }).project_id
+			) || []
+		)];
+
+		// Get projects for those IDs (excluding owned projects to avoid duplicates)
+		let activityProjects: any[] = [];
+		if (activityProjectIds.length > 0) {
+			const { data: activityProjectsData, error: activityProjectsError } = await supabase
+				.from('projects')
+				.select(
+					`
+          id,
+          name,
+          description,
+          tags,
+          genre,
+          is_private,
+          downloads_enabled,
+          daw_info,
+          plugins_used,
+          status,
+          created_at,
+          updated_at,
+          owner_id,
+          likes_count,
+          profiles!projects_owner_id_fkey (
+            id,
+            display_name,
+            username,
+            avatar_url
+          )
+        `,
+				)
+				.in('id', activityProjectIds)
+				.neq('owner_id', userData.user.id) // Exclude owned projects to avoid duplicates
+				.order('updated_at', { ascending: false });
+
+			if (activityProjectsError) throw activityProjectsError;
+			activityProjects = activityProjectsData || [];
+		}
+
+		// Merge and deduplicate projects
+		const allProjects = [...(ownedProjects || []), ...(activityProjects || [])];
+		const uniqueProjects = allProjects.filter((project, index, self) => 
+			index === self.findIndex(p => p.id === project.id)
 		);
+
+		// Sort by updated_at and limit to 5
+		const recentProjects = uniqueProjects
+			.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+			.slice(0, 5);
+
+		return recentProjects.map((p) => ({
+			id: p.id,
+			name: p.name,
+			description: p.description,
+			tags: (p.tags as string[]) || [],
+			genre: p.genre,
+			is_private: p.is_private,
+			downloads_enabled: p.downloads_enabled,
+			daw_info: (p.daw_info as Record<string, string>) || {},
+			plugins_used:
+				(p.plugins_used as Array<{ name: string; version?: string }>) || [],
+			status: p.status,
+			created_at: p.created_at,
+			updated_at: p.updated_at,
+			owner_id: p.owner_id,
+			likes_count: p.likes_count || 0,
+			file_count: 0, // Would need separate query
+			collaborators_count: 1, // Would need separate query
+			creator: p.profiles
+				? {
+						id: (p.profiles as { id: string }).id,
+						name:
+							(p.profiles as { display_name?: string }).display_name ||
+							(p.profiles as { username?: string }).username ||
+							'Unknown',
+						avatar: (p.profiles as { avatar_url?: string | null }).avatar_url || undefined,
+					}
+				: undefined,
+		}));
 	} catch (error) {
 		console.error('Error fetching recent projects:', error);
 		return [];

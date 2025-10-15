@@ -3,6 +3,7 @@
  * Used for mention validation in comments
  */
 
+import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
 
 export interface ProjectMemberSummary {
@@ -33,10 +34,14 @@ export function useProjectMemberUsernames(projectId: string) {
   });
 
   // Create a Set of valid usernames (lowercase for case-insensitive comparison)
-  const validUsernames = new Set(
-    members
-      .filter((m) => m.username)
-      .map((m) => m.username!.toLowerCase())
+  // Memoize to prevent recreating the Set on every render
+  const validUsernames = React.useMemo(
+    () => new Set(
+      members
+        .filter((m) => m.username)
+        .map((m) => m.username!.toLowerCase())
+    ),
+    [members]
   );
 
   return {

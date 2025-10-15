@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 
 type FilterType = "unread" | "all";
 
-export interface MentionsDashboardProps {
+export interface NotificationsDashboardProps {
   /** Initial notifications data */
   initialNotifications: NotificationItemProps[];
   /** Initial filter state */
@@ -22,9 +22,9 @@ export interface MentionsDashboardProps {
 }
 
 /**
- * Mentions Dashboard
+ * Notifications Dashboard
  * 
- * Full dashboard for viewing and managing @mention notifications
+ * Full dashboard for viewing and managing notifications
  * Includes:
  * - Filter buttons (Unread/All)
  * - "Mark all as read" action
@@ -32,17 +32,17 @@ export interface MentionsDashboardProps {
  * - Loading, empty, and error states
  * 
  * @example
- * <MentionsDashboard
+ * <NotificationsDashboard
  *   initialNotifications={notifications}
  *   initialFilter="unread"
  * />
  */
-export function MentionsDashboard({
+export function NotificationsDashboard({
   initialNotifications,
   initialFilter = "unread",
   isLoading = false,
-}: MentionsDashboardProps) {
-  const t = useTranslations("mentions");
+}: NotificationsDashboardProps) {
+  const t = useTranslations("notifications");
   const { toast } = useToast();
   const [filter, setFilter] = useState<FilterType>(initialFilter);
   const [notifications, setNotifications] = useState(initialNotifications);

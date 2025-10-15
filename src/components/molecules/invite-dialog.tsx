@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useCreateProjectInvitation } from '@/lib/api/queries'
 import { ShareLinksManager } from '@/components/organisms/share-links-manager'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ShareLink } from '@/components/organisms/share-links-manager'
 
 export type InviteDialogProps = {
@@ -23,9 +23,10 @@ export default function InviteDialog({ projectId, trigger }: InviteDialogProps) 
 	const [role, setRole] = useState('collaborator')
 	const [activeTab, setActiveTab] = useState('email')
 	const createInvite = useCreateProjectInvitation(projectId)
+	const queryClient = useQueryClient()
 
-	// Fetch share links
-	const { data: shareLinks = [], isLoading: isLoadingLinks, refetch: _refetchLinks } = useQuery<ShareLink[]>({
+	// Fetch share links - refetch when switching to link tab
+	const { data: shareLinks = [], isLoading: isLoadingLinks, refetch } = useQuery<ShareLink[]>({
 		queryKey: ["share-links", projectId],
 		queryFn: async () => {
 			const response = await fetch(`/api/projects/${projectId}/share-links`);
@@ -36,6 +37,13 @@ export default function InviteDialog({ projectId, trigger }: InviteDialogProps) 
 		},
 		enabled: open && activeTab === 'link',
 	});
+
+	// Refetch when switching to link tab
+	useEffect(() => {
+		if (open && activeTab === 'link') {
+			refetch();
+		}
+	}, [open, activeTab, refetch]);
 
 	async function onSend() {
 		if (!email) return

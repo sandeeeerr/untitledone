@@ -24,21 +24,13 @@ interface BreadcrumbsProps {
  * - Last item is semibold and non-clickable
  */
 export function Breadcrumbs({ items, className }: BreadcrumbsProps) {
-  // Truncate if more than 3 items: show first, ellipsis, last
+  // Don't truncate - show all breadcrumbs
   const displayItems = React.useMemo(() => {
     if (!items || items.length === 0) {
       return [];
     }
     
-    if (items.length <= 3) {
-      return items;
-    }
-    
-    return [
-      items[0],
-      { label: '...', isEllipsis: true } as BreadcrumbItem & { isEllipsis?: boolean },
-      items[items.length - 1],
-    ];
+    return items;
   }, [items]);
 
   if (displayItems.length === 0) {

@@ -37,8 +37,7 @@
     "recent": "Recent",
     "collaboration": "Samenwerking",
     "notifications": "Notificaties",
-    "invitations": "Uitnodigingen",
-    "mentions": "Vermeldingen"
+    "invitations": "Uitnodigingen"
   },
   "breadcrumbs": {
     "dashboard": "Dashboard",
@@ -399,6 +398,7 @@
     "markUnresolved": "Markeer als niet opgelost",
     "delete": "Verwijderen",
     "resolve": "Markeer opgelost",
+    "resolved": "Opgelost",
     "unresolve": "Markeer niet opgelost",
     "updated": "Opmerking bijgewerkt",
     "deleted": "Opmerking verwijderd",
@@ -595,28 +595,26 @@
     "emailResentTitle": "E-mail verstuurd!",
     "emailResentDescription": "Controleer je inbox voor de verificatielink."
   },
-  "mentions": {
-    "dashboard_title": "Vermeldingen",
+  "notifications": {
+    "dashboard_title": "Notificaties",
     "new": "nieuw",
-    "description": "Zie al je vermeldingen op één plek",
+    "description": "Zie al je notificaties op één plek",
     "unread": "Ongelezen",
     "all": "Alle",
     "mark_all_read": "Markeer alles als gelezen",
     "mark_as_read": "Markeer als gelezen",
-    "all_marked_read": "Alle vermeldingen gemarkeerd als gelezen",
-    "no_mentions": "Nog geen vermeldingen",
-    "no_mentions_description": "Wanneer iemand je vermeldt in een opmerking, verschijnt het hier",
-    "no_unread": "Geen ongelezen vermeldingen",
-    "no_unread_description": "Helemaal bij! Je hebt geen ongelezen vermeldingen",
-    "error_loading": "Kon vermeldingen niet laden",
+    "all_marked_read": "Alle notificaties gemarkeerd als gelezen",
+    "no_notifications": "Nog geen notificaties",
+    "no_notifications_description": "Wanneer je notificaties ontvangt, verschijnen ze hier",
+    "no_unread": "Geen ongelezen notificaties",
+    "no_unread_description": "Helemaal bij! Je hebt geen ongelezen notificaties",
+    "error_loading": "Kon notificaties niet laden",
     "error_mark_read": "Kon niet markeren als gelezen",
     "error_mark_all_read": "Kon niet alles markeren als gelezen",
     "filter_unread": "Ongelezen",
     "filter_all": "Alle",
     "load_more": "Meer laden",
-    "loading_more": "Laden..."
-  },
-  "notifications": {
+    "loading_more": "Laden...",
     "settings_title": "Notificatie voorkeuren",
     "settings_description": "Beheer hoe en wanneer je notificaties ontvangt voor @vermeldingen",
     "email_enabled": "E-mailnotificaties voor vermeldingen",

@@ -37,8 +37,7 @@
     "recent": "Recent",
     "collaboration": "Collaboration",
     "notifications": "Notifications",
-    "invitations": "Invitations",
-    "mentions": "Mentions"
+    "invitations": "Invitations"
   },
   "breadcrumbs": {
     "dashboard": "Dashboard",
@@ -395,6 +394,7 @@
     "cancel": "Cancel",
     "delete": "Delete",
     "resolve": "Mark resolved",
+    "resolved": "Resolved",
     "unresolve": "Mark unresolved",
     "markResolved": "Mark resolved",
     "markUnresolved": "Mark unresolved",
@@ -596,28 +596,26 @@
     "expiresIn": "Expires in",
     "from": "From"
   },
-  "mentions": {
-    "dashboard_title": "Mentions",
+  "notifications": {
+    "dashboard_title": "Notifications",
     "new": "new",
-    "description": "See all your mentions in one place",
+    "description": "See all your notifications in one place",
     "unread": "Unread",
     "all": "All",
     "mark_all_read": "Mark all as read",
     "mark_as_read": "Mark as read",
-    "all_marked_read": "All mentions marked as read",
-    "no_mentions": "No mentions yet",
-    "no_mentions_description": "When someone mentions you in a comment, it will appear here",
-    "no_unread": "No unread mentions",
-    "no_unread_description": "All caught up! You have no unread mentions",
-    "error_loading": "Failed to load mentions",
+    "all_marked_read": "All notifications marked as read",
+    "no_notifications": "No notifications yet",
+    "no_notifications_description": "When you receive notifications, they will appear here",
+    "no_unread": "No unread notifications",
+    "no_unread_description": "All caught up! You have no unread notifications",
+    "error_loading": "Failed to load notifications",
     "error_mark_read": "Failed to mark as read",
     "error_mark_all_read": "Failed to mark all as read",
     "filter_unread": "Unread",
     "filter_all": "All",
     "load_more": "Load more",
-    "loading_more": "Loading..."
-  },
-  "notifications": {
+    "loading_more": "Loading...",
     "settings_title": "Notification Preferences",
     "settings_description": "Manage how and when you receive notifications for @mentions",
     "email_enabled": "Email notifications for mentions",

@@ -17,22 +17,33 @@ export default async function FileDetailPage({ params }: PageProps) {
 
   let fileTitle = "Bestand";
   let projectName: string | undefined = undefined;
-  try {
-    const detail = await getProjectFileDetail(projectId, fileId);
-    fileTitle = detail.filename || fileTitle;
-    projectName = detail.project?.name || projectName;
-  } catch {}
-
+  
+  // Try to get project name from multiple sources
   try {
     const project = await getProject(projectId);
     projectName = project?.name;
   } catch {}
 
+  // If we still don't have project name, try from file detail
+  if (!projectName) {
+    try {
+      const detail = await getProjectFileDetail(projectId, fileId);
+      fileTitle = detail.filename || fileTitle;
+      projectName = detail.project?.name || projectName;
+    } catch {}
+  } else {
+    // If we have project name, still try to get the file title
+    try {
+      const detail = await getProjectFileDetail(projectId, fileId);
+      fileTitle = detail.filename || fileTitle;
+    } catch {}
+  }
+
   return (
     <LayoutSidebar 
       title={fileTitle}
       breadcrumbLabelOverride={fileTitle}
-      projectBreadcrumbLabelOverride={projectName}
+      projectBreadcrumbLabelOverride={projectName || projectId.slice(0, 8) + '...'}
       projectIdForBreadcrumb={projectId}
     >
       <Suspense 

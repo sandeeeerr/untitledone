@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import UserAvatar from "@/components/atoms/user-avatar";
 import EmptyState from "@/components/atoms/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Download, Clock, User, HardDrive, Trash2, Replace } from "lucide-react";
+import { Download, Clock, User, HardDrive, Trash2, Replace, AlertCircle } from "lucide-react";
 import { getFileIconForName, getFileIconForMime } from "@/lib/ui/file-icons";
 import { formatDistanceToNow } from "date-fns";
 import { nl } from "date-fns/locale";
@@ -391,38 +391,131 @@ export default function FileDetailClient({ projectId, fileId }: FileDetailClient
 function SimpleWaveWrapper({ projectId, fileId, onTime, forwardRef, onAnalyzed }: { projectId: string; fileId: string; onTime?: (ms: number) => void; forwardRef?: React.Ref<BasicWaveformHandle | null>; onAnalyzed?: (meta: { sampleRate?: number; channels?: number; durationMs?: number; bitrateKbps?: number }) => void }) {
   // Use content proxy endpoint directly - handles CORS for external storage providers
   const url = `/api/projects/${projectId}/files/${fileId}/content`;
-  
+  const [urlError, setUrlError] = React.useState<string | null>(null);
+
   // Keep a stable reference to the callback to avoid re-running the effect on each render
   const onAnalyzedRef = React.useRef<typeof onAnalyzed | undefined>(onAnalyzed);
   React.useEffect(() => { onAnalyzedRef.current = onAnalyzed; }, [onAnalyzed]);
-  
-  // Extract audio metadata when component mounts
+
+  // Pre-check URL accessibility
+  React.useEffect(() => {
+    const checkUrl = async () => {
+      try {
+        const response = await fetch(url, { method: 'HEAD' });
+        if (!response.ok) {
+          if (response.status === 401) {
+            // Try to get more specific error info
+            try {
+              const errorData = await response.json();
+              if (errorData.code === 'PROVIDER_TOKEN_EXPIRED') {
+                setUrlError("Storage connection expired. Please ask the file owner to reconnect their account.");
+              } else {
+                setUrlError("File not available");
+              }
+            } catch {
+              setUrlError("Storage connection expired. Please ask the file owner to reconnect their account.");
+            }
+          } else {
+            setUrlError("File not available");
+          }
+        } else {
+          setUrlError(null);
+        }
+      } catch (err) {
+        setUrlError("Failed to access file");
+      }
+    };
+    
+    checkUrl();
+  }, [url]);
+
+  const retryCheck = () => {
+    setUrlError(null);
+    // Re-trigger the check
+    const checkUrl = async () => {
+      try {
+        const response = await fetch(url, { method: 'HEAD' });
+        if (!response.ok) {
+          if (response.status === 401) {
+            // Try to get more specific error info
+            try {
+              const errorData = await response.json();
+              if (errorData.code === 'PROVIDER_TOKEN_EXPIRED') {
+                setUrlError("Storage connection expired. Please ask the file owner to reconnect their account.");
+              } else {
+                setUrlError("File not available");
+              }
+            } catch {
+              setUrlError("Storage connection expired. Please ask the file owner to reconnect their account.");
+            }
+          } else {
+            setUrlError("File not available");
+          }
+        } else {
+          setUrlError(null);
+        }
+      } catch (err) {
+        setUrlError("Failed to access file");
+      }
+    };
+    
+    checkUrl();
+  };
+
+  // Extract audio metadata when component mounts (with delay to avoid double-fetch)
   React.useEffect(() => {
     let mounted = true;
-    (async () => {
-      // Client-side audio metadata (Web Audio API)
-      try {
-        const response = await fetch(url);
-        if (!response.ok) return;
-        
-        const arrayBuf = await response.arrayBuffer();
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const audioBuf = await ctx.decodeAudioData(arrayBuf.slice(0));
-        
-        if (!mounted) return;
-        
-        const durationMs = Math.floor(audioBuf.duration * 1000);
-        const sampleRate = audioBuf.sampleRate;
-        const channels = audioBuf.numberOfChannels;
-        const bitrateKbps = durationMs > 0 ? Math.round(((response.headers.get('Content-Length') ? Number(response.headers.get('Content-Length')) : 0) * 8) / (durationMs / 1000) / 1000) : undefined;
-        onAnalyzedRef.current?.({ durationMs, sampleRate, channels, bitrateKbps });
-        ctx.close().catch(() => {});
-      } catch (err) {
-        console.error('Failed to analyze audio:', err);
-      }
-    })();
-    return () => { mounted = false };
+    const timer = setTimeout(() => {
+      (async () => {
+        // Client-side audio metadata (Web Audio API)
+        try {
+          const response = await fetch(url);
+          if (!response.ok) return;
+
+          const arrayBuf = await response.arrayBuffer();
+          const ctx = new (window.AudioContext || window.webkitAudioContext)();
+          const audioBuf = await ctx.decodeAudioData(arrayBuf.slice(0));
+
+          if (!mounted) return;
+
+          const durationMs = Math.floor(audioBuf.duration * 1000);
+          const sampleRate = audioBuf.sampleRate;
+          const channels = audioBuf.numberOfChannels;
+          const bitrateKbps = durationMs > 0 ? Math.round(((response.headers.get('Content-Length') ? Number(response.headers.get('Content-Length')) : 0) * 8) / (durationMs / 1000) / 1000) : undefined;
+          onAnalyzedRef.current?.({ durationMs, sampleRate, channels, bitrateKbps });
+          ctx.close().catch(() => {});
+        } catch (err) {
+          // Silent fail - metadata is not critical
+          console.error('Failed to analyze audio metadata:', err);
+        }
+      })();
+    }, 1000); // Delay to let WaveSurfer fetch first
+    return () => {
+      mounted = false;
+      clearTimeout(timer);
+    };
   }, [url]);
-  
+
+  // Render waveform immediately - BasicWaveform has its own error handling
+  // But show our pre-check error if available
+  if (urlError) {
+    return (
+      <div className="w-full flex items-center justify-center border-2 border-dashed border-muted-foreground/30 rounded-md bg-muted/20 h-32">
+        <div className="flex flex-col items-center gap-3 text-muted-foreground text-center px-4">
+          <AlertCircle className="h-6 w-6" />
+          <span className="text-sm">{urlError}</span>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={retryCheck}
+            className="text-xs"
+          >
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return <BasicWaveform ref={forwardRef as React.RefObject<BasicWaveformHandle>} url={url} height={96} onTime={onTime} />;
 }

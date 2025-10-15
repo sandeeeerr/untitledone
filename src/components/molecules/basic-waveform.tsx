@@ -4,7 +4,7 @@ import React, { forwardRef, useImperativeHandle } from "react";
 import WaveSurfer from "wavesurfer.js";
 import Timeline from "wavesurfer.js/dist/plugins/timeline.esm.js";
 import { Button } from "@/components/ui/button";
-import { Play, Pause } from "lucide-react";
+import { Play, Pause, AlertCircle, Loader2 } from "lucide-react";
 
 export type BasicWaveformHandle = {
   seekToMs: (ms: number) => void;
@@ -22,11 +22,27 @@ function BasicWaveform(
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [currentMs, setCurrentMs] = React.useState(0);
   const [durationMs, setDurationMs] = React.useState(0);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+  const [containerReady, setContainerReady] = React.useState(false);
   const onTimeRef = React.useRef<typeof onTime | undefined>(onTime);
   React.useEffect(() => { onTimeRef.current = onTime; }, [onTime]);
 
+  // Track when container ref is ready
+  const containerRefCallback = React.useCallback((node: HTMLDivElement | null) => {
+    containerRef.current = node;
+    if (node) {
+      setContainerReady(true);
+    }
+  }, []);
+
   React.useEffect(() => {
-    if (!containerRef.current || !url) return;
+    if (!url || !containerReady || !containerRef.current) {
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
 
     // Clear any previous canvases (React StrictMode double-mount in dev)
     try { containerRef.current.innerHTML = ""; } catch {}
@@ -53,6 +69,7 @@ function BasicWaveform(
     ws.on("ready", () => {
       const dur = ws.getDuration();
       setDurationMs(Math.floor(dur * 1000));
+      setIsLoading(false);
     });
     ws.on("audioprocess", () => {
       const ms = Math.floor(ws.getCurrentTime() * 1000);
@@ -61,6 +78,23 @@ function BasicWaveform(
     });
     ws.on("play", () => setIsPlaying(true));
     ws.on("pause", () => setIsPlaying(false));
+    ws.on("error", (err) => {
+      console.error("WaveSurfer error:", err);
+      
+      // Check if it's a 401 error (likely token expiration)
+      if (err && typeof err === 'object' && 'message' in err) {
+        const message = String(err.message);
+        if (message.includes('401') || message.includes('Unauthorized')) {
+          setError("Storage connection expired. Please ask the file owner to reconnect their account.");
+        } else {
+          setError("Failed to load audio file");
+        }
+      } else {
+        setError("Failed to load audio file");
+      }
+      
+      setIsLoading(false);
+    });
 
     ws.load(url);
 
@@ -76,7 +110,7 @@ function BasicWaveform(
       if (container) { try { container.innerHTML = ""; } catch {} }
       if (timeline) { try { timeline.innerHTML = ""; } catch {} }
     };
-  }, [url, height]);
+  }, [url, height, containerReady]);
 
   useImperativeHandle(ref, () => ({
     seekToMs: (ms: number) => {
@@ -99,20 +133,49 @@ function BasicWaveform(
 
   return (
     <div className="w-full my-2">
-      <div ref={containerRef} className="w-full" style={{ height }} />
-      <div ref={timelineRef} className="wavesurfer-timeline ws-timeline w-full h-3" />
-      <style jsx global>{`
+      {/* Error state overlay */}
+      {error && (
+        <div
+          className="w-full flex items-center justify-center border-2 border-dashed border-muted-foreground/30 rounded-md bg-muted/20"
+          style={{ height }}
+        >
+          <div className="flex flex-col items-center gap-2 text-muted-foreground text-center px-4">
+            <AlertCircle className="h-6 w-6" />
+            <span className="text-sm">{error}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Loading state overlay */}
+      {isLoading && !error && (
+        <div
+          className="w-full flex items-center justify-center border-2 border-dashed border-muted-foreground/30 rounded-md bg-muted/20"
+          style={{ height }}
+        >
+          <div className="flex flex-col items-center gap-2 text-muted-foreground">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <span className="text-sm">Rendering waveform...</span>
+          </div>
+        </div>
+      )}
+
+      {/* Waveform container - always render but hide when loading/error */}
+      <div style={{ display: isLoading || error ? 'none' : 'block' }}>
+        <div ref={containerRefCallback} className="w-full" style={{ height }} />
+        <div ref={timelineRef} className="wavesurfer-timeline ws-timeline w-full h-3" />
+        <style jsx global>{`
         .ws-timeline {
           color: rgba(107, 114, 128, 0.9); /* slate-500 */
         }
         .ws-timeline text { fill: rgba(107,114,128,0.9); font-size: 10px; }
         .ws-timeline line { stroke: rgba(156,163,175,0.6); }
-      `}</style>
-      <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
-        <Button size="sm" variant="outline" className="h-8 w-8 p-0" onClick={toggle} aria-label={isPlaying ? "Pause" : "Play"}>
-          {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-        </Button>
-        <span className="tabular-nums">{mmss(currentMs)}/{mmss(durationMs)}</span>
+        `}</style>
+        <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
+          <Button size="sm" variant="outline" className="h-8 w-8 p-0" onClick={toggle} aria-label={isPlaying ? "Pause" : "Play"}>
+            {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+          </Button>
+          <span className="tabular-nums">{mmss(currentMs)}/{mmss(durationMs)}</span>
+        </div>
       </div>
     </div>
   );

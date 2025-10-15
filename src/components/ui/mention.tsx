@@ -8,10 +8,8 @@ function Mention({ className, ...props }: React.ComponentProps<typeof MentionPri
     <MentionPrimitive.Root
       data-slot="mention"
       className={cn(
-        // Enhanced mention tag styling for better visibility
-        '[&_[data-tag]]:rounded-md [&_[data-tag]]:bg-blue-500 [&_[data-tag]]:px-1.5 [&_[data-tag]]:py-0.5 [&_[data-tag]]:text-white [&_[data-tag]]:font-medium [&_[data-tag]]:text-sm [&_[data-tag]]:inline-flex [&_[data-tag]]:items-center [&_[data-tag]]:gap-1 [&_[data-tag]]:shadow-sm [&_[data-tag]]:border [&_[data-tag]]:border-blue-600 [&_[data-tag]]:cursor-default dark:[&_[data-tag]]:bg-blue-600 dark:[&_[data-tag]]:border-blue-500',
-        // Ensure proper spacing and alignment
-        '[&_[data-tag]]:mx-0.5 [&_[data-tag]]:my-0.5',
+        // Remove visual highlighting - mentions appear as plain text
+        '[&_[data-tag]]:inline [&_[data-tag]]:text-current [&_[data-tag]]:font-normal',
         className
       )}
       {...props}

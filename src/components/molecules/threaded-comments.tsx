@@ -8,7 +8,7 @@ import UserAvatar from "@/components/atoms/user-avatar";
 import { useCreateProjectComment, useUpdateProjectComment, useDeleteProjectComment, useProfile } from "@/lib/api/queries";
 import { type ProjectComment } from "@/lib/api/comments";
 import { buildCommentTree, type CommentTreeNode } from "@/lib/utils/comments";
-import { CornerUpRight, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { CornerUpRight, MoreHorizontal, Pencil, Trash2, Check, X, CheckCircle2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { CommentMentionInput } from "@/components/molecules/comment-mention-input";
 import { HighlightedText } from "@/lib/utils/highlight-mentions";
@@ -189,16 +189,20 @@ export default function ThreadedComments({
     }
   }, [newComment, projectId, context, getTimestampMs, currentProfile, create, t, addOptimisticComment]);
 
+  const update = useUpdateProjectComment();
+
   const toggleResolved = useCallback(async (c: ProjectComment) => {
-    // Optimistic update
-    setComments((prev) => 
-      prev.map((comment) => 
-        String(comment.id) === String(c.id) 
-          ? { ...comment, resolved: !c.resolved } 
-          : comment
-      )
-    );
-  }, []);
+    try {
+      await update.mutateAsync({
+        projectId,
+        commentId: String(c.id),
+        resolved: !c.resolved,
+      });
+    } catch (err) {
+      console.error("Failed to toggle resolved status:", err);
+      setError(err instanceof Error ? err.message : t("failedToUpdate", { defaultValue: "Failed to update comment" }));
+    }
+  }, [projectId, update, t]);
 
   const handleReply = useCallback(async (parent: ProjectComment, text: string) => {
     try {
@@ -288,6 +292,11 @@ function Thread({
   const [isEditing, setIsEditing] = React.useState(false);
   const [draft, setDraft] = React.useState(node.comment.comment);
   const [isPending, startTransition] = useTransition();
+
+  // Update draft when comment changes (e.g., from realtime updates)
+  useEffect(() => {
+    setDraft(node.comment.comment);
+  }, [node.comment.comment]);
   
   const maxIndent = Math.min(depth, 6);
   const hasManyReplies = node.children.length > 3;
@@ -355,13 +364,15 @@ function Thread({
   }, [replyText, node.comment, onReply]);
 
   return (
-    <div 
+    <div
       ref={commentRef}
       data-comment-id={node.comment.id}
-      role="treeitem" 
-      aria-level={depth + 1} 
-      aria-selected={isHighlighted ? 'true' : 'false'} 
-      className={`flex gap-3 text-sm rounded-md py-2 transition-colors ${isHighlighted ? 'bg-blue-50 dark:bg-blue-950/20' : ''}`} 
+      role="treeitem"
+      aria-level={depth + 1}
+      aria-selected={isHighlighted ? 'true' : 'false'}
+      className={`flex gap-3 text-sm rounded-md py-2 transition-colors ${
+        isHighlighted ? 'bg-blue-50 dark:bg-blue-950/20' : ''
+      }`}
       style={{ paddingLeft: 0 + maxIndent * 6 }}
     >
       <UserAvatar
@@ -387,6 +398,12 @@ function Thread({
               <Badge variant="secondary" className="text-[10px]">{formatMs(Number(node.comment.timestamp_ms))}</Badge>
             </button>
           )}
+          {node.comment.resolved && (
+            <Badge variant="outline" className="text-[10px] gap-1 bg-green-50 text-green-700 border-green-200 dark:bg-green-950/50 dark:text-green-400 dark:border-green-800">
+              <CheckCircle2 className="h-2.5 w-2.5" />
+              {t("resolved", { defaultValue: "Resolved" })}
+            </Badge>
+          )}
           {node.comment.edited && <span className="text-[10px] text-muted-foreground">{t("edited")}</span>}
           <div className="ml-auto">
             <DropdownMenu>
@@ -398,7 +415,10 @@ function Thread({
                 <DropdownMenuItem onClick={async () => { await del.mutateAsync(String(node.comment.id)); }} className="cursor-pointer text-red-600" asChild>
                   <button type="button" className="w-full text-left flex items-center"><Trash2 className="h-3.5 w-3.5 mr-2" />{t("delete")}</button>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={async () => { await onToggleResolved(node.comment); if (!node.comment.resolved) setShowAllReplies(false); }} className="cursor-pointer">{node.comment.resolved ? t("markUnresolved") : t("markResolved")}</DropdownMenuItem>
+                <DropdownMenuItem onClick={async () => { await onToggleResolved(node.comment); if (!node.comment.resolved) setShowAllReplies(false); }} className="cursor-pointer">
+                  {node.comment.resolved ? <X className="h-3.5 w-3.5 mr-2" /> : <Check className="h-3.5 w-3.5 mr-2" />}
+                  {node.comment.resolved ? t("markUnresolved") : t("markResolved")}
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

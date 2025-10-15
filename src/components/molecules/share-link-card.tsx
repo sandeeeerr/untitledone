@@ -122,85 +122,90 @@ export function ShareLinkCard({
     <>
       <Card>
         <CardContent className="p-4">
-          <div className="flex items-start justify-between gap-4">
-            {/* Link info */}
-            <div className="flex-1 space-y-2 min-w-0">
-              {/* Status and expiration */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <LinkStatusBadge status={status} />
-                {status === "active" ? (
-                  <span className="text-sm text-muted-foreground">
-                    {t("expires_in")} {timeRemaining}
-                  </span>
-                ) : status === "expired" ? (
-                  <span className="text-sm text-muted-foreground">
-                    {t("link_expired")}
-                  </span>
-                ) : status === "used" ? (
-                  <span className="text-sm text-muted-foreground">
-                    {t("link_used")}
-                  </span>
-                ) : (
-                  <span className="text-sm text-muted-foreground">
-                    {t("link_revoked")}
-                  </span>
-                )}
-              </div>
+          <div className="space-y-3">
+            {/* Status, metadata, and actions row */}
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+              {/* Link info */}
+              <div className="flex-1 space-y-2 min-w-0">
+                {/* Status and expiration */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <LinkStatusBadge status={status} />
+                  {status === "active" ? (
+                    <span className="text-sm text-muted-foreground">
+                      {t("expires_in")} {timeRemaining}
+                    </span>
+                  ) : status === "expired" ? (
+                    <span className="text-sm text-muted-foreground">
+                      {t("link_expired")}
+                    </span>
+                  ) : status === "used" ? (
+                    <span className="text-sm text-muted-foreground">
+                      {t("link_used")}
+                    </span>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">
+                      {t("link_revoked")}
+                    </span>
+                  )}
+                </div>
 
-              {/* Creator and timestamps */}
-              <div className="text-sm text-muted-foreground space-y-1">
-                <div>
-                  {t("created_by")} <span className="font-medium">{creatorName}</span>
-                </div>
-                <div>
-                  {formatDistanceToNow(new Date(createdAt), { addSuffix: true })}
-                </div>
-                {usedAt && (
+                {/* Creator and timestamps */}
+                <div className="text-sm text-muted-foreground space-y-1">
                   <div>
-                    {t("used")}{" "}
-                    {formatDistanceToNow(new Date(usedAt), { addSuffix: true })}
+                    {t("created_by")} <span className="font-medium">{creatorName}</span>
                   </div>
-                )}
+                  <div>
+                    {formatDistanceToNow(new Date(createdAt), { addSuffix: true })}
+                  </div>
+                  {usedAt && (
+                    <div>
+                      {t("used")}{" "}
+                      {formatDistanceToNow(new Date(usedAt), { addSuffix: true })}
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* URL (truncated) - only show if active */}
+              {/* Actions */}
               {isActive && (
-                <div className="text-xs font-mono text-muted-foreground truncate">
-                  {url}
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCopy}
+                    disabled={isCopied}
+                    className="whitespace-nowrap"
+                  >
+                    {isCopied ? (
+                      <>
+                        <Check className="h-4 w-4 mr-1" />
+                        {t("copied")}
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-4 w-4 mr-1" />
+                        {t("copy_link")}
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowRevokeDialog(true)}
+                    disabled={isRevoking}
+                    className="whitespace-nowrap"
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    {t("revoke_link")}
+                  </Button>
                 </div>
               )}
             </div>
 
-            {/* Actions */}
+            {/* URL - full width on its own row */}
             {isActive && (
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCopy}
-                  disabled={isCopied}
-                >
-                  {isCopied ? (
-                    <>
-                      <Check className="h-4 w-4 mr-1" />
-                      {t("copied")}
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="h-4 w-4 mr-1" />
-                      {t("copy_link")}
-                    </>
-                  )}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowRevokeDialog(true)}
-                  disabled={isRevoking}
-                >
-                  <Trash2 className="h-4 w-4 mr-1" />
-                  {t("revoke_link")}
-                </Button>
+              <div className="text-xs font-mono text-muted-foreground break-all bg-muted/50 rounded px-2 py-1.5">
+                {url}
               </div>
             )}
           </div>

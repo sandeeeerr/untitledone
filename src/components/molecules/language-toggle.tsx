@@ -5,14 +5,16 @@ import { Globe } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { setLanguageCookie } from "@/lib/cookies"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 
 export function LanguageToggle() {
   const router = useRouter()
+  const pathname = usePathname()
 
   const change = (locale: string) => {
     setLanguageCookie(locale)
-    router.refresh()
+    // Force a hard navigation to trigger i18n re-evaluation
+    window.location.reload()
   }
 
   return (

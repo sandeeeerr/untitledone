@@ -17,6 +17,7 @@ import { type Project } from '@/lib/api/projects';
 import InviteDialog from '@/components/molecules/invite-dialog';
 import UploadDialog from '@/components/molecules/upload-dialog';
 import CreateVersionDialog from '@/components/molecules/create-version-dialog';
+import { LeaveProjectDialog } from '@/components/molecules/leave-project-dialog';
 import { useProjectMembers } from '@/lib/api/queries';
 import UserAvatar from '@/components/atoms/user-avatar';
 import ProjectActivity from '@/components/organisms/project-activity';
@@ -54,6 +55,7 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
   const [filesQuery, setFilesQuery] = useState<string>("");
   const [activitySort, setActivitySort] = useState<'newest' | 'oldest'>('newest');
   const [filesSort, setFilesSort] = useState<'newest' | 'oldest' | 'name'>('newest');
+  const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   
   // Use deferred values for smoother search experience
   const deferredActivityQuery = useDeferredValue(activityQuery);
@@ -76,23 +78,22 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
     refetch();
   }, [refetch]);
 
-  const handleLeaveProject = useCallback(async () => {
+  const handleLeaveProject = useCallback(() => {
+    setShowLeaveDialog(true);
+  }, []);
+
+  const handleConfirmLeaveProject = useCallback(async () => {
     if (!project?.id) return;
-    
-    const confirmed = window.confirm(
-      t('actions.leaveProjectConfirm', { projectName: project.name })
-    );
-    
-    if (!confirmed) return;
     
     try {
       await leaveProjectMutation.mutateAsync(project.id);
+      setShowLeaveDialog(false);
       router.push('/projects');
     } catch (error) {
       // Error is handled by the mutation's onError
       console.error('Failed to leave project:', error);
     }
-  }, [project, leaveProjectMutation, router, t]);
+  }, [project, leaveProjectMutation, router]);
 
   const lastActivityIso = React.useMemo(() => {
     if (!activity || activity.length === 0) return project?.updated_at ?? null;
@@ -180,25 +181,6 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                       </Badge>
                     </div>
                   </div>
-                  {currentUser?.id && project?.owner_id === currentUser.id && (
-                    <div className="flex items-center gap-2 shrink-0 w-full md:w-auto md:justify-end mt-2 md:mt-0">
-                      <Button size="sm" variant="outline" asChild className="flex-1 sm:flex-none">
-                        <Link href={`/projects/${project.id}/edit`}>
-                          <Settings className="h-4 w-4" />
-                          {t("actions.edit")}
-                        </Link>
-                      </Button>
-                      <InviteDialog 
-                        projectId={project.id} 
-                        trigger={
-                          <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
-                            <UserPlus className="h-4 w-4" />
-                            {t("actions.invite")}
-                          </Button>
-                        } 
-                      />
-                    </div>
-                  )}
                   {isCollaborator && (
                     <div className="flex items-center gap-2 shrink-0 w-full md:w-auto md:justify-end mt-2 md:mt-0">
                       <Button 
@@ -231,6 +213,27 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
                     </AccordionTrigger>
                     <AccordionContent className="pt-2 pb-4">
                       <div className="space-y-6">
+                        {/* Actions - Mobile only */}
+                        {currentUser?.id && project?.owner_id === currentUser.id && (
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="ghost" asChild className="flex-1">
+                              <Link href={`/projects/${project.id}/edit`}>
+                                <Settings className="h-4 w-4 mr-2" />
+                                {t("actions.edit")}
+                              </Link>
+                            </Button>
+                            <InviteDialog
+                              projectId={project.id}
+                              trigger={
+                                <Button variant="ghost" size="sm" className="flex-1">
+                                  <UserPlus className="h-4 w-4 mr-2" />
+                                  {t("actions.invite")}
+                                </Button>
+                              }
+                            />
+                          </div>
+                        )}
+
                         {/* Project Description */}
                         {project.description && (
                           <div>
@@ -477,7 +480,17 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
           <div className="hidden lg:block">
             <Card className="sticky top-20">
               <CardHeader className="p-4 md:p-6 !pb-0">
-                <CardTitle className="text-base">Details</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base">Details</CardTitle>
+                  {currentUser?.id && project?.owner_id === currentUser.id && (
+                    <Button size="sm" variant="ghost" asChild>
+                      <Link href={`/projects/${project.id}/edit`}>
+                        <Settings className="h-4 w-4 mr-2" />
+                        {t("actions.edit")}
+                      </Link>
+                    </Button>
+                  )}
+                </div>
               </CardHeader>
               <CardContent className="p-4 md:p-6 space-y-6">
                 {/* Project Description */}
@@ -527,9 +540,22 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
 
                 {/* Team */}
                 <div>
-                  <div className="flex items-center gap-2 mb-2 text-sm font-medium">
-                    <UserPlus className="h-4 w-4" />
-                          <span>{t("details.team")}</span>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <UserPlus className="h-4 w-4" />
+                      <span>{t("details.team")}</span>
+                    </div>
+                    {currentUser?.id && project?.owner_id === currentUser.id && (
+                      <InviteDialog
+                        projectId={project.id}
+                        trigger={
+                          <Button variant="ghost" size="sm">
+                            <UserPlus className="h-4 w-4 mr-2" />
+                            {t("actions.invite")}
+                          </Button>
+                        }
+                      />
+                    )}
                   </div>
                   <div className="flex -space-x-2">
                     {(members ?? []).slice(0, 6).map(m => (
@@ -564,6 +590,14 @@ export default function ProjectDetailClient({ id, initialProject }: ProjectDetai
           </div>
         </div>
       </div>
+      
+      <LeaveProjectDialog
+        open={showLeaveDialog}
+        onOpenChange={setShowLeaveDialog}
+        projectName={project?.name || ''}
+        onConfirm={handleConfirmLeaveProject}
+        isLeaving={leaveProjectMutation.isPending}
+      />
     </LayoutSidebar>
   );
 }

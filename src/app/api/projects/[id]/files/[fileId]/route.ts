@@ -43,7 +43,7 @@ export const runtime = "nodejs";
 
 const paramsSchema = z.object({
   id: z.string().uuid("Invalid project ID"),
-  fileId: z.string().uuid("Invalid file ID"),
+  fileId: z.string().min(1, "Invalid file ID"), // Support both UUIDs and external IDs (Google Drive, Dropbox)
 });
 
 export async function GET(
@@ -90,13 +90,32 @@ export async function GET(
       }
     }
 
-    // Get file details
-    const { data: file, error: fileError } = await (supabase as SupabaseClient)
+    // Get file details - check both id and external_file_id for external storage support
+    let file: any = null;
+    let fileError: any = null;
+
+    // First try by id (UUID)
+    const { data: fileById, error: errorById } = await (supabase as SupabaseClient)
       .from("project_files")
       .select("id, filename, file_path, file_size, file_type, uploaded_at, uploaded_by, metadata, storage_provider, external_file_id")
       .eq("id", validFileId)
       .eq("project_id", projectId)
-      .single();
+      .maybeSingle();
+
+    if (fileById) {
+      file = fileById;
+    } else {
+      // If not found by id, try by external_file_id (Google Drive, Dropbox)
+      const { data: fileByExternal, error: errorByExternal } = await (supabase as SupabaseClient)
+        .from("project_files")
+        .select("id, filename, file_path, file_size, file_type, uploaded_at, uploaded_by, metadata, storage_provider, external_file_id")
+        .eq("external_file_id", validFileId)
+        .eq("project_id", projectId)
+        .maybeSingle();
+
+      file = fileByExternal;
+      fileError = errorByExternal;
+    }
 
     if (fileError || !file) {
       return NextResponse.json({ error: "File not found" }, { status: 404 });
