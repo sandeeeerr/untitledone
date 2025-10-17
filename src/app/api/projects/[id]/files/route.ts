@@ -39,6 +39,15 @@ const metaSchema = z.object({
   storageProvider: z.enum(['local', 'dropbox', 'google_drive']).optional().default('local'),
 });
 
+// Configure body size limit for file uploads
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '200mb',
+    },
+  },
+};
+
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }

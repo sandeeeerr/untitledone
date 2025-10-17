@@ -47,6 +47,31 @@ export default function UploadDialog({ projectId, trigger }: UploadDialogProps) 
 		setFiles(prev => [...prev, ...newFiles])
 	}, [])
 
+	const handleDragOver = useCallback((e: React.DragEvent) => {
+		e.preventDefault()
+		e.stopPropagation()
+	}, [])
+
+	const handleDragEnter = useCallback((e: React.DragEvent) => {
+		e.preventDefault()
+		e.stopPropagation()
+	}, [])
+
+	const handleDragLeave = useCallback((e: React.DragEvent) => {
+		e.preventDefault()
+		e.stopPropagation()
+	}, [])
+
+	const handleDrop = useCallback((e: React.DragEvent) => {
+		e.preventDefault()
+		e.stopPropagation()
+		
+		const files = Array.from(e.dataTransfer.files)
+		if (files.length > 0) {
+			onDrop(files)
+		}
+	}, [onDrop])
+
 	const removeFile = (id: string) => {
 		setFiles(prev => prev.filter(f => f.id !== id))
 	}
@@ -203,6 +228,10 @@ export default function UploadDialog({ projectId, trigger }: UploadDialogProps) 
 							"cursor-pointer"
 						)}
 						onClick={() => document.getElementById('file-input')?.click()}
+						onDragOver={handleDragOver}
+						onDragEnter={handleDragEnter}
+						onDragLeave={handleDragLeave}
+						onDrop={handleDrop}
 					>
 						<Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
 						<p className="text-sm text-muted-foreground mb-2">
