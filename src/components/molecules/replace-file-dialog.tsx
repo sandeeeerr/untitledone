@@ -51,11 +51,7 @@ export default function ReplaceFileDialog({ projectId, fileId, trigger, onReplac
       
       if (isLargeFile) {
         // Direct upload to Supabase Storage
-        const { createClient } = await import('@supabase/supabase-js');
-        const supabase = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        );
+        const supabase = (await import('@/lib/supabase-client')).default;
         
         const key = `${projectId}/${crypto.randomUUID()}-${file.name}`;
         const { error: uploadError } = await supabase.storage

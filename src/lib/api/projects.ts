@@ -290,13 +290,16 @@ export async function uploadProjectFile(projectId: string, payload: UploadFileIn
 	const isLargeFile = payload.file.size > 4.5 * 1024 * 1024; // 4.5MB
 	const isLocalStorage = (payload.storageProvider || 'local') === 'local';
 	
+	console.log('Upload file:', {
+		size: payload.file.size,
+		isLargeFile,
+		isLocalStorage,
+		storageProvider: payload.storageProvider
+	});
+	
 	if (isLargeFile && isLocalStorage) {
 		// Direct upload to Supabase Storage
-		const { createClient } = await import('@supabase/supabase-js');
-		const supabase = createClient(
-			process.env.NEXT_PUBLIC_SUPABASE_URL!,
-			process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-		);
+		const supabase = (await import('@/lib/supabase-client')).default;
 		
 		const key = `${projectId}/${crypto.randomUUID()}-${payload.file.name}`;
 		const { error: uploadError } = await supabase.storage
