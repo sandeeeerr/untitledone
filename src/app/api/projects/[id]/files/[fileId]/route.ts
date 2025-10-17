@@ -13,8 +13,12 @@ export const config = {
     bodyParser: {
       sizeLimit: '200mb',
     },
+    responseLimit: false,
   },
 };
+
+// Use Node.js runtime for file uploads to avoid Edge Runtime limitations
+// export const runtime = 'nodejs';
 
 // Type for file metadata
 interface FileMetadata {
@@ -328,9 +332,46 @@ export async function POST(
 
       // Parse multipart form-data
       const form = await req.formData().catch(() => null);
-      const newFile = form?.get("file");
-      const description = (form?.get("description") as string | null) || undefined;
-      if (!(newFile instanceof File)) return NextResponse.json({ error: "Missing file" }, { status: 400 });
+      if (!form) return NextResponse.json({ error: "Invalid form data" }, { status: 400 });
+      
+      const description = (form.get("description") as string | null) || undefined;
+      
+      // Check if this is a metadata-only request (for large files uploaded directly to Supabase)
+      const uploadedPath = form.get("uploadedPath") as string | null;
+      const isMetadataOnly = !!uploadedPath;
+      
+      let newFile: File | null = null;
+      let fileSize: number;
+      let fileName: string;
+      let fileType: string;
+      
+      if (isMetadataOnly) {
+        // Large file already uploaded directly to Supabase Storage
+        const sizeStr = form.get("size") as string | null;
+        const name = form.get("name") as string | null;
+        const type = form.get("type") as string | null;
+        
+        if (!sizeStr || !name || !type) {
+          return NextResponse.json({ error: "Missing required metadata for pre-uploaded file" }, { status: 400 });
+        }
+        
+        fileSize = parseInt(sizeStr, 10);
+        fileName = name;
+        fileType = type;
+        
+        // Validate uploaded path format
+        if (!uploadedPath.startsWith(`${projectId}/`)) {
+          return NextResponse.json({ error: "Invalid uploaded path" }, { status: 400 });
+        }
+      } else {
+        // Original flow - file uploaded via FormData
+        newFile = form.get("file") as File | null;
+        if (!(newFile instanceof File)) return NextResponse.json({ error: "Missing file" }, { status: 400 });
+        
+        fileSize = newFile.size;
+        fileName = newFile.name;
+        fileType = newFile.type;
+      }
 
       // Validate MIME and size (allow audio + common DAW/project/preset/archive/doc/image/video)
       const allowMimeOrExt: RegExp[] = [
@@ -340,10 +381,10 @@ export async function POST(
         /^application\/pdf$/i,
         /\.(wav|mp3|flac|aac|aiff|ogg|m4a|opus|mid|midi|syx|als|flp|logicx|band|cpr|ptx|rpp|song|bwproject|reason|nki|adg|fst|fxp|fxb|nmsv|h2p|zip|rar|7z|tar|gz|txt|md|doc|docx|pdf|png|jpg|jpeg|gif|webp|svg|mp4|mov|mkv|json|xml)$/i,
       ];
-      const name = newFile.name || file.filename || "file";
+      const name = fileName || file.filename || "file";
       const fileWithType = file as { file_type?: string };
-      const type = newFile.type || fileWithType.file_type || "application/octet-stream";
-      const size = Number(newFile.size || 0);
+      const type = fileType || fileWithType.file_type || "application/octet-stream";
+      const size = fileSize;
       const maxBytes = getMaxUploadFileBytes();
       const allowed = allowMimeOrExt.some((re) => re.test(type) || re.test(name));
       if (!allowed) {
@@ -374,8 +415,16 @@ export async function POST(
         }
       }
 
-      // Upload new object under a fresh key
-      const newKey = await uploadProjectObject({ projectId, file: newFile });
+      // Upload new object or use pre-uploaded path
+      let newKey: string;
+      
+      if (isMetadataOnly) {
+        // File already uploaded directly to Supabase Storage
+        newKey = uploadedPath;
+      } else {
+        // Upload via existing function
+        newKey = await uploadProjectObject({ projectId, file: newFile! });
+      }
 
       // Insert new file record
       const { data: newFileRow, error: insertNewErr } = await (supabase as SupabaseClient)

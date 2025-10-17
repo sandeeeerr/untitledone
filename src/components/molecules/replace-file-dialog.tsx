@@ -46,20 +46,69 @@ export default function ReplaceFileDialog({ projectId, fileId, trigger, onReplac
     setSubmitting(true);
     setError(null);
     try {
-      const form = new FormData();
-      form.append("file", file);
-      if (description.trim()) form.append("description", description.trim());
-      const res = await fetch(`/api/projects/${projectId}/files/${fileId}?action=replace`, { method: "POST", body: form });
-      if (!res.ok) {
-        const payload = await res.json().catch(() => ({}));
-        throw new Error(payload?.error || "Failed to replace file");
+      // For large files (>4.5MB), upload directly to Supabase Storage
+      const isLargeFile = file.size > 4.5 * 1024 * 1024; // 4.5MB
+      
+      if (isLargeFile) {
+        // Direct upload to Supabase Storage
+        const { createClient } = await import('@supabase/supabase-js');
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        );
+        
+        const key = `${projectId}/${crypto.randomUUID()}-${file.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from('project-files')
+          .upload(key, file, {
+            contentType: file.type || 'application/octet-stream',
+            cacheControl: '3600'
+          });
+        
+        if (uploadError) {
+          throw new Error(`Upload failed: ${uploadError.message}`);
+        }
+        
+        // Send metadata to our API
+        const form = new FormData();
+        form.append("uploadedPath", key);
+        form.append("size", file.size.toString());
+        form.append("type", file.type || 'application/octet-stream');
+        form.append("name", file.name);
+        if (description.trim()) form.append("description", description.trim());
+        
+        const res = await fetch(`/api/projects/${projectId}/files/${fileId}?action=replace`, { 
+          method: "POST", 
+          body: form 
+        });
+        
+        if (!res.ok) {
+          const payload = await res.json().catch(() => ({}));
+          throw new Error(payload?.error || "Failed to replace file");
+        }
+        const data = (await res.json().catch(() => ({}))) as { newFileId?: string };
+        const newId = data?.newFileId;
+        setOpen(false);
+        setFile(null);
+        setDescription("");
+        onReplaced?.(newId || "");
+      } else {
+        // Original flow for small files
+        const form = new FormData();
+        form.append("file", file);
+        if (description.trim()) form.append("description", description.trim());
+        const res = await fetch(`/api/projects/${projectId}/files/${fileId}?action=replace`, { method: "POST", body: form });
+        if (!res.ok) {
+          const payload = await res.json().catch(() => ({}));
+          throw new Error(payload?.error || "Failed to replace file");
+        }
+        const data = (await res.json().catch(() => ({}))) as { newFileId?: string };
+        const newId = data?.newFileId;
+        setOpen(false);
+        setFile(null);
+        setDescription("");
+        onReplaced?.(newId || "");
       }
-      const data = (await res.json().catch(() => ({}))) as { newFileId?: string };
-      const newId = data?.newFileId;
-      setOpen(false);
-      setFile(null);
-      setDescription("");
-      onReplaced?.(newId || "");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to replace file");
     } finally {

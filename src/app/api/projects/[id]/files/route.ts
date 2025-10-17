@@ -45,14 +45,19 @@ export const config = {
     bodyParser: {
       sizeLimit: '200mb',
     },
+    responseLimit: false,
   },
 };
+
+// Use Node.js runtime for file uploads to avoid Edge Runtime limitations
+export const runtime = 'nodejs';
 
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // console.log("File upload API called");
     const supabase = await createServerClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
@@ -67,20 +72,71 @@ export async function POST(
     const projectId = validation.data.id;
 
     // Parse multipart form-data
-    const form = await req.formData().catch(() => null);
+    // console.log("Processing file upload request...");
+    const form = await req.formData().catch((error) => {
+      console.error("FormData parsing error:", error);
+      return null;
+    });
     if (!form) {
       return NextResponse.json({ error: "Invalid form data" }, { status: 400 });
     }
 
-    const file = form.get("file");
-    if (!(file instanceof File)) {
-      return NextResponse.json({ error: "Missing file" }, { status: 400 });
+    // Check if this is a metadata-only request (for large files uploaded directly to Supabase)
+    const uploadedPath = form.get("uploadedPath") as string | null;
+    const isMetadataOnly = !!uploadedPath;
+
+    let file: File | null = null;
+    let fileSize: number;
+    let fileName: string;
+    let fileType: string;
+
+    if (isMetadataOnly) {
+      // Large file already uploaded directly to Supabase Storage
+      const sizeStr = form.get("size") as string | null;
+      const name = form.get("name") as string | null;
+      const type = form.get("type") as string | null;
+      
+      if (!sizeStr || !name || !type) {
+        return NextResponse.json({ error: "Missing required metadata for pre-uploaded file" }, { status: 400 });
+      }
+      
+      fileSize = parseInt(sizeStr, 10);
+      fileName = name;
+      fileType = type;
+      
+      // Validate uploaded path format
+      if (!uploadedPath.startsWith(`${projectId}/`)) {
+        return NextResponse.json({ error: "Invalid uploaded path" }, { status: 400 });
+      }
+      
+      // console.log("Metadata-only request for pre-uploaded file:", {
+      //   path: uploadedPath,
+      //   name: fileName,
+      //   size: fileSize,
+      //   type: fileType
+      // });
+    } else {
+      // Original flow - file uploaded via FormData
+      file = form.get("file") as File | null;
+      if (!file) {
+        return NextResponse.json({ error: "Missing file" }, { status: 400 });
+      }
+      
+      fileSize = file.size;
+      fileName = file.name;
+      fileType = file.type;
+      
+      // console.log("File received:", {
+      //   name: fileName,
+      //   size: fileSize,
+      //   type: fileType
+      // });
     }
 
     // Per-file size guard (configurable)
     {
       const maxBytes = getMaxUploadFileBytes();
-      const size = Number(file.size || 0);
+      const size = fileSize;
       if (size <= 0 || size > maxBytes) {
         return NextResponse.json({ error: "File too large", code: "FILE_TOO_LARGE", details: { maxBytes, size } }, { status: 413 });
       }
@@ -97,7 +153,7 @@ export async function POST(
 
     // Quota check before uploading (only for local storage)
     if (storageProvider === 'local') {
-      const incomingBytes = Number(file.size || 0);
+      const incomingBytes = fileSize;
       const { allowed, maxBytes, usedBytes } = await willExceedUserQuota(user.id, incomingBytes);
       if (!allowed) {
         return NextResponse.json(
@@ -116,35 +172,50 @@ export async function POST(
       }
     }
 
-    // Get storage provider adapter
+    // Get storage provider adapter and upload result
     let uploadResult;
-    try {
-      const adapter = await getStorageProvider(storageProvider, user.id);
-      const uploadPath = `${projectId}/${crypto.randomUUID()}-${file.name}`;
-      uploadResult = await adapter.upload(file, uploadPath, user.id);
-    } catch (error) {
-      console.error("Storage provider upload failed:", error);
-      
-      // Check for specific error codes
-      if (error instanceof Error) {
-        if (error.message.includes('PROVIDER_NOT_CONNECTED')) {
-          return NextResponse.json(
-            { error: "Storage provider not connected", code: "PROVIDER_NOT_CONNECTED" },
-            { status: 400 }
-          );
+    
+    if (isMetadataOnly) {
+      // File already uploaded directly to Supabase Storage
+      uploadResult = {
+        fileId: uploadedPath,
+        path: uploadedPath,
+        size: fileSize,
+        metadata: {
+          contentType: fileType,
+          uploadedAt: new Date().toISOString(),
+        },
+      };
+    } else {
+      // Upload via storage provider adapter
+      try {
+        const adapter = await getStorageProvider(storageProvider, user.id);
+        const uploadPath = `${projectId}/${crypto.randomUUID()}-${fileName}`;
+        uploadResult = await adapter.upload(file!, uploadPath, user.id);
+      } catch (error) {
+        console.error("Storage provider upload failed:", error);
+        
+        // Check for specific error codes
+        if (error instanceof Error) {
+          if (error.message.includes('PROVIDER_NOT_CONNECTED')) {
+            return NextResponse.json(
+              { error: "Storage provider not connected", code: "PROVIDER_NOT_CONNECTED" },
+              { status: 400 }
+            );
+          }
+          if (error.message.includes('PROVIDER_TOKEN_EXPIRED')) {
+            return NextResponse.json(
+              { error: "Storage provider token expired", code: "PROVIDER_TOKEN_EXPIRED" },
+              { status: 401 }
+            );
+          }
         }
-        if (error.message.includes('PROVIDER_TOKEN_EXPIRED')) {
-          return NextResponse.json(
-            { error: "Storage provider token expired", code: "PROVIDER_TOKEN_EXPIRED" },
-            { status: 401 }
-          );
-        }
+        
+        return NextResponse.json(
+          { error: "Failed to upload file to storage provider" },
+          { status: 500 }
+        );
       }
-      
-      return NextResponse.json(
-        { error: "Failed to upload file to storage provider" },
-        { status: 500 }
-      );
     }
 
     // Insert file metadata
@@ -152,10 +223,10 @@ export async function POST(
       .from("project_files")
       .insert({
         project_id: projectId,
-        filename: file.name,
+        filename: fileName,
         file_path: uploadResult.path,
         file_size: uploadResult.size,
-        file_type: file.type || "application/octet-stream",
+        file_type: fileType || "application/octet-stream",
         uploaded_by: user.id,
         storage_provider: storageProvider,
         external_file_id: storageProvider !== 'local' ? uploadResult.fileId : null,
@@ -203,7 +274,7 @@ export async function POST(
         .insert({
           version_id: resolvedVersionId,
           type: "addition",
-          description: (meta.data.description?.trim() || `Uploaded ${file.name}`),
+          description: (meta.data.description?.trim() || `Uploaded ${fileName}`),
           author_id: user.id,
           file_id: fileRecord.id,
         });

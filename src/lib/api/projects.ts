@@ -285,6 +285,59 @@ export type UploadFileInput = {
 };
 
 export async function uploadProjectFile(projectId: string, payload: UploadFileInput): Promise<{ id: string; filename: string; uploaded_at: string }> {
+	// For large files (>4.5MB) with local storage, upload directly to Supabase Storage
+	// to bypass Vercel's 4.5MB request limit
+	const isLargeFile = payload.file.size > 4.5 * 1024 * 1024; // 4.5MB
+	const isLocalStorage = (payload.storageProvider || 'local') === 'local';
+	
+	if (isLargeFile && isLocalStorage) {
+		// Direct upload to Supabase Storage
+		const { createClient } = await import('@supabase/supabase-js');
+		const supabase = createClient(
+			process.env.NEXT_PUBLIC_SUPABASE_URL!,
+			process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+		);
+		
+		const key = `${projectId}/${crypto.randomUUID()}-${payload.file.name}`;
+		const { error: uploadError } = await supabase.storage
+			.from('project-files')
+			.upload(key, payload.file, {
+				contentType: payload.file.type || 'application/octet-stream',
+				cacheControl: '3600'
+			});
+		
+		if (uploadError) {
+			throw new Error(`Upload failed: ${uploadError.message}`);
+		}
+		
+		// Send metadata to our API
+		const form = new FormData();
+		form.append("uploadedPath", key);
+		form.append("size", payload.file.size.toString());
+		form.append("type", payload.file.type || 'application/octet-stream');
+		form.append("name", payload.file.name);
+		if (payload.description) form.append("description", payload.description);
+		if (payload.versionId) form.append("versionId", payload.versionId);
+		form.append("storageProvider", "local");
+
+		const res = await fetch(`/api/projects/${projectId}/files`, {
+			method: "POST",
+			body: form,
+		});
+
+		if (!res.ok) {
+			let message = "Failed to save file metadata";
+			try {
+				const body = await res.json();
+				if (body?.error) message = body.error as string;
+			} catch {}
+			throw new Error(message);
+		}
+
+		return (await res.json()) as { id: string; filename: string; uploaded_at: string };
+	}
+	
+	// Original flow for small files or external storage
 	const form = new FormData();
 	form.append("file", payload.file);
 	if (payload.description) form.append("description", payload.description);
