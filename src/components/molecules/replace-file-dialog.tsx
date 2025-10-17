@@ -1,11 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { useCallback } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Replace } from "lucide-react";
+import { Replace, Upload } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function ReplaceFileDialog({ projectId, fileId, trigger, onReplaced }: { projectId: string; fileId: string; trigger?: React.ReactNode; onReplaced?: (newFileId: string) => void }) {
   const [open, setOpen] = React.useState(false);
@@ -13,6 +14,31 @@ export default function ReplaceFileDialog({ projectId, fileId, trigger, onReplac
   const [description, setDescription] = React.useState<string>("");
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      setFile(files[0]);
+    }
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -59,13 +85,37 @@ export default function ReplaceFileDialog({ projectId, fileId, trigger, onReplac
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="space-y-2">
             <div className="text-sm">New file</div>
+            
+            {/* Drag & Drop Zone */}
+            <div
+              className={cn(
+                "border-2 border-dashed rounded-lg p-6 text-center transition-colors",
+                "hover:border-primary/50 hover:bg-muted/50",
+                "cursor-pointer"
+              )}
+              onClick={() => document.getElementById('replace-file-input')?.click()}
+              onDragOver={handleDragOver}
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+              <p className="text-sm text-muted-foreground mb-1">
+                {file ? file.name : "Drop file here or click to browse"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Supported: Audio, DAW projects, MIDI/SysEx, presets, archives, docs, images, video. Max ~200MB.
+              </p>
+            </div>
+            
             <Input
+              id="replace-file-input"
               type="file"
               accept=".wav,.aiff,.flac,.mp3,.aac,.ogg,.m4a,.opus,.mid,.midi,.syx,.als,.flp,.logicx,.band,.cpr,.ptx,.rpp,.song,.bwproject,.reason,.zip,.rar,.7z,.tar,.gz,.nki,.adg,.fst,.fxp,.fxb,.nmsv,.h2p,.txt,.md,.doc,.docx,.pdf,.png,.jpg,.jpeg,.gif,.webp,.svg,.mp4,.mov,.mkv,.json,.xml"
               onChange={(e) => setFile(e.currentTarget.files?.[0] ?? null)}
               disabled={submitting}
+              className="hidden"
             />
-            <p className="text-xs text-muted-foreground">Supported: Audio, DAW projects, MIDI/SysEx, presets, archives, docs, images, video. Max ~200MB.</p>
           </div>
           <div className="space-y-2">
             <div className="text-sm">Description (optional)</div>

@@ -7,6 +7,15 @@ import { getMaxUploadFileBytes } from "@/lib/env";
 import { getStorageProvider } from "@/lib/storage/factory";
 import type { StorageProviderType } from "@/lib/storage/types";
 
+// Configure body size limit for file uploads
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '200mb',
+    },
+  },
+};
+
 // Type for file metadata
 interface FileMetadata {
   superseded_by?: string | null;
