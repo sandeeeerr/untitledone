@@ -5,10 +5,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ArrowRight, List } from "lucide-react"
-import { DemoButton, useDemo, DemoProvider } from "../demo-components"
+import { DemoButton } from "../demo-components"
 
 export default function MoleculesPageContent() {
-  const { toggleCrazy } = useDemo()
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center bg-white dark:bg-black p-10 relative">

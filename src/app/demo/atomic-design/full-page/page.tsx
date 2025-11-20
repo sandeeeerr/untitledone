@@ -4,7 +4,7 @@ import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Wand2, ArrowRight, Check, Music, Users, Zap, Download, Share2, Play, Heart } from "lucide-react"
+import { Wand2, ArrowRight, Check, Music, Users, Zap, Download, Share2, Heart } from "lucide-react"
 import { DemoButton, useDemo, DemoProvider } from "../demo-components"
 import { Suspense } from "react"
 
@@ -48,7 +48,7 @@ function FullPageContent() {
             Muziek maken doe je samen
           </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Werk samen met producers en DJ's van over de hele wereld. Deel projecten, krijg feedback en maak betere muziek.
+            Werk samen met producers en DJ&apos;s van over de hele wereld. Deel projecten, krijg feedback en maak betere muziek.
           </p>
           <div className="flex gap-4 justify-center">
             <DemoButton size="lg" className="text-lg px-8">

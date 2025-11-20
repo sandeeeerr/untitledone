@@ -290,17 +290,7 @@ export async function uploadProjectFile(projectId: string, payload: UploadFileIn
 	const isLargeFile = payload.file.size > 4.5 * 1024 * 1024; // 4.5MB
 	const isLocalStorage = (payload.storageProvider || 'local') === 'local';
 	
-	console.log('Upload file:', {
-		size: payload.file.size,
-		sizeMB: (payload.file.size / (1024 * 1024)).toFixed(2) + 'MB',
-		isLargeFile,
-		isLocalStorage,
-		storageProvider: payload.storageProvider,
-		threshold: '4.5MB'
-	});
-	
 	if (isLargeFile && isLocalStorage) {
-		console.log('Using direct upload flow for large file');
 		// Direct upload to Supabase Storage
 		const supabase = (await import('@/lib/supabase-client')).default;
 		
@@ -343,7 +333,6 @@ export async function uploadProjectFile(projectId: string, payload: UploadFileIn
 		return (await res.json()) as { id: string; filename: string; uploaded_at: string };
 	}
 	
-	console.log('Using original upload flow for small file or external storage');
 	// Original flow for small files or external storage
 	const form = new FormData();
 	form.append("file", payload.file);

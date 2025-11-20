@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Wand2, Check, ArrowRight } from "lucide-react"
-import { DemoButton, useDemo, DemoProvider } from "../demo-components"
+import { Check } from "lucide-react"
+import { DemoButton, DemoProvider } from "../demo-components"
 import { Suspense } from "react"
 
 function TokensPageContent() {
@@ -77,7 +77,7 @@ function TokensPageContent() {
             Design Tokens Demo
           </h2>
           <p className="text-xl text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">
-            Pas de "huisstijl regels" aan en zie hoe alles automatisch verandert. 
+            Pas de &quot;huisstijl regels&quot; aan en zie hoe alles automatisch verandert. 
             Net zoals je één knop aanpast, kun je ook één kleur of vorm aanpassen.
           </p>
         </div>
@@ -149,7 +149,7 @@ function TokensPageContent() {
 }`}</code>
             </pre>
             <p className="text-sm text-muted-foreground mt-3">
-              Deze "tokens" worden gebruikt door alle knoppen, kaarten en andere onderdelen.
+              Deze &quot;tokens&quot; worden gebruikt door alle knoppen, kaarten en andere onderdelen.
             </p>
           </CardContent>
         </Card>

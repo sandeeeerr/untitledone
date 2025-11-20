@@ -1,17 +1,15 @@
 "use client"
 
-import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { List, Check, Wand2, ArrowRight } from "lucide-react"
-import { DemoButton, useDemo, DemoProvider } from "../demo-components"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { List, Wand2 } from "lucide-react"
+import { DemoButton, DemoProvider } from "../demo-components"
 import { Suspense } from "react"
 
 function PagesPageContent() {
-  const { toggleCrazy, isCrazy } = useDemo()
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center bg-white dark:bg-black p-10 relative">
@@ -42,7 +40,7 @@ function PagesPageContent() {
               Muziek maken doe je samen
             </h1>
             <p className="text-muted-foreground max-w-[600px]">
-              Werk samen met producers en DJ's van over de hele wereld.
+              Werk samen met producers en DJ&apos;s van over de hele wereld.
             </p>
           </div>
           

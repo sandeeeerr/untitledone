@@ -2,7 +2,6 @@
 
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useDemo } from "./demo-components"
 
 export default function DemoHome() {
   
@@ -52,7 +51,7 @@ export default function DemoHome() {
           Demo: Hoe we een website bouwen
         </h1>
         <p className="text-slate-500 text-lg">
-          Een simpele uitleg van "Atomic Design" voor niet-technische mensen.
+          Een simpele uitleg van &quot;Atomic Design&quot; voor niet-technische mensen.
           Klik op de stappen om te zien hoe het werkt.
         </p>
       </div>

@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, List } from "lucide-react"
-import { DemoButton, useDemo, DemoProvider } from "../demo-components"
+import { DemoButton } from "../demo-components"
 
 export default function TemplatesPageContent() {
   return (
@@ -11,8 +11,8 @@ export default function TemplatesPageContent() {
       <div className="mb-8 text-center max-w-xl">
         <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-200 mb-4">4. Templates</h2>
         <p className="text-xl text-slate-500 dark:text-slate-400">
-          Voordat we de pagina invullen, maken we een "schets".<br/>
-          We bepalen waar het "Nieuwsbrief Blok" komt te staan.
+          Voordat we de pagina invullen, maken we een &quot;schets&quot;.<br/>
+          We bepalen waar het &quot;Nieuwsbrief Blok&quot; komt te staan.
         </p>
       </div>
 

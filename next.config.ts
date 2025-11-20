@@ -28,8 +28,8 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     optimizePackageImports: ['@mantine/core', '@mantine/hooks', 'lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
-    serverComponentsExternalPackages: [],
   },
+  serverExternalPackages: [],
   compiler: {
     // Remove console.log in production
     removeConsole: process.env.NODE_ENV === 'production' ? {

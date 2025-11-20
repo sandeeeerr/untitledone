@@ -68,7 +68,7 @@ function ProjectCard({ project }: { project: Project }) {
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground">Status:</span>
-            <Badge variant={statusVariant as any}>{statusLabel}</Badge>
+            <Badge variant={statusVariant as "default" | "secondary" | "destructive" | "outline"}>{statusLabel}</Badge>
           </div>
         </div>
         <div className="flex gap-2">
