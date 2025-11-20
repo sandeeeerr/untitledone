@@ -326,7 +326,28 @@ export async function POST(
     }
 
     if (action === "replace") {
-      if (!(project.owner_id === user.id || file.uploaded_by === user.id)) {
+      // Allow replace if user has access to the project (owner or member)
+      // This matches the upload permissions logic
+      const isOwner = project.owner_id === user.id;
+      let hasAccess = isOwner;
+      
+      if (!hasAccess) {
+        if (project.is_private) {
+          // For private projects, check membership
+          const { data: membership } = await (supabase as SupabaseClient)
+            .from("project_members")
+            .select("user_id")
+            .eq("project_id", projectId)
+            .eq("user_id", user.id)
+            .maybeSingle();
+          hasAccess = !!membership;
+        } else {
+          // For public projects, authenticated users can replace files
+          hasAccess = true;
+        }
+      }
+      
+      if (!hasAccess) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       }
 
