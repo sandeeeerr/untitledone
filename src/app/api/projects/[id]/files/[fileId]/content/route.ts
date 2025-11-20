@@ -57,7 +57,8 @@ export async function GET(
         file_size,
         storage_provider,
         uploaded_by,
-        external_file_id
+        external_file_id,
+        file_path
       `)
       .eq('id', validFileId)
       .eq('project_id', projectId)
@@ -70,19 +71,40 @@ export async function GET(
       );
     }
 
-    const storageProvider = file.storage_provider as StorageProviderType;
+    const storageProvider = (file.storage_provider || 'local') as StorageProviderType;
     const uploadedByUserId = file.uploaded_by;
-    const fileIdentifier = file.external_file_id || file.id;
+    // For local storage, use file_path; for external providers, use external_file_id or file.id
+    const fileIdentifier = storageProvider === 'local' 
+      ? (file.file_path || file.id)
+      : (file.external_file_id || file.id);
+
+    // Validate storage provider
+    if (!['local', 'dropbox', 'google_drive'].includes(storageProvider)) {
+      console.error(`Invalid storage provider: ${storageProvider} for file ${validFileId}`);
+      return NextResponse.json(
+        { error: `Invalid storage provider: ${storageProvider}` },
+        { status: 500 }
+      );
+    }
 
     // For local storage, redirect to Supabase Storage URL
     if (storageProvider === 'local') {
-      const { data: signedUrl } = await supabase.storage
+      if (!fileIdentifier) {
+        console.error('Missing file_path for local storage file:', validFileId);
+        return NextResponse.json(
+          { error: 'File path not found' },
+          { status: 500 }
+        );
+      }
+
+      const { data: signedUrl, error: urlError } = await supabase.storage
         .from('project-files')
         .createSignedUrl(fileIdentifier, 60 * 60); // 1 hour expiry
 
-      if (!signedUrl) {
+      if (urlError || !signedUrl) {
+        console.error('Failed to generate signed URL:', urlError, 'for path:', fileIdentifier);
         return NextResponse.json(
-          { error: 'Failed to generate signed URL' },
+          { error: 'Failed to generate signed URL', details: urlError?.message },
           { status: 500 }
         );
       }
@@ -92,9 +114,17 @@ export async function GET(
 
     // For Dropbox, get signed URL and redirect
     if (storageProvider === 'dropbox') {
-      const adapter = await getStorageProvider(storageProvider, uploadedByUserId);
-      const signedUrl = await adapter.getDownloadUrl(fileIdentifier, uploadedByUserId, 60 * 60);
-      return NextResponse.redirect(signedUrl);
+      try {
+        const adapter = await getStorageProvider(storageProvider, uploadedByUserId);
+        const signedUrl = await adapter.getDownloadUrl(fileIdentifier, uploadedByUserId, 60 * 60);
+        return NextResponse.redirect(signedUrl);
+      } catch (error) {
+        console.error('Dropbox error:', error);
+        return NextResponse.json(
+          { error: 'Failed to get Dropbox file', details: error instanceof Error ? error.message : 'Unknown error' },
+          { status: 500 }
+        );
+      }
     }
 
     // For Google Drive, handle token refresh automatically
@@ -102,6 +132,7 @@ export async function GET(
       try {
         return await fetchGoogleDriveFile(fileIdentifier, uploadedByUserId, file);
       } catch (error) {
+        console.error('Google Drive error:', error);
         // Check if it's a 401 (unauthorized/expired token)
         if (is401Error(error)) {
           console.warn(`Google Drive token expired for user ${uploadedByUserId}, attempting refresh...`);
@@ -115,20 +146,38 @@ export async function GET(
           }
           
           // Retry fetch once with fresh token
-          return await fetchGoogleDriveFile(fileIdentifier, uploadedByUserId, file);
+          try {
+            return await fetchGoogleDriveFile(fileIdentifier, uploadedByUserId, file);
+          } catch (retryError) {
+            console.error('Google Drive retry error:', retryError);
+            return NextResponse.json(
+              { error: 'Failed to fetch Google Drive file after token refresh', details: retryError instanceof Error ? retryError.message : 'Unknown error' },
+              { status: 500 }
+            );
+          }
         }
-        throw error;
+        return NextResponse.json(
+          { error: 'Failed to fetch Google Drive file', details: error instanceof Error ? error.message : 'Unknown error' },
+          { status: 500 }
+        );
       }
     }
 
+    // This should never be reached due to validation above, but TypeScript needs it
     return NextResponse.json(
-      { error: 'Failed to stream file content' },
+      { error: `Unsupported storage provider: ${storageProvider}` },
       { status: 500 }
     );
   } catch (error) {
     console.error('Error in file content proxy:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorStack = error instanceof Error ? error.stack : undefined;
     return NextResponse.json(
-      { error: 'Failed to fetch file content' },
+      { 
+        error: 'Failed to fetch file content',
+        details: errorMessage,
+        ...(process.env.NODE_ENV === 'development' && errorStack ? { stack: errorStack } : {})
+      },
       { status: 500 }
     );
   }

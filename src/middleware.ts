@@ -14,6 +14,7 @@ const PUBLIC_ROUTES = {
     pages: {
         landing: "/",
         auth: "/auth",
+        demo: "/demo",
     },
     // API routes accessible without auth (GET only)
     api: {
@@ -38,7 +39,8 @@ function isPublicRoute(request: NextRequest): boolean {
     // Public pages (all methods)
     if (
         path === PUBLIC_ROUTES.pages.landing ||
-        path.startsWith(PUBLIC_ROUTES.pages.auth) 
+        path.startsWith(PUBLIC_ROUTES.pages.auth) ||
+        path.startsWith(PUBLIC_ROUTES.pages.demo)
     ) {
         return true;
     }
