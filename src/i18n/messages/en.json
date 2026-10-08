@@ -573,6 +573,7 @@
     },
     "footer": {
       "copyright": "All rights reserved.",
+      "madeBy": "Made by",
       "privacy": "Privacy Policy",
       "terms": "Terms of Service",
       "links": {

@@ -224,7 +224,10 @@ export default function LandingPage() {
             <div className="flex items-center gap-2">
               <Logo alt="Logo" width={40} height={25} />
               <p className="text-sm text-muted-foreground ml-4">
-                © 2025 {t('footer.copyright')}
+                © 2025 {t('footer.copyright')} {t('footer.madeBy')}{' '}
+                <a href="https://sanderr.nl" className="hover:text-foreground" target="_blank" rel="noopener">
+                  Sander de Vries
+                </a>
               </p>
             </div>
             <div className="flex gap-4 text-sm text-muted-foreground">
