@@ -226,7 +226,7 @@ export default function LandingPage() {
               <p className="text-sm text-muted-foreground ml-4">
                 © 2025 {t('footer.copyright')} {t('footer.madeBy')}{' '}
                 <a href="https://sanderr.nl" className="hover:text-foreground" target="_blank" rel="noopener">
-                  Sander de Vries
+                  Sanderr
                 </a>
               </p>
             </div>
