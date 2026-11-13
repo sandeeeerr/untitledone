@@ -7,6 +7,7 @@ import { getLocale, getMessages } from 'next-intl/server';
 import { ReactQueryProvider } from '@/components/atoms/react-query-provider';
 import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from '@/components/atoms/theme-provider';
+import Script from 'next/script';
 
 const geistSans = localFont({
   src: '../fonts/GeistVF.woff',
@@ -82,6 +83,8 @@ export default async function RootLayout({
           </NextIntlClientProvider>
           <Toaster />
         </ReactQueryProvider>
+        {/* Umami on Sander's Mac mini: a visitor count without cookies; data-domains keeps local copies out. */}
+        <Script src="https://stats.sanderr.nl/script.js" data-website-id="af14b1da-74ba-4f1d-acc6-d3475ce6a851" data-domains="www.untitledone.nl,untitledone.nl" data-do-not-track="true" strategy="afterInteractive" />
       </body>
     </html>
   );
