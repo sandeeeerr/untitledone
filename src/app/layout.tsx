@@ -84,7 +84,7 @@ export default async function RootLayout({
           <Toaster />
         </ReactQueryProvider>
         {/* Umami on Sander's Mac mini: a visitor count without cookies; data-domains keeps local copies out. */}
-        <Script src="https://stats.sanderr.nl/script.js" data-website-id="af14b1da-74ba-4f1d-acc6-d3475ce6a851" data-domains="www.untitledone.nl,untitledone.nl" data-do-not-track="true" strategy="afterInteractive" />
+        <Script src="https://stats.sanderr.nl/script.js" data-website-id="af14b1da-74ba-4f1d-acc6-d3475ce6a851" data-domains="www.untitledone.nl,untitledone.nl" data-do-not-track="true" data-performance="true" data-errors="true" strategy="afterInteractive" />
       </body>
     </html>
   );
